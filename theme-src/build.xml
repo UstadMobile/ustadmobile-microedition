@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Export" default="generateResource" basedir=".">
+<target name="generateResource">
+<taskdef classpath="editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
+    <build dest="output.res">
+   <font name="titleFont" system="FACE_SYSTEM | STYLE_PLAIN | SIZE_MEDIUM" createBitmap="true" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄظﻅﻆﻈعﻉﻊﻌغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳةﺓﺔىﻯﻰپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټ＀＂！ځ＃％＄ډ６ړ７ږ８ښ）＋＊ګ，／－ڼ０２１ې３５４یﯽۍ９ﺊﺌﺋ" logicalName="DejaVu Sans PSMod3-plain-12;" />
+   <font name="bodyFont" system="FACE_SYSTEM | STYLE_PLAIN | SIZE_MEDIUM" createBitmap="true" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄظﻅﻆﻈعﻉﻊﻌغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳةﺓﺔىﻯﻰپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټ＀＂！ځ＃％＄ډ６ړ７ږ８ښ）＋＊ګ，／－ڼ０２１ې３５４یﯽۍ９ﺊﺌﺋ" logicalName="DejaVu Sans PSMod3-plain-12;" />
+   <image file="image/loading6.gif frame:4" name="loading6.gif frame:4" />
+   <image file="image/SliderFull.borderRight:1" name="SliderFull.borderRight:1" />
+   <image file="image/loading6.gif frame:3" name="loading6.gif frame:3" />
+   <image file="image/loading6.gif frame:2" name="loading6.gif frame:2" />
+   <image file="image/loading6.gif frame:1" name="loading6.gif frame:1" />
+   <image file="image/rugbdr.png" name="rugbdr.png" />
+   <image file="image/loading6.gif frame:0" name="loading6.gif frame:0" />
+   <image file="image/rugtiledk.png" name="rugtiledk.png" />
+   <image file="image/SliderFull.borderTopR:1" name="SliderFull.borderTopR:1" />
+   <image file="image/SliderFull.borderBottomR:1" name="SliderFull.borderBottomR:1" />
+   <image file="image/Slider.sel#borderBottomL:1" name="Slider.sel#borderBottomL:1" />
+   <image file="image/Slider.sel#borderRight:1" name="Slider.sel#borderRight:1" />
+   <image file="image/SliderFull.borderBottom:1" name="SliderFull.borderBottom:1" />
+   <image file="image/SliderFull.borderLeft:1" name="SliderFull.borderLeft:1" />
+   <image file="image/Slider.sel#borderTopL:1" name="Slider.sel#borderTopL:1" />
+   <image file="image/SliderFull.borderCenter:1" name="SliderFull.borderCenter:1" />
+   <image file="image/loadingb64" name="loadingb64" />
+   <image file="image/Slider.sel#borderBottomR:1" name="Slider.sel#borderBottomR:1" />
+   <image file="image/SliderFull.borderTop:1" name="SliderFull.borderTop:1" />
+   <image file="image/Slider.sel#borderTop:1" name="Slider.sel#borderTop:1" />
+   <image file="image/Slider.sel#borderBottom:1" name="Slider.sel#borderBottom:1" />
+   <image file="image/Slider.sel#borderTopR:1" name="Slider.sel#borderTopR:1" />
+   <image file="image/Slider.sel#borderLeft:1" name="Slider.sel#borderLeft:1" />
+   <image file="image/Slider.sel#borderCenter:1" name="Slider.sel#borderCenter:1" />
+   <image file="image/SliderFull.borderTopL:1" name="SliderFull.borderTopL:1" />
+   <image file="image/SliderFull.borderBottomL:1" name="SliderFull.borderBottomL:1" />
+   <image file="image/rugtile.png" name="rugtile.png" />
+   <font system="FACE_SYSTEM | STYLE_BOLD | SIZE_MEDIUM" name="gen1" />
+   <font system="FACE_SYSTEM | STYLE_BOLD | SIZE_MEDIUM" name="gen2" />
+   <font system="FACE_SYSTEM | STYLE_BOLD | SIZE_MEDIUM" name="gen3" />
+   <font system="FACE_SYSTEM | STYLE_BOLD | SIZE_MEDIUM" name="gen4" />
+   <font system="FACE_SYSTEM | STYLE_BOLD | SIZE_MEDIUM" name="gen5" />
+   <theme file="theme/Makeover" name="Makeover" />
+   </build>
+</target>
+</project>
