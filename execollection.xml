@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-
-<execollection showtoc="false" title="Dari Literacy Book 1">
-	<list>
-		<!-- relative path-->
-		<item title="Lesson 1">lesson001</item>
-		<item title="Lesson 2">lesson002</item>
-	</list>
-</execollection>
