@@ -6,7 +6,7 @@ package com.toughra.mlearnplayer.idevices;
 
 import com.sun.lwuit.Button;
 import com.sun.lwuit.Command;
-import com.sun.lwuit.Dialog;
+import com.sun.lwuit.Component;
 import com.sun.lwuit.Display;
 import com.sun.lwuit.Form;
 import com.sun.lwuit.Image;
@@ -14,6 +14,7 @@ import com.sun.lwuit.Label;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
 import com.sun.lwuit.table.TableLayout;
+import com.toughra.mlearnplayer.FeedbackDialog;
 import java.io.IOException;
 import java.util.Vector;
 import com.toughra.mlearnplayer.Idevice;
@@ -27,6 +28,17 @@ import com.toughra.mlearnplayer.xml.XmlNode;
  */
 public class HangmanIdevice extends Idevice implements ActionListener{
 
+    /**
+     * Static constant colors for the buttons for picking letters
+     */
+    static final int LB_WRONGCOL = 0xff0000;
+    static final int LB_CORGUESS = 0x00ff00;
+    static final int LB_DEFAULT = 0x0000ff;
+    
+    static final int LB_FGCOLOR = 0xffffff;
+    
+    static Button[] letterButtons;
+            
     //The form for showing image of player status, hint and current answer in progress
     Form imageDisplayForm;
     
@@ -76,6 +88,8 @@ public class HangmanIdevice extends Idevice implements ActionListener{
     int currentWordIndex;
     
     int levelAttempts = 0;
+    
+    boolean gameComplete = false;
     
     public HangmanIdevice(MLearnPlayerMidlet hostMidlet, XmlNode xmlData) {
         super(hostMidlet);  
@@ -133,10 +147,10 @@ public class HangmanIdevice extends Idevice implements ActionListener{
 
     public void actionPerformed(ActionEvent ae) {
         Command cmd = ae.getCommand();
-        if(cmd.getCommandName().equals(pickText)) {
+        if(cmd.getCommandName().equals(pickText) && gameComplete == false) {
             letterPickerForm.show();
         }else if(cmd.getCommandName().length() == 1) {
-            chooseLetter(cmd.getCommandName());
+            chooseLetter(cmd.getCommandName(), ae.getComponent());
         }
     }
     
@@ -156,13 +170,19 @@ public class HangmanIdevice extends Idevice implements ActionListener{
     }
     
     void loseLevel() {
-        showFeedback(lostLevelMsg);
+        showFeedback(lostLevelMsg, false);
         levelAttempts++;
         startLevel(currentWordIndex);
     }
     
     void advanceLevel() {
-        showFeedback(levelPassMsg);
+        showFeedback(levelPassMsg, true);
+        
+        //reset the buttons
+        for(int i = 0; i < letterButtons.length; i++) {
+            letterButtons[i].getStyle().setBgColor(LB_DEFAULT);
+            letterButtons[i].getUnselectedStyle().setBgColor(LB_DEFAULT);
+        }
         if(levelAttempts == 0) {
             //means the user has not used all lives on this level - so say correct firs time
             correctFirst++;
@@ -174,11 +194,9 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         startLevel(++currentWordIndex);
     }
     
-    void showFeedback(String feedback) {
-        Dialog fbDialog = new Dialog();
-        fbDialog.setTimeout(hostMidlet.fbTime);
-        fbDialog.addComponent(new Label(feedback));
-        fbDialog.showDialog();
+    void showFeedback(String feedback, boolean isCorrect) {
+        FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
+        fbDialog.showFeedback(fbDialog, feedback, isCorrect);
     }
     
     String genWordDisplay() {
@@ -197,14 +215,17 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         return wordDisplay;
     }
     
-    public void chooseLetter(String letter) {
-        System.out.println("Choose: " + letter);
+    public void chooseLetter(String letter, Component c) {
         if(words[currentWordIndex].indexOf(letter) != -1) {
+            c.getStyle().setBgColor(LB_CORGUESS);
+            c.getUnselectedStyle().setBgColor(LB_CORGUESS);
             lettersFound += letter;
         }else {
             //wrong guess
             if(currentImageIndex < imgSrcs.length - 1) {
                 currentImageIndex++;
+                c.getStyle().setBgColor(LB_WRONGCOL);
+                c.getUnselectedStyle().setBgColor(LB_WRONGCOL);
                 updateImg();
             }else {
                 loseLevel();
@@ -213,18 +234,20 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         
         String wordDisplay = genWordDisplay();
         
+        wordLabel.setText(wordDisplay);
         
         if(wordDisplay.equals(words[currentWordIndex])) {
             //level passed
             if(currentWordIndex < words.length - 1) {
                 advanceLevel();
             }else {
-                showFeedback(gameWonMsg);
+                imageDisplayForm.show();
+                gameComplete = true;
+                showFeedback(gameWonMsg, true);
             }
         }else {
             System.out.println(wordDisplay);
-            wordLabel.setText(wordDisplay);
-
+            
             imageDisplayForm.show();
         }
     }
@@ -238,10 +261,14 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         if(letterPickerForm == null) {
             letterPickerForm = new Form();
             int numLetters = alphabet.length();
+            letterButtons = new Button[numLetters];
             for (int i = 0; i < numLetters; i++) {
                 Button button = new Button(new Command(
                         alphabet.substring(i, i+1)));
+                letterButtons[i] = button;
                 button.addActionListener(this);
+                button.getStyle().setFgColor(LB_FGCOLOR);
+                button.getStyle().setBgColor(LB_DEFAULT);
                 letterPickerForm.addComponent(button);
             }
         }
