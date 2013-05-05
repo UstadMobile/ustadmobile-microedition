@@ -42,7 +42,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     
     private static final int SETTINGS = 6;
     
-    private static final int TEACHERREPORT = 7;
+    private static final int ABOUTFORM = 7;
     
     private static final int QUIT = 8;
     
@@ -104,6 +104,9 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     Command cmdShowHTTP;
     Form frmHTTP;
     
+    //the about form
+    Form aboutForm;
+    
     //Vector index -> Filename
     Vector httpSettingsList;
     
@@ -150,6 +153,30 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             
             
         }
+        
+        setOKCmd = new Command("OK", 42);
+
+        aboutForm = new Form("About");
+        Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
+        TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
+                    + "Written by Mike Dawson \n\n"
+                    + "This program is free software: you can redistribute it and/or modify " +
+"    it under the terms of the GNU General Public License as published by " +
+"    the Free Software Foundation, either version 3 of the License, or " +
+"    (at your option) any later version..\nThis program is distributed in the hope that it will be useful, " +
+"    but WITHOUT ANY WARRANTY; without even the implied warranty of " +
+"    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the " +
+"    GNU General Public License for more details.  " +
+"\n" +
+"    You should have received a copy of the GNU General Public License" +
+"    along with this program.  If not, see <http://www.gnu.org/licenses/>.");                
+        aboutText.setEditable(false);
+        aboutForm.addComponent(versionLabel);
+        aboutForm.addComponent(aboutText);
+        Button aboutGoBack = new Button(setOKCmd);
+        aboutGoBack.addActionListener(this);
+        aboutForm.addComponent(aboutGoBack);
+        
         
         settingsForm = new Form("Settings");
         BoxLayout bLayout = new BoxLayout(BoxLayout.Y_AXIS);
@@ -230,7 +257,6 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         settingsForm.addComponent(svrOnCheckBox);
         
 
-        setOKCmd = new Command("OK", 42);
         
         Button settingOKButton = new Button(setOKCmd);
         settingOKButton.addActionListener(this);
@@ -386,10 +412,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 host.contentBrowser.show();
             }else if(cmd.getId() ==SENDTEST) {
                 MLObjectPusher.countDown = 0;//set this to zero to force the thread to run next tick
-            }else if(cmd.getId() == TEACHERREPORT) {
-                MLReportRequest req = new MLReportRequest(this);
-                req.setupForm();
-                req.show();
+            }else if(cmd.getId() == ABOUTFORM) {
+                //MLReportRequest req = new MLReportRequest(this);
+                //req.setupForm();
+                //req.show();
+                
+                aboutForm.show();
             }else if(cmd.getId() == cmdShowHTTP.getId()) {
                 frmHTTP.show();
             }else if(cmd.getId() == cmdHTTPOK.getId()) {

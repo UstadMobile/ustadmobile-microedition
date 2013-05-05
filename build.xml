@@ -22,7 +22,7 @@
     
     <property name="MidletSuite" value="EXEMobile2"/>
     <property name="Midlet_1_name" value="Ustad Mobile"/>
-    <property name="Midlet_1_class" value="net.paiwastoon.mlearnplayer.MLearnPlayerMidlet"/>
+    <property name="Midlet_1_class" value="com.toughra.mlearnplayer.MLearnPlayerMidlet"/>
     
     <property name="wtk.cldc.version" value="1.1"/>
     <property name="wtk.midp.version" value="2.1"/>

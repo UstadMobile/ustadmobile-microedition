@@ -70,7 +70,7 @@ public class IdeviceFactory {
             }else if(deviceType.equals("mathdrill2")) {
                 deviceToReturn = new MathDrillIdevice(host, ideviceNode);
             }else {
-                HTMLIdevice device = new HTMLIdevice(host, null);
+                HTMLIdevice device = new HTMLIdevice(host, "");
                 device.htmlStr = "<html><body>&nbsp;</body></html>";
                 deviceToReturn = device;                
             }

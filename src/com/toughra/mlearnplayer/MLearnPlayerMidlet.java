@@ -30,6 +30,7 @@ import javax.microedition.midlet.*;
 import com.toughra.mlearnplayer.datatx.MLObjectPusher;
 import com.toughra.mlearnplayer.datatx.MLServerThread;
 import com.toughra.mlearnplayer.idevices.EXERequestHandler;
+import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
 
 //#ifdef NOKIA
@@ -85,16 +86,11 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     public String nextPrevLinksCachedForURL;
     
-    //XmlNode of XmlData for the next node to show
-    public XmlNode cachedNextNode;
+   
     
     public String cachedIdeviceId;
     
-    //If the cached data is ready
-    public boolean cachedNextNodeReady = false;
     
-    //Thread that will run to cache the next
-    private CacheNextIdeviceThread cacheNodeThread;
 
     //media player
     private Player player;
@@ -180,6 +176,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     //whether we have already done an auto open on return
     boolean returnPosDone = false;
     
+    public static final String versionInfo = "V: 0.9.01 (5/May/2013)";
+    
     public void logMsg(String msg) {
         System.out.println(msg);
         /*if(debugStrm == null && currentPackageURI != null && currentPackageURI.length() > 8) {
@@ -228,7 +226,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             Display.getInstance().setBidiAlgorithm(true);
             Resources r = Resources.open("/theme2.res");
             UIManager.getInstance().setThemeProps(r.getTheme("Makeover"));
-            
+
+            EXEStrMgr.getInstance().p("Ustad Mobile version: " + this.versionInfo, EXEStrMgr.DEBUG);
             EXEStrMgr.getInstance().p("Loaded theme", 1);
             
             //setup locale management
@@ -312,16 +311,21 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 + currentColId);
         if(lastPos != null && returnPosDone == false) {
             //we need to go to where they last were...
-            returnPosDone = true;
-            int slashPos = lastPos.indexOf('/');
-            String lastPkg = lastPos.substring(0, slashPos);
-            String lastHref = lastPos.substring(slashPos + 1);
-            
-            String pkgDir = myTOC.colBaseHREF + "/" + lastPkg + "/";
-            hostMidlet.openPackageDir(pkgDir, false);
-            loadTOC(true);
-            
-            hostMidlet.loadPage(lastHref);
+            EXEStrMgr.po("Last position attempting to open " + lastPos, EXEStrMgr.DEBUG);
+            try {
+                returnPosDone = true;
+                int slashPos = lastPos.indexOf('/');
+                String lastPkg = lastPos.substring(0, slashPos);
+                String lastHref = lastPos.substring(slashPos + 1);
+
+                String pkgDir = myTOC.colBaseHREF + "/" + lastPkg + "/";
+                hostMidlet.openPackageDir(pkgDir, false);
+                loadTOC(true);
+
+                hostMidlet.loadPage(lastHref);
+            }catch(Exception e) {
+                EXEStrMgr.po("Error attempting to load last page : ", EXEStrMgr.DEBUG);
+            }
         }
         returnPosDone = true;
         
@@ -531,17 +535,18 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 myHref);
         ideviceIdList = (String[])pageIdeviceInfo[EXETOC.PAGELIST_IDEVICEIDS];
         ideviceTitleList = (String[])pageIdeviceInfo[EXETOC.PAGELIST_IDEVICETITLES];
+        TOCCachePage cPg = myTOC.cache.getPageByHref(myHref);
+        this.nextHref = cPg.nextHref;
+        this.prevHref = cPg.prevHref;                
+
+        int index = (goLast == false) ? 0 : ideviceIdList.length -1;
+        EXEStrMgr.po("Showing idevice for page " + pageHref + " : " + index, EXEStrMgr.DEBUG);
+
         if(ideviceIdList.length == 0) {
-            Dialog myDialog = new Dialog("Empty Page");
-            myDialog.addComponent(new Label("Sorry - Page has no content"));
-            myDialog.show();
+            //this needs to show an idevice (blank html or something should do)
+            Idevice blankHTMLDevice = new HTMLIdevice(this, " ");
+            showIdevice(blankHTMLDevice, null);
         }else {
-            TOCCachePage cPg = myTOC.cache.getPageByHref(myHref);
-            this.nextHref = cPg.nextHref;
-            this.prevHref = cPg.prevHref;                
-            
-            int index = (goLast == false) ? 0 : ideviceIdList.length -1;
-            EXEStrMgr.po("Showing idevice for page " + pageHref + " : " + index, EXEStrMgr.DEBUG);
             showIdevice(myHref, ideviceIdList[index]);
         }
         
@@ -665,6 +670,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     public void showIdevice(Idevice device, String ideviceId) {
         try {
+            
             if(device.getMode() == Idevice.MODE_LWUIT_FORM) {
                 if(!Display.isInitialized()) {
                     Display.init(this);
@@ -701,10 +707,6 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 EXEStrMgr.po("Showing idevice form for " + ideviceId, EXEStrMgr.DEBUG);
                 
                 //save where we are if we are using a collection
-                if(currentColId != null && this.currentPkgId != null && this.currentHref != null) {
-                    EXEStrMgr.getInstance().setPref("lastpage."
-                            + currentColId, this.currentPkgId + "/" + this.currentHref);
-                }
                 deviceForm.show();
                 
                 MLearnUtils.printFreeMem(this, "show " + device.getClass().getName());
@@ -714,14 +716,6 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 device.start();
                 MLearnUtils.printFreeMem(this, "startedr " + device.getClass().getName());
                 currentIdeviceObj = device;
-                
-                /*
-                //now get ready to cache the next one
-                String[] nextDeviceInfo = getNextIDeviceIdAndHref(1);
-                cacheNodeThread = new CacheNextIdeviceThread(this, nextDeviceInfo[NEXT_HREF],
-                        nextDeviceInfo[NEXT_DEVICEID]);
-                cacheNodeThread.start();
-                */
             }
         }catch(Exception e) {
             e.printStackTrace();
@@ -749,12 +743,21 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                     + pageHREF);
             EXEStrMgr.po("got inputstream " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
             
-            XmlNode cachedData = (ideviceId.equals(cachedIdeviceId) && cachedNextNodeReady) ?
-                    cachedNextNode : null;
+            XmlNode cachedData =  null;
             EXEStrMgr.po("Calling idevice factory" + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
             
             Idevice device = IdeviceFactory.makeIdevice(inStream, ideviceId, this, cachedData);
             EXEStrMgr.po("Generated idevice object " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
+            
+            //Save the current location of the student
+            if(currentColId != null && pageHREF != null && this.currentHref != null) {
+                String lastURLRecordVal = this.currentPkgId + "/" + pageHREF;
+                EXEStrMgr.getInstance().setPref("lastpage."
+                        + currentColId, lastURLRecordVal);
+                EXEStrMgr.po("Recorindg lastpage." + currentColId + " as " + lastURLRecordVal,
+                        EXEStrMgr.DEBUG);
+            }
+
             
             showIdevice(device, ideviceId);
             EXEStrMgr.po("Loading complete for idevice now for " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);

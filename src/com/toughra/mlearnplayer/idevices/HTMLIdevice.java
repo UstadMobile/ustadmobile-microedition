@@ -32,6 +32,11 @@ public class HTMLIdevice extends Idevice {
         }
     }
     
+    public HTMLIdevice(MLearnPlayerMidlet hostMidlet, String html) {
+        super(hostMidlet);
+        this.htmlStr = html;
+    }
+    
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
