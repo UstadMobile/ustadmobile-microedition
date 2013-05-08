@@ -18,6 +18,7 @@ import com.sun.lwuit.events.FocusListener;
 import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.layouts.BoxLayout;
 import com.sun.lwuit.layouts.FlowLayout;
+import com.sun.lwuit.layouts.GridLayout;
 import com.sun.lwuit.plaf.Border;
 import java.util.Vector;
 import com.toughra.mlearnplayer.xml.XmlNode;
@@ -38,6 +39,8 @@ public class SortIdevice extends Idevice implements ActionListener {
     public static final int DIR_LTR = 1;
     
     public static final int DIR_RTL = 2;
+    
+    public static final int DIR_TTB = 3;
     
     int direction = DIR_LTR;
     
@@ -85,6 +88,8 @@ public class SortIdevice extends Idevice implements ActionListener {
         if(optionNode.hasAttribute("dir")) {
             if(optionNode.getAttribute("dir").equalsIgnoreCase("rtl")) {
                 direction = DIR_RTL;
+            }else if(optionNode.getAttribute("dir").equalsIgnoreCase("ttb")) {
+                direction = DIR_TTB;
             }
         }
         
@@ -95,9 +100,12 @@ public class SortIdevice extends Idevice implements ActionListener {
         if(direction == DIR_LTR) {
             incMap[3] = -1;
             incMap[4] = 1;
-        }else {
+        }else if(direction == DIR_RTL){
             incMap[3] = 1;
             incMap[4] = -1;
+        }else if(direction == DIR_TTB) {
+            incMap[1] = -1;
+            incMap[2] = 1;
         }
         
         
@@ -157,7 +165,7 @@ public class SortIdevice extends Idevice implements ActionListener {
 
     public void actionPerformed(ActionEvent ae) {
         if(ae.getCommand() != null && ae.getCommand().getCommandName() != null) {
-            if(ae.getCommand().getCommandName().equals("checkit")) {
+            if(ae.getCommand().getCommandName().equals(checkText)) {
                 FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
                 boolean isCorrect = checkAnswer();
                 if(numAttempts == 0) {
@@ -199,8 +207,9 @@ public class SortIdevice extends Idevice implements ActionListener {
                 needUpdate = true;
                 //containerForm.setFocused(form);
                 //form.setFocused(src);
-            }else if(currentActiveIndex != -1 && src.active && (key == -3 || key == -4)) {
-                moveActiveItem(incMap[Math.abs(key)]);
+            }else if(currentActiveIndex != -1 && src.active && (key == -3 || key == -4 || key == -1 || key == -2)) {
+                int moveAmount = incMap[Math.abs(key)];
+                moveActiveItem(moveAmount);
                 remakeForm();
                 needUpdate = true;
             }
@@ -222,7 +231,9 @@ public class SortIdevice extends Idevice implements ActionListener {
         
         checkButton.setNextFocusUp(items[items.length - 1]);
         for(int i = 0; i < numItems; i++) {
-            items[i].setNextFocusDown(checkButton);
+            if(direction == DIR_LTR || direction == DIR_RTL) {
+                items[i].setNextFocusDown(checkButton);
+            }
             
             if(direction == DIR_LTR) {
                 if(i < numItems -1) {
@@ -235,7 +246,7 @@ public class SortIdevice extends Idevice implements ActionListener {
                 }else {
                     items[i].setNextFocusLeft(items[0]);
                 }
-            }else {
+            }else if(direction == DIR_RTL){
                 if(i < numItems -1) {
                     items[i].setNextFocusLeft(items[i+1]);
                 }else {
@@ -314,7 +325,11 @@ public class SortIdevice extends Idevice implements ActionListener {
             form.setRTL(true);
         }
         
-        form.setLayout(new FlowLayout());
+        if(direction != DIR_TTB) {
+            form.setLayout(new FlowLayout());
+        }else {
+            form.setLayout(new GridLayout(items.length+1, 1));
+        }
         for (int i = 0; i < items.length; i++) {
             form.addComponent(items[i]);
         }
@@ -326,11 +341,13 @@ public class SortIdevice extends Idevice implements ActionListener {
         containerForm.addKeyListener(-3, this);
         containerForm.addKeyListener(-4, this);
         containerForm.addKeyListener(-5, this);
+        containerForm.addKeyListener(-1, this);//UP
+        containerForm.addKeyListener(-2, this);//Down
         
         containerForm.addComponent(form);
         
         containerForm.addComponent(checkButton);
-        checkButton.setCommand(new Command("checkit"));
+        checkButton.setCommand(new Command(checkText));
         checkButton.setNextFocusUp(items[items.length-1]);
         checkButton.addActionListener(this);
         return containerForm;
