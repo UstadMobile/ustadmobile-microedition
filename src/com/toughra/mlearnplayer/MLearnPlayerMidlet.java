@@ -324,7 +324,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
 
                 hostMidlet.loadPage(lastHref);
             }catch(Exception e) {
-                EXEStrMgr.po("Error attempting to load last page : ", EXEStrMgr.DEBUG);
+                EXEStrMgr.po("Error attempting to load last page : " + e.toString(), EXEStrMgr.DEBUG);
             }
         }
         returnPosDone = true;

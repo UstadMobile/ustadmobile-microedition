@@ -8,6 +8,17 @@
         </data>
         <references xmlns="http://www.netbeans.org/ns/ant-project-references/2">
             <reference>
+                <foreign-project>MIDP_UI</foreign-project>
+                <artifact-type>jar</artifact-type>
+                <script>${project.MIDP_UI}/build.xml</script>
+                <target>jar</target>
+                <clean-target>clean</clean-target>
+                <id>jar</id>
+                <properties>
+                    <property name="config.active"/>
+                </properties>
+            </reference>
+            <reference>
                 <foreign-project>UI</foreign-project>
                 <artifact-type>jar</artifact-type>
                 <script>${project.UI}/build.xml</script>
@@ -19,14 +30,14 @@
                 </properties>
             </reference>
             <reference>
-                <foreign-project>UI_MIDP</foreign-project>
+                <foreign-project>UI</foreign-project>
                 <artifact-type>jar</artifact-type>
-                <script>${project.UI_MIDP}/build.xml</script>
+                <script>${project.UI}/build.xml</script>
                 <target>jar</target>
                 <clean-target>clean</clean-target>
-                <id>jar</id>
+                <id>jar.NoLegacy</id>
                 <properties>
-                    <property name="config.active"/>
+                    <property name="config.active">NoLegacy</property>
                 </properties>
             </reference>
         </references>
