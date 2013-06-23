@@ -10,12 +10,18 @@ There are three NetBeans projects that you will need
  * UI - a modified version of LWUIT that supports bitmap arabic fonts
  * MIDP_UI - part of LWUIT required to build (unmodified from stock LWUIT)
 
-1. Copy exemobile2-build.sample.properties to exemobile2-build.properties
+1. Check out all the projects needed for the build
 
-2. Set the paths in exemobile2-build.properties so that the compilation can find 
+git clone git://git.code.sf.net/p/ustadmobil/ustadmobilcode EXEMobile2
+git clone git://git.code.sf.net/p/ustadmobil/codelwuitui UI
+git clone git://git.code.sf.net/p/ustadmobil/codelwuitmidpui MIDP_UI
+
+2. exemobile2-build.sample.properties to exemobile2-build.properties
+
+3. Set the paths in exemobile2-build.properties so that the compilation can find 
    required libraries
 
-3. Resolve any reference problems in NetBeans and make sure that you have a suitable 
+4. Resolve any reference problems in NetBeans and make sure that you have a suitable 
    Wireless Toolkit (WTK) installed - this has been tested with 2.5.2 building in Linux
 
 
