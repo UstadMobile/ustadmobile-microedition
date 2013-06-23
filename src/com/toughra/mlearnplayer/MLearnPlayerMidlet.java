@@ -1,9 +1,25 @@
+/*
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
 package com.toughra.mlearnplayer;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
@@ -39,43 +55,50 @@ import com.toughra.mlearnplayer.xml.XmlNode;
 
 
 /**
+ * 
+ * This is the main MIDLet that really runs the show of Ustad Mobil.  
+ * 
  * @author mike
  */
 public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnable, PlayerListener{
 
-    //Base folder name for the learning package that the user is currently running
+    /**Base folder name for the learning package that the user is currently running*/
     public String currentPackageURI;
 
+    /** The table of contents and idevice/href cache*/
     public EXETOC myTOC = null;
 
+    /** The Table of contents form */
     private com.sun.lwuit.Form TOCForm = null;
 
-    //the id of the idevice that the user is currently on
+    /**the id of the idevice that the user is currently on*/
     public String currentIdevice = null;
     
+    /**The index of the current idevice in the page*/
     public int currentIdeviceIndex = -1;
 
-    //a reference to the idevice currently shown
+    /*a reference to the idevice currently shown*/
     public Idevice currentIdeviceObj = null;
 
-    //the idevices on the current page
+    /*the idevices on the current page*/
     protected String[] ideviceIdList;
 
-    //the titles that are on the current page
+    /*the titles that are on the current page*/
     private String[] ideviceTitleList;
 
     /** Href of the currently loaded page */
     public String currentHref;
     
-    //next page href to show
+    /**next page href to show*/
     public String nextHref;
-    //prev page href to show
+    
+    /*prev page href to show*/
     public String prevHref;
     
-    //the current collection id
+    /*the current collection id (as defined by packagefolder/execollectionid flat file*/
     public String currentColId;
     
-    //the current package id
+    /*The current package ID - normally the folder name of the package*/
     public String currentPkgId;
     
     
@@ -83,101 +106,137 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     //the cached next and previous links for the url given by nextPrevLinksCachedForURL
     //public String[] cachedURLNextPrevLinks;
-    
+    /** Cached next and previous links*/
     public String nextPrevLinksCachedForURL;
     
    
-    
+    /** 
+     * The ID of the cached idevice (e.g. next device) if it has been cached,
+     * otherwise null
+     */
     public String cachedIdeviceId;
     
     
 
-    //media player
+    /** Media player object to be used*/
     private Player player;
     
-    //the input stream that is being used now by the player
+    /** InputStream used for the player as required*/
     private InputStream playerInputStream;
     
-    //the browsers for opening content
+    /** The browse form used to select the first piece of content*/
     public ContentBrowseForm contentBrowser = null;
     
-    //the in game menu form
+    /** The main options menu */
     MLearnMenu menuFrm;
     
-    //the current idevice form
+    /**the current idevice form*/
     Form deviceForm;
     
-    //The form showing right now (be it TOC,device, or collection)
+    /** The form showing right now (be it TOC,device, or collection) */
     public Form curFrm;
     
-    //Default time to show feedback (in ms)
+    /**Default time to show feedback (in ms)*/
     public int fbTime = 3500;
     
+    /** The length of the currently playing media*/
     public long currentMediaLength = -1;
     
-    //Default Shortcut keys
+    /** Default shortcut keycode - for next (*) button */
     public static final int KEY_NEXT = 42;
+    
+    /** Default shortcut keycode - for previous (#) button */
     public static final int KEY_PREV = 35;
     
+    /** Command ID for going next HREF*/
     final int NEXT_HREF = 0;
+    
+    /** Command ID for going to next idevice*/
     final int NEXT_DEVICEID = 1;
+    
+    /** String used with method to indicate we should open the first idevice
+     * in a package*/
     final String firstDevice = ":FIRST";
+    
+    /** String used with method to indicate we should open the last idevice
+     * in a package
+     */
     final String lastDevice = ":LAST";
-        
+    
+    /*
+     * The preprocessor = if the preprocessor is media capable set to the static
+     * variable as required.  If this is set to false then any calls to play
+     * media will be ignored.
+     */
     //#ifdef MEDIAENABLED
 //#    public static final boolean mediaEnabled = true;
     //#else
     public static final boolean mediaEnabled = false;
     //#endif
     
-    //list of positive feedback
+    /** Array of sound file names that can be used for positive feedback*/
     public String[] posFbURIs;
     
-    //list of negative feedback
+    /** Array of sound file names that can be used for negative feedback*/
     public String[] negFbURIs;
     
-    //time for maintenance thread to sleep
+    /**time for maintenance thread to sleep*/
     final int tickTime = 2000;
     
-    //transition time for animated stuff
+    /**transition time for animated stuff - e.g. slide to slide*/
     public final int transitionTime = 1000;
     
+    /** time to wait before/after transition before starting an idevice*/
     public final int transitionWait = 100;
     
+    /** currently unused */
     public NavigationActionListener navListener;
     
+    /** controls main run thread - should almost always be true*/
     boolean running = true;
     
-    //main volume
+    /** the main volume - used when instantiating players (from 0-100) */
     public int volume = 80;
     
-    //animated image for loading icon
+    /** Animated image for a loading icon*/
     Image loadingImg;
     
+    /** Dialog to house animated loading icon*/
     Dialog loadingDialog;
     
+    /** Control if the debug log is enabled */
     boolean debugLogEnabled = true;
     
+    /** Not really used now*/
     String debugLogFile = "log.txt";
+    /** Not really used now*/
     PrintStream debugStrm;
     
-    //localiation res
+    /** Localization resource */
     public Resources localeRes;
+    /** Hashtable of keys to lookup to find string*/
     public Hashtable localeHt;
     
+    /** Reference to self*/
     static MLearnPlayerMidlet hostMidlet;
     
-    //the thread running to do blue tooth push to teacher phone
+    /**the thread running to do bluetooth push to teacher phone*/
     MLObjectPusher pushThread;
     
-    //whether or not to just open the next chapter's first page right away
+    /**whether or not to just open the next chapter's first page right away*/
     boolean autoPageOpen = true;
     
-    //whether we have already done an auto open on return
+    /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.01 (5/May/2013)";
+    public static final String versionInfo = "V: 0.9.02 (16/June/2013)";
     
+    /**
+     * Not really used - using EXEStrMgr instead
+     * @see EXEStrMgr
+     * 
+     * @param msg 
+     */
     public void logMsg(String msg) {
         System.out.println(msg);
         /*if(debugStrm == null && currentPackageURI != null && currentPackageURI.length() > 8) {
@@ -208,10 +267,22 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         */
     }
     
+    /**
+     * Give a reference to self
+     * @return the running MIDlet
+     */
     public static MLearnPlayerMidlet getInstance() {
         return hostMidlet;
     }
     
+    /**
+     * startApp will:
+     *  Load theme (/theme2.res from jar file) - see build.xml
+     *  Load locale res (/localisation.res from jar file) - see build.xml
+     *  Setup forms and action listeners for them
+     *  Display the ContentBrowseForm to allow the user to select which learning
+     *  package they want to start with.
+     */
     public void startApp() {
         hostMidlet = this;//uses for getInstance
 
@@ -242,7 +313,6 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         myTOC = new EXETOC(this);
         
         currentPackageURI = "/mxml1";
-        //showTOC();
         
         contentBrowser = new ContentBrowseForm(this);
         contentBrowser.makeForm();
@@ -251,12 +321,20 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         pushThread = new MLObjectPusher();
         pushThread.start(); 
         
+        /*
+         * This is Nokia specific code that is used to stop the lights from dimming
+         */
         //#ifdef NOKIA
 //#             DeviceControl.setLights(0, 100);
 //#     new Thread(this).start();
         //#endif
     }
     
+    /**
+     * Set the volume being used, and if a player is running right now, update
+     * the volume for it
+     * @param vol int from 0-100 for volume
+     */
     public void setVolume(int vol) {
         this.volume = vol;
         if(this.player != null) {
@@ -267,6 +345,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
     
+    /**
+     * the main run thread - only sleeps and wakes up the lights for Nokias
+     */
     public void run() {
         while(running) {
             try {Thread.sleep(tickTime); }
@@ -277,6 +358,13 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
     
+    /**
+     * Opens a package (folder containing exetoc.xml) and shows the user the
+     * list of pages in it if showTOC is true
+     * 
+     * @param dirName - The dirname containing the exetoc.xml file
+     * @param showTOC - True if we should show table of contents (default) false otherwise
+     */
     public void openPackageDir(String dirName, boolean showTOC) {
         //contentBrowser = null;
         currentPackageURI = dirName.substring(0, dirName.length() - 1);
@@ -292,10 +380,23 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         logMsg("started");
     }
     
+    /**
+     * Overloaded function
+     * 
+     * @param dirName - The dirname containing the exetoc.xml file
+     */
     public void openPackageDir(String dirName) {
         openPackageDir(dirName, true);
     }
     
+    
+    /**
+     * Opens a collection dir (containing execollection.xml) .
+     * If autoPageOpen is true then show the last page that the learner
+     * was using from before.
+     * 
+     * @param dirName 
+     */
     public void openCollectionDir(String dirName) {
         //dirname comes with trailing /
         stopCurrentIdevice();
@@ -331,6 +432,15 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         
     }
     
+    
+    /**
+     * Utility method that could be used to request opening a FileConnection
+     * resource a few times.
+     * 
+     * @param URL URL to pass to the FileConnection object
+     * @return the InputStream once its open
+     * @throws IOException 
+     */
     public InputStream retryGetFile(String URL) throws IOException {
         IOException lastException = null;
         int maxTries = 3;
@@ -353,13 +463,17 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     
     /**
-     * Short utility method - if path starts with / - use stream method - otherwise
-     * use file method
+     * Returns an input stream by checking the URL.  
+     * URL starts file:// - will use IOWatcher to preload the file contents
+     *  if this is not a media file ending with mp3, 3gp or wav
+     * If URL starts file:// and is a media file will return FileConnection.openInputStream
+     * If URL starts with / will return getClass().getResourceAsStream
+     * Else will interpret as a relative link, prefix the currentPackageURI, and apply
+     * the same logic as if for file://
      * 
-     * @param URL
-     * @param callee - calling object ref
-     * @return
-     * @throws IOException 
+     * @param URL URL as above
+     * @return InputStream for the URL
+     * @throws IOException if there is an IOException dealing with the file system
      */
     public InputStream getInputStreamReaderByURL(String URL) throws IOException{
         boolean isMedia = URL.endsWith("mp3") || URL.endsWith("3gp") || URL.endsWith("wav") || URL.endsWith("mpg");
@@ -389,10 +503,30 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
     
+    /**
+     * Overload of makeHTMLComponent (String, HTMLCallback)
+     * 
+     * 
+     * @param htmlStr
+     * @return 
+     */
     public HTMLComponent makeHTMLComponent(String htmlStr) {
         return makeHTMLComponent(htmlStr, null);
     }
     
+    /**
+     * This makes an HTMLComponent with a given HTML String.  It will use a 
+     * RequestHandler so that images etc. will be loaded from the current
+     * package path.
+     * 
+     * If the package is running Right to Left then a dir tag will be set by
+     * the RequestHandler to make the HTML right to left.
+     * 
+     * @param htmlStr HTML String to show (do not include &ltbody&gt; &lt;html&gt; etc.
+     * @param callback HTMLCallback object if desired.  Otherwise leave null
+     * 
+     * @return HTMLComponent that will display the given HTML code.
+     */
     public HTMLComponent makeHTMLComponent(String htmlStr, HTMLCallback callback) {
         HTMLComponent htmlComp = new HTMLComponent(new EXERequestHandler(this, 
                 htmlStr));
@@ -411,11 +545,16 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         return htmlComp;
     }
     
-    //shows the 'ingame' menu
+    /**
+     * Shows the main options menu (continue, repeat, about, settings, etc)
+     */
     public void showMenu() {
         menuFrm.show();
     }
     
+    /**
+     * See overloaded function
+     */
     public void loadTOC() {
         loadTOC(false);
     }
@@ -423,8 +562,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**
      * Load the table of contents
      * 
-     * if hide is set to true (ie dont show it right now)
-     * then will not set curFrm
+     * @param hide - Do not show the table of contents form itself immediately.  Do not set curFrm
      * 
      */ 
     public void loadTOC(boolean hide) {
@@ -481,6 +619,11 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
     
+    /**
+     * Used if we are using a loading dialog (now loads pretty quickly, so
+     * not really used).  Will remove the loading dialog and show the toc 
+     * form
+     */
     public void tocReady() {
         if(loadingDialog != null) {
             loadingDialog.setVisible(false);
@@ -491,6 +634,10 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
     
 
+    /**
+     * Generates a loading dialog
+     * @return Dialog with animated loading image
+     */
     public Dialog makeLoadingDialog() {
         Dialog dlg = new Dialog();
         Button loadingButton = new Button(loadingImg);
@@ -502,6 +649,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         return dlg;
     }
     
+    /**
+     * Show table of contents form
+     */
     public void showTOC() {
         stopCurrentIdevice();
         
@@ -525,10 +675,22 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         
     }
 
+    /**
+     * Load the specified page - show the first idevice in the list
+     * 
+     * @param pageHref href to load (e.g. pagename.xml)
+     */
     public void loadPage(String pageHref) {
         loadPage(pageHref, false);
     }
     
+    /**
+     * Loads a given page.  If goLast is true, show the last idevice (e.g. reversing)
+     * Otherwise - show the first idevice
+     * 
+     * @param pageHref href to laod - eg. pagename.xml
+     * @param goLast if true show the last idevice on the page, otherwise show the first
+     */
     public void loadPage(String pageHref, boolean goLast) {
         String myHref = (pageHref != null ? pageHref : this.currentHref);
         Object[] pageIdeviceInfo = myTOC.getPageIdeviceList(currentPackageURI + "/exetoc.xml",
@@ -555,7 +717,14 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
  
     
-
+    /**
+     * Utility method that makes sure a stream gets opened as UTF-8
+     * 
+     * @param URL to open
+     * @return InputStreamReader that will read UTF8
+     * 
+     * @throws IOException 
+     */
     public InputStreamReader getUTF8StreamForURL(String URL) throws IOException {
         InputStreamReader reader = new InputStreamReader(this.getInputStreamReaderByURL(URL),
                 "UTF-8");
@@ -589,7 +758,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /**
      * 
-     * TODO: Make this just refer to getNextIdeviceIdAndHref
+     * Goes increment devices along to show the next (or previous) idevice
+     * @param increment how many idevices to move along (can be +ve/-ve)
      * 
      */
     public void showNextDevice(int increment) {
@@ -654,7 +824,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
 
     
-    
+    /**
+     * Stop the currently running idevice
+     */
     void stopCurrentIdevice() {
         if(currentIdeviceObj != null) {
             currentIdeviceObj.stop();
@@ -668,6 +840,12 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
     
+    /**
+     * Show the idevice given by the device object
+     * 
+     * @param device - The idevice to show
+     * @param ideviceId - the deviceid
+     */
     public void showIdevice(Idevice device, String ideviceId) {
         try {
             
@@ -735,6 +913,14 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
     
+    /**
+     * Show the idevice given by the id which is expected to be contained in
+     * the file given by pageHREF.  Will search through the idevices given
+     * and then instantiate an idevice by using the IdeviceFactory
+     * 
+     * @param pageHREF URL of page to load 
+     * @param ideviceId deviceId to open
+     */
     public void showIdevice(String pageHREF, String ideviceId) {
         stopCurrentIdevice();
         try {
@@ -768,7 +954,12 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
 
 
-    //user has selected from table of contents
+    /**
+     * Main event handler - looks out for selections of a package from the current
+     * table of contents list and when the user pushes the next or previous
+     * buttons (default * and #)
+     * @param evt 
+     */
     public void actionPerformed(ActionEvent evt) {
         Object src = evt.getSource();
         String pageHref = null;
@@ -797,18 +988,35 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
 
 
+    /**
+     * Pause app - does nothing
+     */
     public void pauseApp() {
     }
 
+    /**
+     * Ends the application - saves all preferences, logs, and stops any
+     * server threads running
+     * 
+     * @param unconditional 
+     */
     public void destroyApp(boolean unconditional) {
         MLObjectPusher.enabled = false;//make this thread quite
         EXEStrMgr.getInstance().saveAll();
     }
 
+    /**
+     * Stops any media currently playing - and runs garbage collect after
+     */
     public void stopMedia() {
         stopMedia(true);
     }
     
+    /**
+     * Stops the media currently playing.  Closes and deallocates player.
+     * 
+     * @param doAutoGc If set true will call System.gc() after stopping media
+     */
     public void stopMedia(boolean doAutoGc) {
         if(player != null && mediaEnabled == true) {
             try{
@@ -830,6 +1038,13 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
     }
 
+    /**
+     * Utility method used with player - returns mime type for files ending
+     * .mp3, .au, .wav, .3gp, .mpg
+     * 
+     * @param fileName
+     * @return 
+     */
     public static String getContentType(String fileName) {
         String fileNameLower = fileName.toLowerCase();
         if(fileNameLower.endsWith(".mp3")) {
@@ -849,10 +1064,20 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         return null;
     }
     
+    /**
+     * Provides the current package uri base directory
+     * @return Current package URI base directory
+     */
     public String getCurrentPackageURI() {
         return currentPackageURI;
     }
     
+    /**
+     * Play the default sound that indicates a positive (e.g. correct answer)
+     * event
+     * 
+     * @return the time of the sound in microseconds
+     */
     public long playPositiveSound() {
         System.out.println("Play +ve");
         if(posFbURIs != null){
@@ -863,6 +1088,11 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         return -1;
     }
     
+    /**
+     * Play the default negative sound
+     * 
+     * @return length of the sound in microseconds
+     */
     public long playNegativeSound() {
         System.out.println("Play -ve");
         if(negFbURIs != null){
@@ -874,6 +1104,13 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
     
 
+    /**
+     * Plays a sound file.  Will only run if mediaEnabled is set to true.
+     * 
+     * @param mediaURI URI of file to play e.g. file://localhost/file/foo.mp3
+     * 
+     * @return the length of the clip in microseconds
+     */
     public long playMedia(String mediaURI) {
         stopMedia();
         MLearnUtils.checkFreeMem();
@@ -920,6 +1157,13 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         return (1*1000*1000);
     }
 
+    /**
+     * Automatically deallocate resources once the media file itself is finished
+     * 
+     * @param player The media player
+     * @param event event string given by PlayerListener
+     * @param eventData info about event
+     */
     public void playerUpdate(Player player, String event, Object eventData) {
         logMsg("Player Update Event : '" + event + "'");
         if(event.equals(PlayerListener.END_OF_MEDIA)) {

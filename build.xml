@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- You may freely edit this file. See commented blocks below for -->
-<!-- some examples of how to customize the build. -->
-<!-- (If you delete it and reopen the project it will be recreated.) -->
+<!-- 
+
+Slightly modified NetBeans ant build file.  This will do the theme creation
+because the Theme Editor has a limit on the number of characters in a font.
+
+See Line 120 for more on font creation / themes or to add characters to the 
+supported character set.
+
+-->
+
 <project name="EXEMobile2" default="jar" basedir=".">
     <description>Builds, tests, and runs the project .</description>
     <taskdef classpath="${antenna.home}" resource="antenna.properties"/>
     
-    <property name="lwuit.home" value="/opt/LWUIT_1_5-NoBB-RC2"/>
-    <property name="lwuit.home.editorpath" value="${lwuit.home}/apps/LWUITDemo"/>
-    <property name="lwuitres.dir" value="${src.dir}/../theme-src"/>
-    
-    <property name="wtk.home" value="/opt/WTK2.5.2"/>
-    
-    <property name="src.preprocessed.NOKIA" value="src-preprocessed-NOKIA"/>
-    <property name="classes.dir.NOKIA" value="classes-NOKIA"/>
-    <property name="dist.dir.NOKIA" value="dist-NOKIA"/>
-    <property name="classpath.NOKIA" value="/opt/microemulator-2.0.4/lib/microemu-nokiaui.jar"/>
-    
+    <property file="exemobile2-build.properties"/> 
+        
     <taskdef classpath="${lwuit.home.editorpath}/editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
     
     
@@ -120,8 +118,8 @@
                 </build>
                 
                 <build dest="${src.dir}/theme2.res">
-                    <font name="titleFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ۰۱۲۳۴۵۶۷۸۹"  src="/home/mike/NetBeansProjects/BidiSupportTesting/DejaVuSansPSMod3.ttf" createBitmap="True"/>
-                    <font name="bodyFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！۰۱۲۳۴۵۶۷۸۹ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ"  src="/home/mike/NetBeansProjects/BidiSupportTesting/DejaVuSansPSMod3.ttf" createBitmap="True"/>
+                    <font name="titleFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ۰۱۲۳۴۵۶۷۸۹"  src="${title.font.ttf}" createBitmap="True"/>
+                    <font name="bodyFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！۰۱۲۳۴۵۶۷۸۹ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ"  src="${body.font.ttf}" createBitmap="True"/>
             
                     <image file="${lwuitres.dir}/image/loading6.gif frame:4" name="loading6.gif frame:4" />
                     <image file="${lwuitres.dir}/image/SliderFull.borderRight:1" name="SliderFull.borderRight:1" />
@@ -225,12 +223,12 @@
                 </wtkpackage>
                 
                 <wtksign 
-                    keystore="/home/mike/Documents/PAIWASTOON/Projects/Mobile-Education/sign3/keystore.ks"
+                    keystore="${wtk.keystore}"
                     jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar" 
                     jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
-                    storepass="ItIsTime2" 
-                    certpass="ItIsTime2" 
-                    certalias="1"
+                    storepass="${wtk.storepass}" 
+                    certpass="${wtk.certpass}" 
+                    certalias="${wtk.certalias}"
                 />
 
             </target>

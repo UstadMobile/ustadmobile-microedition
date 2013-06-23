@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer;
 
@@ -16,36 +31,59 @@ import javax.microedition.io.file.FileSystemRegistry;
  *
  * Class to manage data transmission, storage, etc for Ustad Mobile
  * 
+ * For purposes of logging this class can close a FileConnector, switch to using
+ * the buffer, flush the contents to the file, and then reopen a file connector
+ * 
+ * NOTE: Storage Manager automatically makes a folder on the root folder with
+ * the greatest amount of space available.  This should normally mean in most
+ * j2me environments the memory card.
+ * 
+ * Manages the preferences for Ustad Mobil.
+ * 
  * @author mike
  */
 public class EXEStrMgr {
     
+    /**The Host midlet*/
     MLearnPlayerMidlet host;
     
+    /**We only want one instance of this class*/
     static EXEStrMgr instance;
     
+    /**The storage name used for j2me storage*/
     static String storageName = "net.paiwastoon.ustadmobile";
     
+    /** Preferences storage that is made as a serialized hashtable*/
     public MLearnPreferences prefs;
     
+    /**The file name that is used for the serialized hashtable */
     final String pStrFname = "preferences";
     
+    /**The filename used for localized resources*/
     public static final String localeResName = "localize";
     
+    /**PrintStream used to save debugging information*/
     PrintStream debugStrm;
     
+    /**PrintStream used for activity logging (-activity.log)*/
     PrintStream logStrm;
     
+    /**The base folder (umobiledata) where we save info*/
     String baseFolder;
     
+    /**Log level info */
     public static final int INFO = 0;
     
+    /**Log level warn*/
     public static final int WARN = 1;
     
+    /**Log level debug*/
     public static final int DEBUG = 2;
     
+    /**The uuid that has been randomly generated for this instance*/
     public String uuid;
     
+    /**FileConnector objects that are currently open*/
     public Hashtable openLogFCs;
     
     /** no swap operation required */
@@ -60,6 +98,11 @@ public class EXEStrMgr {
     /** used when we are buffering as a file is being transmitted */
     ByteArrayOutputStream bufOut;
     
+    /*
+     * Constructor - 
+     * 
+     * @param host - MLearnPlayerMidlet instance
+     */
     public EXEStrMgr(MLearnPlayerMidlet host) {
         this.host = host;
         
@@ -67,6 +110,7 @@ public class EXEStrMgr {
         
         openLogFCs = new Hashtable();
         
+        //Check and see if we have the preferences already saved in j2me file system
         if(Storage.getInstance().exists(pStrFname)) {
             try {
                 InputStream in = Storage.getInstance().createInputStream(pStrFname);
@@ -88,11 +132,13 @@ public class EXEStrMgr {
                 e.printStackTrace();
             }
         }else {
+            //this is our first run - create and generate a uuid
             prefs = new MLearnPreferences();
             Random r = new Random(System.currentTimeMillis());
             uuid = String.valueOf(Math.abs(r.nextLong()));
             prefs.setPref("uuid", uuid);            
         }
+        
         if(prefs.getPref("basefolder") == null) {
             setupBaseFolder();
         }
@@ -155,13 +201,19 @@ public class EXEStrMgr {
         EXEStrMgr.getInstance().p("Loaded localization res for " + localeToUse, 1);
     }
     
-    
+    /**
+     * 
+     * @return The locale code in use (e.g. en_US)
+     */
     public String getLocale() {
         return getPref("locale");
     }
     
     /**
-     * Will return yyyy-mm-dd
+     * Format a string to be used in the filename for the activity and debug 
+     * names.
+     * 
+     * @return String formatted for date log file names yyyy-mm-dd
      */ 
     public String getDateLogStr() {
         Calendar cal = Calendar.getInstance();
@@ -170,8 +222,12 @@ public class EXEStrMgr {
     }
     
     /**
-     * Utility function that will check if a log already exists
-     * should make this essentially auto append
+     * Utility function that will check if a log already exists.  It essentially
+     * opens the file in an auto append mode, and it will create the file if 
+     * it does not already exist.
+     * 
+     * It works by opening the file, checking the file size, and then skipping
+     * size bytes.
      * 
      * The filename will automatically be put in umobiledata/date-logname
      * 
@@ -209,6 +265,12 @@ public class EXEStrMgr {
         return strm;
     }
     
+    /**
+     * Check and see if a log is open
+     * 
+     * @param basename (e.g. 'activity' or 'debug')
+     * @return true if the given name is open, false otherwise. 
+     */
     public boolean logFileOpen(String basename) {
         return openLogFCs.containsKey(basename);
     }
@@ -225,15 +287,30 @@ public class EXEStrMgr {
         }
     }
     
+    /**
+     * Logs an exception to the debug log
+     * @param e The exception 
+     * @param str additional string info
+     */
     public static void po(Exception e, String str) {
         getInstance().p(str + " : " + e.toString(), WARN);
         e.printStackTrace();
     }
     
+    /**
+     * Logs a message to the debug log
+     * @param str
+     * @param level 
+     */
     public static void po(String str, int level) {
         getInstance().p(str, level);
     }
     
+    /**
+     * Logs a message to the debug log.  Checks to see if
+     * @param str
+     * @param level 
+     */
     public synchronized void p(String str, int level) {
         if(debugStrm == null && baseFolder != null) {
             debugStrm = openLogStream("debug");
@@ -244,22 +321,31 @@ public class EXEStrMgr {
         }
     }
     
+    /**
+     * Logs a line to the activity log
+     * @param str message to write
+     * @param device - idevice to get log info from
+     */
     public synchronized static void lg(String str, Idevice device) {
         getInstance().l(str, device);
     }
     
-    
+    /**
+     * Logs a line to the activity log
+     * @param str
+     * @param device 
+     */
     public void l(String str, Idevice device) {
         l(str, device, SWAP_NONE);
     }
     
     /**
-     * Makes a log of the learner's activity
+     * Makes a log of the learner's activity.  If required it can swap between
+     * using the memory buffer and writing direct to the file (e.g. when the log
+     * file itself is being transmitted to the teachers phone)
      * 
-     * 
-     * 
-     * @param str
-     * @param device 
+     * @param str - string to log
+     * @param device - Idevice object to log for
      * @param swapOp - if an open log needs switched to being a buffer...
      */
     public synchronized void l(String str, Idevice device, int swapOp) {
@@ -340,7 +426,7 @@ public class EXEStrMgr {
     
     /**
      * Find out where we should put the base folder by finding the root folder
-     * with the maximum amount of space
+     * with the maximum amount of space (this should be the memory card generally)
      */
     public void setupBaseFolder() {
         Enumeration e = FileSystemRegistry.listRoots();
@@ -379,10 +465,22 @@ public class EXEStrMgr {
         savePrefs();
     }
     
+    /**
+     * Returns the current operating instance
+     * 
+     * @return operating instance of EXEStrMgr
+     */
     public static EXEStrMgr getInstance() {
         return getInstance(MLearnPlayerMidlet.getInstance());
     }
     
+    /**
+     * Returns the current operating instance
+     * 
+     * @param host the operating mlearnplayermidlet
+     * 
+     * @return operating instance of EXEStrMgr
+     */
     public static EXEStrMgr getInstance(MLearnPlayerMidlet host) {
         if(instance == null) {
             instance = new EXEStrMgr(host);
@@ -391,24 +489,49 @@ public class EXEStrMgr {
         return instance;
     }
     
+    /**
+     * Set a general preference key
+     * 
+     * @param key
+     * @param val 
+     */
     public void setPref(String key, String val){
         prefs.setPref(key, val);
     }
     
+    /**
+     * Returns a preference key as a String.  Returns null if the key does
+     * not exist
+     * 
+     * @param key The parameter key to find in the hashtable
+     * @return Value of the key
+     */
     public String getPref(String key) {
         return prefs.getPref(key);
     }
     
+    /**
+     * Removes the preference key given 
+     * 
+     * @param key Key to remove
+     */
     public void delPref(String key) {
         prefs.prefs.remove(key);
     }
     
+    /**
+     * Saves the preferences and flushes all log output to disk
+     */
     public void saveAll() {
         savePrefs();
         if(logStrm != null) { logStrm.flush(); }
         if(debugStrm != null) { debugStrm.flush(); }
     }
     
+    /**
+     * Writes the preferences to disk as according to the hard coded filename as
+     * a serialized hashtable.
+     */
     public void savePrefs() {
         try {
             OutputStream out = Storage.getInstance().createOutputStream(pStrFname);

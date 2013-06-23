@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer.datatx;
 
@@ -20,28 +35,45 @@ import com.toughra.mlearnplayer.MLearnPreferences;
 
 /**
  *
- * This will push out logs to the next bluetooth or http hop
+ * This class is used to push activity logs over Bluetooth to the teacher's phone.
+ * 
+ * It will save replication status to make sure that if logs are updated only
+ * the remaining part of the log will be transmitted (e.g. no duplication)
  * 
  * @author mike
  */
 public class MLObjectPusher extends Thread{
     
+    /**
+     * Empty constructor
+     */
     public MLObjectPusher() {
         Random r = new Random(System.currentTimeMillis());
         countDown = r.nextInt(REPDELAY);
     }
     
+    /**
+     * Hashtable in the form of :
+     * log base name (e.g. studentid-date-activity.log) -> Number bytes sent
+     */
     Hashtable repStatus;
     
-    //sync every 5mins
+    /** The delay in ms after which to try to replicate (default: 5mins) */
     public static final int REPDELAY = 300000;
     
+    /** Thread sleep tick time in ms */
     public static final int TICK = 1000;
     
+    /** The countDown tracker, when this reaches zero, the replication attempt will run*/
     public static int countDown = REPDELAY;
     
+    /** true if enabled and replication runs (e.g. there is a teachers phone) false otherwise*/
     public static boolean enabled = true;
     
+    /**
+     * Main thread method that will call checkRepFiles to do the replication and 
+     * sendData
+     */
     public void run() {
         while(enabled) {
             countDown -= TICK;
@@ -63,6 +95,12 @@ public class MLObjectPusher extends Thread{
         }
     }
     
+    /**
+     * Returns the replication status hashtable
+     * 
+     * @return replication status hashtable mapped file base name -&gt; to
+     * number of bytes sent successfully so far.
+     */
     public Hashtable getRepStatus() {
         Hashtable ht = null;
         //check and see if it exists
@@ -92,6 +130,11 @@ public class MLObjectPusher extends Thread{
         return ht;
     }
     
+    /**
+     * Save replication status - put the hashtable into a file called repstatus.ht
+     * 
+     * @param ht 
+     */
     public void saveRepStatus(Hashtable ht)  {
         FileConnection fCon = null;
         String fileName = EXEStrMgr.getInstance().getPref("basefolder")  
@@ -116,6 +159,12 @@ public class MLObjectPusher extends Thread{
         }
     }
     
+    /**
+     * Make a vector list of those files that need to be replicated (e.g. all
+     * -activity.log) files.
+     * 
+     * @return 
+     */
     public Vector checkRepFiles() {
         //check files to be replicated
         
@@ -165,12 +214,28 @@ public class MLObjectPusher extends Thread{
         EXEStrMgr.po("Sent student data hashtable", EXEStrMgr.DEBUG);
     }
     
+    /**
+     * Sets the correct learnername and passes to the overloaded method
+     * 
+     * @param cs ClientSession of active session
+     * @param hs HeaderSet of active session
+     * @throws IOException 
+     */
     public void sendStudentInfoOverBt(ClientSession cs, HeaderSet hs) throws IOException{
         Hashtable ht = new Hashtable();
         ht.put("learnername", EXEStrMgr.getInstance().getPref("learnername"));
         sendStudentInfoOverBt(ht, cs, hs);
     }
     
+    /**
+     * Sends a file over the Bluetooth connection to the server
+     * @param fileName File URI as it will be passed to Connector.open
+     * @param cs current ClientSession
+     * @param hs current HeaderSet
+     * @param alreadySent num bytes already sent from this file to skip.  If alreadySent &gt;= file size - do nothing.
+     * 
+     * @throws IOException 
+     */
     public void sendFileOverBT(String fileName, ClientSession cs, HeaderSet hs, long alreadySent) throws IOException{            
         EXEStrMgr.po("Attempting to open for reading " + fileName, EXEStrMgr.DEBUG);
 
@@ -205,6 +270,7 @@ public class MLObjectPusher extends Thread{
 
         String fileBaseName = fileName.substring(fileName.lastIndexOf('/')+1);
 
+        //Set heads which are recognized by MLServerThread
         hs.setHeader(HeaderSet.NAME, fileBaseName);
         hs.setHeader(HeaderSet.TYPE, "text/plain");
         hs.setHeader(HeaderSet.LENGTH, lengthObj);
@@ -230,11 +296,23 @@ public class MLObjectPusher extends Thread{
         op.close();
         EXEStrMgr.po("Closed op", EXEStrMgr.DEBUG);
 
+        //if we get here without any exception - we have been successful (hoorah)
         repStatus.put(fileBaseName, String.valueOf(fileLen));
         EXEStrMgr.po("Saved repstatus " + fileBaseName + "sent " + fileLen, EXEStrMgr.DEBUG);
     }
     
     
+    /**
+     * Sends the log data files the Bluetooth connection - Look over all the
+     * log files - see which ones have new data that has to be sent, and send those
+     * to the server.
+     * 
+     * If a log file is currently in use and needs replicated the logging instance
+     * will be told to switch to writing it in memory until the transfer operation
+     * completes.
+     * 
+     * @param conURL The Bluetooth server URL (normally saved in the preferences from the discovery process)
+     */
     public void sendData(String conURL) {
         
         String baseNameReopen = null;
@@ -254,18 +332,20 @@ public class MLObjectPusher extends Thread{
             
             Vector repList = checkRepFiles();
             int numFiles = repList.size();
+            
+            //open the rpelication status hashtable
             EXEStrMgr.po("Attempting to get rep status ", EXEStrMgr.DEBUG);
             repStatus = getRepStatus();
             EXEStrMgr.po("Opened rep status ", EXEStrMgr.DEBUG);
             
-            
+            //send the learnername etc. over the connection
             try {
                 sendStudentInfoOverBt(cs, hs);
             }catch(IOException e) {
                 EXEStrMgr.po("Exception sending student info " + e.toString(), EXEStrMgr.DEBUG);
             }
             
-            
+            //go through all the files 
             for(int i = 0; i < numFiles; i++) {
                 String cFname = repList.elementAt(i).toString();
                 

@@ -1,8 +1,20 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
  * 
- * NOTE: For some reason this is not setting the selected device properly
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
 package com.toughra.mlearnplayer.idevices;
@@ -25,60 +37,93 @@ import com.toughra.mlearnplayer.xml.XmlNode;
 
 
 /**
- *
+ * Implements to the sort idevice interaction in J2ME.
+ * 
  * @author mike
  */
 public class SortIdevice extends Idevice implements ActionListener {
 
-    //the items that the user will sort
+    /**the items that the user will sort*/
     SortableItem[] items; 
     
-    //The correct order
+    /** the items in the correct order*/
     SortableItem[] correctOrder;
     
+    /** Sort items left to right flag */
     public static final int DIR_LTR = 1;
     
+    /** sort items right to left flag */
     public static final int DIR_RTL = 2;
     
+    /** sort items top to bottom flag */
     public static final int DIR_TTB = 3;
     
+    /** direction we are operating in */
     int direction = DIR_LTR;
     
+    /** width of border when an item is hilighted to be moved */
     static int borderWidthHilight = 3;
+    
+    /** normal width of border of item*/
     static int borderWidthNormal = 1;
+    
+    /** padding between the button and it's html contents */
     static int padding = 5;
     
+    /** color of border normally */
     static int normalColor = 0x000000;
+    
+    /** color of border when hilighted to be moved */
     static int activeColor = 0xff0000;
     
     //TODO: there must be a better way
     static final int[] allDirs = {Component.TOP, Component.LEFT, Component.BOTTOM, Component.RIGHT};
     
-    //the item currently active or -1 if none
+    /** currently active index or -1 if no item currently active */
     int currentActiveIndex = -1;
     
-    //the form where components live
+    /**the form where components live*/
     Form form;
     
     Form containerForm;
     
-    //increment map - key code (absolute) to how much to move the idevice
+    /**
+     * Increment map is used to determine when a user presses a direction button
+     * what happens to the position of the item in the main list.
+     * 
+     * in the form of keyCode -&gt; increment - e.g. 3(left) to -1 (move down one)
+     */
     int[] incMap;
     
+    /** 
+     * Instruction HTML to show at the beginning
+     */
     String instructions;
     
+    /** HTML feedback to show when correctly sorted */
     String positiveFeedback;
     
+    /** HTML feedback to show when incorrectly sorted */
     String negativeFeedback;
     
+    /** The currently focused item */
     SortableItem focusedItem;
     
+    /** Text to show on the button for user to select a check */
     String checkText;
     
+    /** The Button for the user to request their answer to be checked */
     Button checkButton;
     
+    /** number of attempts that have been made so far*/
     int numAttempts = 0;
     
+    /**
+     * Constructor 
+     * 
+     * @param hostMidlet our host midlet
+     * @param srcData the XML data for this idevice
+     */
     public SortIdevice(MLearnPlayerMidlet hostMidlet, XmlNode srcData) {
         super(hostMidlet);
         Vector sortItems = srcData.findChildrenByTagName("item", true);
@@ -97,6 +142,7 @@ public class SortIdevice extends Idevice implements ActionListener {
         checkButton = new Button(checkText);
         
         
+        ///sort out increment direction maps - see the documentation for incMap
         if(direction == DIR_LTR) {
             incMap[3] = -1;
             incMap[4] = 1;
@@ -111,9 +157,6 @@ public class SortIdevice extends Idevice implements ActionListener {
         
         int numItems = sortItems.size();
         items = new SortableItem[numItems];
-        
-        
-        
         
         
         for(int i = 0; i < numItems; i++) {
@@ -152,6 +195,11 @@ public class SortIdevice extends Idevice implements ActionListener {
         
     }
     
+    /** 
+     * Check the answer of the user
+     * 
+     * @return true if sorted correctly false otherwise
+     */
     boolean checkAnswer() {
         int numItems = items.length;
         for(int i = 0; i < numItems; i++) {
@@ -163,7 +211,15 @@ public class SortIdevice extends Idevice implements ActionListener {
         return true;
     }
 
+    /**
+     * Event Listener for when the user requests their item checked, and if the
+     * user is making an item active to be moved for an item or moving an already 
+     * active item
+     * 
+     * @param ae ActionEvent
+     */
     public void actionPerformed(ActionEvent ae) {
+        //see if this is a request for a check
         if(ae.getCommand() != null && ae.getCommand().getCommandName() != null) {
             if(ae.getCommand().getCommandName().equals(checkText)) {
                 FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
@@ -188,12 +244,14 @@ public class SortIdevice extends Idevice implements ActionListener {
         }
         
         Component srcCompRef = ae.getComponent();
+        //if this is not a request for a check 
         if(src != null && !checkButton.hasFocus()) {
         
             int key = ae.getKeyEvent();
             
             boolean needUpdate = false;
             if(!src.active && key == -5) {
+                //this is a request to make an item active for moving
                 src.setActive(true);
                 currentActiveIndex = MLearnUtils.indexInArray(items, src);
                 src.requestFocus();
@@ -201,6 +259,7 @@ public class SortIdevice extends Idevice implements ActionListener {
                 //containerForm.setFocused(form);
                 //form.setFocused(src);
             }else if(src.active && key == -5) {
+                //item is active - now being deactivated
                 src.setActive(false);
                 currentActiveIndex = -1;
                 src.requestFocus();
@@ -208,6 +267,7 @@ public class SortIdevice extends Idevice implements ActionListener {
                 //containerForm.setFocused(form);
                 //form.setFocused(src);
             }else if(currentActiveIndex != -1 && src.active && (key == -3 || key == -4 || key == -1 || key == -2)) {
+                //active item needs to move
                 int moveAmount = incMap[Math.abs(key)];
                 moveActiveItem(moveAmount);
                 remakeForm();
@@ -215,8 +275,6 @@ public class SortIdevice extends Idevice implements ActionListener {
             }
             
             if(needUpdate) {
-                //form.revalidate();
-                //form.repaint();
                 containerForm.revalidate();
                 containerForm.repaint();
             }
@@ -225,6 +283,9 @@ public class SortIdevice extends Idevice implements ActionListener {
         }
     }
     
+    /**
+     * For each sortable item make sure that the correct next item 
+     */
     private void updateNextFocus() {
         //set the correct focus movements
         int numItems = items.length;
@@ -282,9 +343,9 @@ public class SortIdevice extends Idevice implements ActionListener {
     }
     
     /**
-     * Allow the user to reorder things
+     * Allow the user to reorder things - move the active item by the increment
      * 
-     * @param increment 
+     * @param increment +1 or -1 - amount by which to move the active SortableItem
      */
     public void moveActiveItem(int increment){
         int newPos = currentActiveIndex + increment;
@@ -303,11 +364,19 @@ public class SortIdevice extends Idevice implements ActionListener {
     }
 
     
-    
+    /**
+     * This is a LWUIT mode idevice
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
 
+    /**
+     * Return the main form 
+     * 
+     * @return LWUIT form to be used to run the idevice
+     */
     public Form getForm() {
         containerForm = new Form();
         containerForm.setScrollableY(true);
@@ -353,15 +422,24 @@ public class SortIdevice extends Idevice implements ActionListener {
         return containerForm;
     }
 
+    /**
+     * Start the idevice
+     */
     public void start() {
         super.start();
         items[0].requestFocus();
     }
 
+    /**
+     * Stop the idevice
+     */
     public void stop() {
         super.stop();
     }
 
+    /**
+     * dispose of all items
+     */
     public void dispose() {
         form = null;
     }
@@ -369,15 +447,36 @@ public class SortIdevice extends Idevice implements ActionListener {
     
     
 }
+
+/**
+ * Utility container class to represent a sortable item in the list
+ * 
+ * When a SortableItem is 'active' this means when the user presses the direction
+ * keys it should move.  
+ * 
+ * @author mike
+ */
 class SortableItem extends Container implements FocusListener{
     
+    /** our host idevice*/
     private SortIdevice idevice;
     
+    /**
+     * Constructor 
+     * 
+     * @param idevice our host idevice
+     */
     SortableItem(SortIdevice idevice) {
         this.idevice = idevice;
         addFocusListener(this);
     }
     
+    /**
+     * Comparator method to be used to check for correct ordering by the user
+     * 
+     * @param other
+     * @return true if this is the same object, false otherwise
+     */
     public boolean equals(Object other) {
         if(other == this) {
             return true;
@@ -386,6 +485,11 @@ class SortableItem extends Container implements FocusListener{
         return false;
     }
 
+    /**
+     * When we get focus - tell the parent idevice about this
+     * 
+     * @param cmpnt 
+     */
     public void focusGained(Component cmpnt) {
         int x = 0;
         idevice.focusedItem = this;
@@ -396,11 +500,16 @@ class SortableItem extends Container implements FocusListener{
     }
     
     
-    //item is held down / ready to move
+    /**item is held down / ready to move*/
     boolean active = false;
     
+    /** action listeners - used for going active/inactive*/
     Vector actionListeners;
     
+    /**
+     * Add ActionListener for when this item goes active/inactive
+     * @param l ActionListener
+     */
     public void addActionListener(ActionListener l) {
         if(actionListeners == null) {
             actionListeners = new Vector();
@@ -408,15 +517,28 @@ class SortableItem extends Container implements FocusListener{
         actionListeners.addElement(l);
     }
     
+    /**
+     * Remove an ActionListener for when this item goes active/inactive
+     * 
+     * @param l ActionListener
+     */
     public void removeActionListener(ActionListener l) {
         actionListeners.removeElement(l);
     }
     
+    /**
+     * Fire event for keycode
+     * @param k keycode
+     */
     void fireActionEvent(int k) {
         ActionEvent evt = new ActionEvent(this, k);
         MLearnUtils.fireActionEventToAll(actionListeners, evt);
     }
     
+    /**
+     * Update the style to set the border color and width for this item according
+     * to whether it is currently active or inactive
+     */
     public void updateStyle() {
         for(int j = 0; j < SortIdevice.allDirs.length; j++) {
             getStyle().setPadding(SortIdevice.allDirs[j], idevice.padding, true);
@@ -432,6 +554,10 @@ class SortableItem extends Container implements FocusListener{
 
     }
     
+    /**
+     * Set whether this so it can be moved around (or not) 
+     * @param active true if it should be 
+     */
     public void setActive(boolean active) {
         if(active) {
             getSelectedStyle().setBorder(Border.createLineBorder(

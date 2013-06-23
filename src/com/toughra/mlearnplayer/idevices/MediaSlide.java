@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 
 package com.toughra.mlearnplayer.idevices;
@@ -18,36 +33,69 @@ import com.toughra.mlearnplayer.MLearnUtils;
 
 
 /**
- *
+ * MediaSlide shows an image (optionally with a sound file to play) or a video
+ * It can be part of a SlideShow object but can also be an independent idevice on its
+ * own
+ * 
  * @author mike
  */
 public class MediaSlide extends Idevice implements Runnable{
 
+    /** The XMLNode that contains our XML data*/
     private XmlNode dataNode;
 
+    /** URI of audio to play in this slide*/
     public String audioURI = null;
+    
+    /** URI of video to play in this slide */
     public String videoURI = null;
+    
+    /** VideoComponent used to play video object*/
     private VideoComponent videoComp = null;
     
-    //set this if it also needs to be stopped
+    /**set this if it also needs to be stopped - e.g. this MediaSlide is part of
+     * a slideshow - so stop the slideshow object when stop is called
+     */
     public SlideShowIdevice slideShow;
     
-    //add the hostMidlet defined transition wait before starting media
+    /**add the hostMidlet defined transition wait before starting media*/
     public boolean transWait = true;
 
+    /**
+     * Constructor
+     * @param host host midlet
+     * @param dataNode  our xml data
+     */
     public MediaSlide(MLearnPlayerMidlet host, XmlNode dataNode) {
         super(host);
         this.dataNode = dataNode;
     }
 
+    /**
+     * This is an LWUIT form mode Idevice
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
     
+    /**
+     * Provide the time that this should run for
+     * @return Provide the time that this should run for (not implemented)
+     */
     public int getTime() {
         return -1;//TODO return the time the media will run for
     }
 
+    /**
+     * Gets the main LWUIT form.  Looks in the XML for audio or video tags
+     * 
+     * If a video tag is there - it will show the video in a player and nothing else
+     * Otherwise will look for an img tag for an image to show and optionally
+     * an audio tag for a sound to play
+     * 
+     * @return 
+     */
     public Form getForm() {
         Form myForm = new Form();
         Vector audioList = dataNode.findChildrenByTagName("audio", true);
@@ -116,12 +164,18 @@ public class MediaSlide extends Idevice implements Runnable{
         return myForm;
     }
     
+    /**
+     * This is called to wait for the transition to finish and then play the media
+     */
     public void run() {
         try { Thread.sleep(hostMidlet.transitionTime + hostMidlet.transitionWait); }
         catch(InterruptedException e) {}
         hostMidlet.playMedia(audioURI);
     }
 
+    /**
+     * Main start method - wait for the transition if requested and then play media
+     */
     public void start() {
         super.start();
         if(audioURI != null) {
@@ -138,6 +192,9 @@ public class MediaSlide extends Idevice implements Runnable{
         }
     }
     
+    /**
+     * Stop everything
+     */
     public void stop() {
         super.stop();
         if(videoComp != null) {

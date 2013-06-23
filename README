@@ -1,0 +1,22 @@
+
+Ustad Mobil README
+
+Updated 23/June/2013
+
+To build:
+
+There are three NetBeans projects that you will need
+ * EXEMobile2 - the main project
+ * UI - a modified version of LWUIT that supports bitmap arabic fonts
+ * MIDP_UI - part of LWUIT required to build (unmodified from stock LWUIT)
+
+1. Copy exemobile2-build.sample.properties to exemobile2-build.properties
+
+2. Set the paths in exemobile2-build.properties so that the compilation can find 
+   required libraries
+
+3. Resolve any reference problems in NetBeans and make sure that you have a suitable 
+   Wireless Toolkit (WTK) installed - this has been tested with 2.5.2 building in Linux
+
+
+

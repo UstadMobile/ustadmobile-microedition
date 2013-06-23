@@ -1,7 +1,23 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
+
 package com.toughra.mlearnplayer;
 
 import com.sun.lwuit.*;
@@ -19,7 +35,14 @@ import javax.microedition.io.file.*;
 
 /**
  *
- * This is designed to show file system directory lists 
+ * This is the form that is shown to the user to select a content package 
+ * at the start of using the app.
+ * 
+ * It will go through the file system roots using FileSystemRegistry.listRoots()
+ * and then scan for directories that have either an execollection.xml file
+ * or a exetoc.xml file.
+ * 
+ * These will then be presented as a form to the user to select the content package
  * 
  * @author mike
  */
@@ -47,7 +70,10 @@ public class ContentBrowseForm extends Form implements ActionListener{
     }
     
     
-    
+    /**
+     * The main meat of the class is here - go through the file system roots 
+     * as per the class documentation.  
+     */
     public void makeForm() {
         Enumeration e = FileSystemRegistry.listRoots();
         String dirName = null;
@@ -166,7 +192,8 @@ public class ContentBrowseForm extends Form implements ActionListener{
     
     
     /**
-     * What to do when an item from the list is selected
+     * What to do when an item from the list is selected - notifies the 
+     * MLearnPlayerMidlet instance of the selection
      * 
      * @param ae 
      */
@@ -181,6 +208,11 @@ public class ContentBrowseForm extends Form implements ActionListener{
     }
 }
 
+/**
+ * Simple holder class for items in the list
+ * 
+ * @author mike
+ */
 class ContentBrowseItem {
     int type;
     String title;

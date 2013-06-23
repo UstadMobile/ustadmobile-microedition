@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer.idevices;
 import com.toughra.mlearnplayer.FeedbackDialog;
@@ -18,32 +33,48 @@ import com.toughra.mlearnplayer.xml.XmlNode;
 
 
 /**
- *
+ * Runs the MissingLetter idevice interaction in J2ME
+ * 
  * @author mike
  */
 public class MissingLetterIdevice extends Idevice implements ActionListener {
 
+    /** HTML of positive feedback*/
     String positiveFb;
     
+    /**HTML of negative feedback*/
     String negativeFb;
     
+    /**HTML of exercise complete feedback*/
     String completeFb;
     
+    /** The main form used*/
     Form mainFrm;
     
+    /** The button container for the choices for each picture*/
     Container buttonContainer;
     
+    /** Label containing an image of what is shown to the user */
     Label imageLabel;
     
-    //the current level
+    /**the current level*/
     public int currentIndex;
     
+    /** Levels that contain the choices to show, the image to show, etc*/
     MissingLetterLevel[] levels;
     
+    /** monitoring of free memory */
     long freeMem;
     
+    /** number of attempts on this question*/
     int attemptCount = 0;
     
+    /**
+     * Constructor
+     * 
+     * @param host our host midlet
+     * @param data the xml data
+     */
     public MissingLetterIdevice(MLearnPlayerMidlet host, XmlNode data ) {
         super(host);
         
@@ -64,7 +95,12 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
     }
     
     
-    
+    /**
+     * Show the level number given by the argument.  Cleans up anything that was
+     * there before.
+     * 
+     * @param levelNum level number to show
+     */
     public void showLevel(int levelNum) {
         freeMem = MLearnUtils.checkFreeMem();
         buttonContainer.removeAll();
@@ -90,6 +126,10 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
         
     }
 
+    /**
+     * Main event handler - check the users answer
+     * @param ae ActionEvent
+     */
     public void actionPerformed(ActionEvent ae) {
         String cmdStr = ae.getCommand().getCommandName();
         FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
@@ -117,15 +157,26 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
     }
     
     
-    
+    /**
+     * This is a LWUIT mode idevice 
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
 
+    /**
+     * Dispose
+     */
     public void dispose() {
         super.dispose();
     }
 
+    /**
+     * Return the main LWUIT Form
+     * 
+     * @return Idevice's main LWUIT Form
+     */
     public Form getForm() {
         //make buttons
         if(mainFrm == null) {
@@ -146,10 +197,16 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
         return mainFrm;
     }
 
+    /**
+     * Start method - show the first question
+     */
     public void start() {
         showLevel(0);
     }
 
+    /**
+     * Stop
+     */
     public void stop() {
         
     }
@@ -157,18 +214,35 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
     
     
 }
+
+/**
+ * Utility container representing a level in the exercise contains the image
+ * url and the choices of possible answers
+ * 
+ * @author mike
+ */
 class MissingLetterLevel {
     
+    /** URL to the image to be shown*/
     String imgURL;
     
+    /** Choices that the user can select*/
     String[] choices;
     
+    /** The index of the correct choice */
     String correctIndex;
     
+    /** String used to separate answers */
     static final String sepStr = ",";
     
+    /** the current choice of the user */
     String correctChoice;
     
+    /**
+     * Constructor
+     * @param imgURL URL of image to show
+     * @param choiceList List of choices for the buttons for the user separated by ,
+     */
     MissingLetterLevel(String imgURL, String choiceList) {
         this.imgURL = imgURL;
         Vector choicesVector = new Vector();

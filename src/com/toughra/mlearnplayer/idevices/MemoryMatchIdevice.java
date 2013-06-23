@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer.idevices;
 
@@ -18,57 +33,74 @@ import java.util.Vector;
 
 
 /**
- *
+ * Idevice that implements the MemoryMatch exercise.  Forms a grid of 
+ * cells that the user has to match between.  Cells can only be shown
+ * one pair at a time.
+ * 
  * @author mike
  */
 public class MemoryMatchIdevice extends Idevice implements ActionListener{
     
-    //whether those tiles that are matched are hidden
+    /**whether those tiles that are matched are hidden*/
     boolean hideMatches;
     
+    /** the cover image to use before a tile is revealed*/
     Image coverImage;
     
+    //** image source for cover image */
     String coverImgSrc;
     
+    /** The main form*/
     Form frm;
     
+    /** Pair objects that represent which ones are actually matches */
     MemoryMatchPair[] pairs;
     
+    /** The cells that we are using in the grid*/
     MemoryMatchCell[] cells;
     
+    /** the currently selected cell*/
     MemoryMatchCell selected;
     
+    /** number of pairs matched so far */
     int numPairsMatched;
     
-    //html of positive feedback
+    /**html of positive feedback*/
     String fbPos;
     
-    //html of negative feedback
+    /**html of negative feedback*/
     String fbNeg;
     
-    //temporary holding variable for feedback about to show
+    /**temporary holding variable for feedback about to show*/
     String fbTmp;
     
-    //cell width in pixels
+    /**cell width in pixels*/
     int cellWidth = 50;
     
-    //cell height in pixels
+    /**cell height in pixels*/
     int cellHeight = 50;
     
-    //number rows
+    /**number rows*/
     int rows = 2;
     
-    //number cols
+    /**number cols*/
     int cols = 2;
     
-    //the time that a cell will show before feedback displays
+    /*the time that a cell will show before feedback displays (in ms)*/
     int cellShowTime = 500;
     
+    /**LayoutManager to use */
     TableLayout tLayout;
     
-    //whether or not to split the array into questions and answers
+    /**whether or not to split the array into questions and answers*/
     boolean splitPairs = false;
 
+    /**
+     * Constructor
+     * 
+     * @param host our midlet host
+     * @param rootData the XML data that we need
+     */
     public MemoryMatchIdevice(MLearnPlayerMidlet host, XmlNode rootData) {
         super(host);
         
@@ -107,6 +139,11 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
     
     
 
+    /**
+     * Event handler that deals with when the main button is pushed
+     * 
+     * @param ae ActionEvent
+     */
     public void actionPerformed(ActionEvent ae) {
         Component sCmp = ae.getComponent();
         if(sCmp != null && sCmp instanceof MemoryMatchCell) {
@@ -141,6 +178,10 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
         }
     }
     
+    
+    /**
+     * Show the feedback
+     */
     public void doFeedback() {
         FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
         fbDialog.showFeedback(frm, fbTmp);
@@ -148,12 +189,20 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
     
     
 
+    /**
+     * Dispose of everything
+     */
     public void dispose() {
         super.dispose();
         frm = null;
         coverImage = null;
     }
 
+    /**
+     * Returns the main LWUIT form to use
+     * 
+     * @return main LWUIT Form
+     */
     public Form getForm() {
         if(frm == null) {
             frm = new Form();
@@ -195,21 +244,36 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
         return frm;
     }
 
+    /**
+     * Start the idevice
+     */
     public void start() {
         super.start();
         numPairsMatched = 0;
     }
 
+    /**
+     * Stop the idevice
+     */
     public void stop() {
         super.stop();
     }
 
+    
+    /**
+     * This is a quiz style idevice
+     * @return Idevice.LOG_QUIZ
+     */
     public int getLogType() {
         return Idevice.LOG_QUIZ;
     }
 
     //NOTE: this is not strictly speaking correct - does not count incorrect guesses as this is somewhat random
     //TODO: Add a numGuesses to the additional string in the log
+    /**
+     * Provides the quiz score data for logging
+     * @return array of quiz scores
+     */
     public int[] getScores() {
         return new int[] {
             numPairsMatched, numPairsMatched, pairs.length

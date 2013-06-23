@@ -1,7 +1,23 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
+
 package com.toughra.mlearnplayer.datatx;
 
 import com.sun.lwuit.io.ConnectionRequest;
@@ -19,11 +35,27 @@ import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnUtils;
 
 /**
- *
+ * This class takes care of sending student logs collected from other devices
+ * and uploading them to an http address as a file in the post field.
+ * 
+ * It is capable of partial uploads.  When a file is uploaded it will use
+ * DataOutputStream to write an int value to a  file called (LogName).sent 
+ * 
+ * If a file has been modified after the most recent .sent file, then only the 
+ * remaining data is transferred - the number of bytes specified in (LogName).sent
+ * will be skipped.
+ * 
+ * Uses HttpMultipartRequest to actually do the HTTP Post operation
+ * 
  * @author mike
  */
 public class MLHTTPRep {
      
+    /**
+     * the main logic of the class - will pick up settings from the preferences
+     * and look for any logs that need sent (e.g. modified since .sent file was
+     * last modified)
+     */
     public void sendLogs() {
         try {
             //make sure that the server knows that we exist
@@ -40,6 +72,7 @@ public class MLHTTPRep {
             Vector fileList = MLearnUtils.enumToVector(dirCon.list("*activity.log", true));
             dirCon.close();
                         
+            //go through all the files in the list
             for(int i = 0; i < fileList.size(); i++) {
                 String bname = fileList.elementAt(i).toString();
                 try {
@@ -55,6 +88,12 @@ public class MLHTTPRep {
         }
     }
     
+    /**
+     * A callhome message is a utility so that you can see from an http server
+     * if a phone sent out has been active or not.  Send a callhome every hour
+     * whilst running
+     * 
+     */
     public void checkCallHome() {
         String calledHome = EXEStrMgr.getInstance().getPref("player.calledhome");
         long lastCallHomeTime = 0L;
@@ -91,6 +130,16 @@ public class MLHTTPRep {
         }
     }
     
+    /**
+     * Sends a log file to the server.  It will look up the student information
+     * that is known about this user and set student_uuid and student_learnername
+     * with the http request as post form parameters.  It will then use 
+     * HttpMultipartRequest to send the log as an post file field
+     * 
+     * @param fileURI The complete URI to pass to Connector
+     * @param basename The basename of the file which is used to set the filename in the HTTP request
+     * @throws Exception if something goes wrong
+     */
     public void sendLog(String fileURI, String basename) throws Exception{
         FileConnection fcon = (FileConnection)Connector.open(fileURI, Connector.READ, true);
         String sentFileURI = fileURI + ".sent";
@@ -118,23 +167,12 @@ public class MLHTTPRep {
             return;
         }
         
-        //TODO: Need to skip alreadySent bytes
-        
-        /*
-        ByteArrayOutputStream bout= new ByteArrayOutputStream(fileSize);
-        InputStream fin = fcon.openInputStream();
-        MLearnUtils.copyStrm(fin, bout);
-        fin.close();
-        
-        byte[] fileBytes = bout.toByteArray();
-        bout.close();
-        bout = null;
-        */
-        
         
         String url = EXEStrMgr.getInstance().getPref("httptx.url");
         HttpMultipartRequest req = new HttpMultipartRequest(
                 url, params, "filecontent", basename, "text/plain", fileURI);
+        
+        //used for partial uploads
         if(alreadySent > 0) {
             req.skipBytes = alreadySent;
         }

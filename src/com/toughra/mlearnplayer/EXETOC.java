@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 
 package com.toughra.mlearnplayer;
@@ -21,6 +36,9 @@ import org.xmlpull.v1.XmlPullParserException;
  * This class implements the Table of Contents to read an EXE Generated XML
  * table of contents file and then provide the user with a list that they can
  * use to select the item that they wish to go to.
+ * 
+ * It caches the content of the package as a set of objects so that it need
+ * not be re-read as the learner navigates.
  *
  * @author mike
  */
@@ -57,7 +75,10 @@ public class EXETOC implements ActionListener{
      */
     public String colBaseDir;
     
+    /** The collection title*/
     public static final int COL_TITLE = 0;
+    
+    /** The collection directory*/
     public static final int COL_DIR = 1;
     
     /** Base folder for the collection */
@@ -78,9 +99,12 @@ public class EXETOC implements ActionListener{
      */
     List colList;
     
+    /**The URL of the collection */
     String currentURL;
     
-    /** If the current package loaded is right to left*/
+    /** If the current package loaded is right to left
+     * This will get detected based on the language specified in the package
+     */
     public boolean currentIsRTL;
     
     /**Language codes that are RTL*/
@@ -89,22 +113,41 @@ public class EXETOC implements ActionListener{
     /* List for GUI */
     List tocList;
 
-    /** */
+    /** The host midlet*/
     private MLearnPlayerMidlet hostMidlet;
 
+    /**
+     * Constructor method takes just only the host midlet
+     * 
+     * @param hostMidlet 
+     */
     public EXETOC(MLearnPlayerMidlet hostMidlet) {
         this.hostMidlet = hostMidlet;
     }
 
+    /**
+     * Get the number of pages
+     * 
+     * @return number of pages in current package.
+     */
     public int getNumPages() {
         return cache.pages.length;
     }
     
+    /**
+     * Get the href for the given page index.
+     * 
+     * @param index
+     * @return String href of the given index
+     */
     public String getPageHref(int index) {
         return cache.pages[index].href;
     }
     
     /**
+     * Go through a collection (execollection.xml file that details multiple
+     * packages that go together).  Cache the titles and hrefs of each package
+     * in the collection so the user can make a selection
      * 
      * @param href 
      */
@@ -133,12 +176,21 @@ public class EXETOC implements ActionListener{
         }
     }
     
+    /**
+     * Clear out details of the current collection
+     */
     public void clearCollection() {
         collection = null;
         colBaseDir = null;
         colTitle = null;
     }
     
+    /**
+     * Makes a form for the user to select a package from the current collection
+     * You need to call readCollection first.
+     * 
+     * @return 
+     */
     public Form getCollectionForm() {
         if(colForm == null) {
             colForm = new Form(colTitle);
@@ -188,6 +240,12 @@ public class EXETOC implements ActionListener{
         return colBaseHREF + "/" + collection[index][COL_DIR] + "/";
     }
 
+    /**
+     * Notifies the hostMidlet when the user has selected a package from the 
+     * current collection
+     * 
+     * @param ae 
+     */
     public void actionPerformed(ActionEvent ae) {
         if(ae.getSource() == colList) {
             //open 
@@ -230,7 +288,8 @@ public class EXETOC implements ActionListener{
     
     
     /**
-     * Utility method to get a generic xml parser and the kxmlparser
+     * Utility method to get a generic xml parser and the kxmlparser for a given
+     * URL
      *  
      * @param URL
      * @return
@@ -247,7 +306,9 @@ public class EXETOC implements ActionListener{
 
 
     /**
-     *
+     * This will read exetoc.xml and cache the list of pages and idevices
+     * that are in the package.  
+     * 
      * @param URL the path to the exetoc.xml file
      */
     public void readList(String URL) {
@@ -319,18 +380,27 @@ public class EXETOC implements ActionListener{
     }
 
     
+    /**
+     * Get rid of the list object
+     */
     public void disposeList() {
         this.tocList = null;
     }
 
+    /**
+     * Gets the current list
+     * @return current table of contents list
+     */
     public List getList() {
         return tocList;
     }
 
 
     /**
-     * Provides a LWUIT Form to be shown
-     * @return
+     * Provides a LWUIT Form to be shown for the table of contents of the
+     * current package
+     * 
+     * @return Form with an option to select each page.
      */
     public Form getForm() {
         if(tocList == null) {

@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer;
 
@@ -19,81 +34,114 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 
 /**
- *
+ * This class is used to run the application menu where the user can choose
+ * to return to the table of contents, change settings etc.
+ * 
  * @author mike
  */
 public class MLearnMenu extends Form implements ActionListener, DataChangedListener{
 
+    /** The host midlet*/
     private MLearnPlayerMidlet host;
     
+    /** The keys that are used in the menu (looked up in the localization res) */
     String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "teacherreport", "quit"};
     
+    /** Continue command ID */
     private static final int CONTINUE = 0;
     
+    /** Repeat command ID */
     private static final int REPEAT = 1;
     
+    /** Back command ID */
     private static final int BACK = 2;
     
+    /** Go to contents command ID */
     private static final int CONTENTS = 3;
     
+    /** Go to collection contents ID */
     private static final int COLLECTION = 4;
     
+    /** Go to open course command ID */
     private static final int OPENCOURSE = 5;
     
+    /** Go to settings command ID*/
     private static final int SETTINGS = 6;
     
+    /** Go to the about form command ID*/
     private static final int ABOUTFORM = 7;
     
+    /** Quit command ID*/
     private static final int QUIT = 8;
     
     private static final int SEARCHBT = 43;
     
-    //start of stuff for settings form
+    /** The main form object for the settings dialog*/
     Form settingsForm;
+    
+    /**The slider object used to control the playback volume */
     Slider volSlider;
+    
+    /** Command object for settings OK */
     Command setOKCmd;
     
     //end of settings form stuff
     
+    /** Array of buttons for the main menu*/
     Button[] buttons;
     
+    /** Array of commands that will be formed for those buttons*/
     Command[] cmds;
     
+    /** Layout used for the main form*/
     BoxLayout bLayout;
     
-    //name of the learner (for teacher record transmission etc)
+    /** Name of the learner (for teacher record transmission etc)*/
     TextField nameField;
     
     //The combo box for setting the language
     ComboBox langCombo;
     
-    //Available lang codes
+    /** The language codes that are available to select from*/
     String[] langCodeStr;
     
-    //Learner ID field
+    /**Learner ID field*/
     TextField lIdField;
     
+    /**Checkbox for turning on/off the bluetooth log receive server*/
     CheckBox svrOnCheckBox;
     
-    //command for doing the bluetooth search
+    /**command for doing the bluetooth search*/
     Command doSearchCmd;
     
-    //button for that
+    /** Button to do the bluetooth search */
     Button searchButton;
     
-    //Bluetooth stuff here
+    /** Form that contains bluetooth servers that have been found*/
     Form btDevicesForm;
     
+    /**Client Manager object that handles doing the bluetooth search? */
     MLClientManager clientMgr;
     
+    /** BlueToothAction Listener*/
     BTActionListener btActionListener;
+    
+    /** Vector used to save discovered Bluetooth servers*/
     Vector btClientURLs;
+    
+    /**Action Listener used to wait whilst the discovery is running*/
     BTSelectActionListener btSelectActionListener;
     
+    /** Command to send all logs (puts the threads countdown to 0)*/
     Command sendTestCmd;
+    
+    /** Button for sending logs right now*/
     Button sendTestBtn;
+    
+    /** Command ID for the send run button*/
     private static final int SENDTEST = 45;
     
+    /** Dialog used to indicate a loading status (e.g. waiting for bluetooth disc)*/
     Dialog loadingDialog;
     
     //end bluetooth stuff
@@ -101,29 +149,40 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     
     //===http related stuff===
     
+    /** Command to show HTTP Settings*/
     Command cmdShowHTTP;
+    
+    /** Form that contains http settings*/
     Form frmHTTP;
     
-    //the about form
+    /** Form that contains the about dialog*/
     Form aboutForm;
     
-    //Vector index -> Filename
+    /** Vector in the form of index -> filename for settings files (e.g. name.ht) */
     Vector httpSettingsList;
     
-    //For the radio buttons
+    /** ButtonGroup for radio buttons for available http settings*/
     ButtonGroup httpSettingGrp;
     
+    /** TextField for the httpUserName to send to reception script */
     TextField httpUserTF;
     
+    /** TextField for the password for log reception*/
     TextField httpPassTF;
     
+    /** The HTTP OK Button command*/
     Command cmdHTTPOK;
     
+    /** The http send command*/
     Command cmdHTTPSend;
     
     //===end http stuff===
     
-    
+    /**
+     * Constructor
+     * 
+     * @param host host midlet
+     */
     public MLearnMenu(MLearnPlayerMidlet host) {
         this.host = host;
         buttons = new Button[labels.length];
@@ -131,6 +190,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         
         bLayout = new BoxLayout(BoxLayout.Y_AXIS) ;
         setLayout(bLayout);
+        /*
+         * Go through all the buttons we have in the main menu.  Expect an icon
+         * in the resources /icon/menu-index.png
+         */
         for(int i = 0; i < labels.length; i++) {
             InputStream imgIn = getClass().getResourceAsStream("/icons/menu-" + i + ".png");
             try {
@@ -154,8 +217,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             
         }
         
+        //the meaning of life, the universe and everything
         setOKCmd = new Command("OK", 42);
 
+        //The about form
         aboutForm = new Form("About");
         Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
         TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
@@ -178,6 +243,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         aboutForm.addComponent(aboutGoBack);
         
         
+        //The settings where you can set volume etc.
         settingsForm = new Form("Settings");
         BoxLayout bLayout = new BoxLayout(BoxLayout.Y_AXIS);
         settingsForm.setLayout(bLayout);
@@ -229,7 +295,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         settingsForm.addComponent(langLabel);
         settingsForm.addComponent(langCombo);
         
-        
+        //the label for selecting the bluetooth server to talk with (teacher phone)
         Label tchrLabel = new Label(MLearnUtils._("Teachers Phone"));
         settingsForm.addComponent(tchrLabel);
         
@@ -249,6 +315,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         sendTestBtn.addActionListener(this);
         settingsForm.addComponent(sendTestBtn);
         
+        //checkbox for switching server (e.g. teacher) mode on/off
         svrOnCheckBox = new CheckBox(MLearnUtils._("serveron"));
         String svrEnabled = EXEStrMgr.getInstance().getPref("server.enabled");
         if(svrEnabled != null && svrEnabled.equals("true")) {
@@ -257,7 +324,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         settingsForm.addComponent(svrOnCheckBox);
         
 
-        
+        ///settings OK button
         Button settingOKButton = new Button(setOKCmd);
         settingOKButton.addActionListener(this);
         settingsForm.addComponent(settingOKButton);
@@ -273,6 +340,13 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         
     }
     
+    /**
+     * Do the setup of the HTPT settings form.
+     * 
+     * This will look for the umobiledata/txsettings/*.ht and expect a serialized
+     * hashtable file.  Expects the keys server.username, server.url, and server.password
+     * 
+     */
     private void makeHTTPFrm() {
         frmHTTP = new Form("Log Settings");
         //go and look for settings
@@ -312,16 +386,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         Button okBtn = new Button(cmdHTTPOK);
         okBtn.addActionListener(this);
         frmHTTP.addComponent(okBtn);
-        
-        /*
-        cmdHTTPSend = new Command("Send Now", 220);
-        Button sendBtn = new Button(cmdHTTPSend);
-        sendBtn.addActionListener(this);
-        frmHTTP.addComponent(sendBtn);
-        * 
-        */
     }
     
+    /**
+     * Continue back to the main menu of the form.  Check for certain settings
+     * changes and see if we need to run the bluetooth server / log transmit etc
+     */
     protected void contMain() {
         if(host.curFrm != null) {
             host.curFrm.show();   
@@ -344,6 +414,11 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         MLServerThread.getInstance().checkServer();
     }
     
+    /**
+     * Check the http settings and put them into the main preferences as
+     * required
+     * 
+     */
     private void updateHTTPSettings() {
         int httpSel = httpSettingGrp.getSelectedIndex();
         
@@ -374,6 +449,11 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         }
     }
     
+    /**
+     * Main action event handler - see where the users wants to go
+     * 
+     * @param ae 
+     */
     public void actionPerformed(ActionEvent ae) {
         Command cmd = ae.getCommand();
         if(cmd != null) {
@@ -413,10 +493,6 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             }else if(cmd.getId() ==SENDTEST) {
                 MLObjectPusher.countDown = 0;//set this to zero to force the thread to run next tick
             }else if(cmd.getId() == ABOUTFORM) {
-                //MLReportRequest req = new MLReportRequest(this);
-                //req.setupForm();
-                //req.show();
-                
                 aboutForm.show();
             }else if(cmd.getId() == cmdShowHTTP.getId()) {
                 frmHTTP.show();
@@ -429,6 +505,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         }
     }
     
+    /**
+     * This is called after going through the bluetooth discovery process
+     * to show available servers to the user.
+     */
     public void showAvailableBT() {
         //this is coming through the BT thread
         btDevicesForm = new Form("Available Devices");
@@ -466,6 +546,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         btDevicesForm.show();
     }
 
+    /**
+     * Event handler for the volume slider
+     * 
+     * @param id
+     * @param level 
+     */
     public void dataChanged(int id, int level) {
        host.setVolume(level);
     }
@@ -475,7 +561,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
 }
 
 
-
+/**
+ * Utility ActionListener to Listen for when a user has selected one of the
+ * available bluetooth servers and save this into the preferences.
+ * 
+ * @author mike
+ */
 class BTSelectActionListener implements ActionListener {
 
     MLearnMenu host;
@@ -485,11 +576,16 @@ class BTSelectActionListener implements ActionListener {
     }
 
     
-    
+    /**
+     * Lookup which server has been selected and save to preferences.
+     * 
+     * @param ae 
+     */
     public void actionPerformed(ActionEvent ae) {
         Command cmd = ae.getCommand();
         int id = cmd.getId();
         
+        //check that the user has not selected the cancel (e.g. no server) option
         if(id != 1000) {
             String URL = host.btClientURLs.elementAt(id).toString();
             String friendlyName = cmd.getCommandName();
@@ -504,6 +600,13 @@ class BTSelectActionListener implements ActionListener {
     
 }
 
+/**
+ * Bluetooth Action Listener will remove itself from the action listener list
+ * to avoid repeat calls and then call the menu to show the list of available
+ * servers
+ * 
+ * @author mike
+ */
 class BTActionListener implements ActionListener, Runnable{
     
     MLearnMenu host;

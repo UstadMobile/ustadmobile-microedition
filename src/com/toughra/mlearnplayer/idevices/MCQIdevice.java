@@ -1,3 +1,23 @@
+/*
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
 package com.toughra.mlearnplayer.idevices;
 
 import com.toughra.mlearnplayer.xml.XmlNode;
@@ -14,40 +34,56 @@ import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
 
 /**
- * This needs to be used for both multiple choice and multiple select (checkbox)
+ * The MCQIdevice will render a set of Multiple Choice Questions
+ * 
  * @author mike
  */
 public class MCQIdevice extends Idevice implements ActionListener {
 
+
+    /** Vector of html text of questions to be shown */
     private Vector questions;
     
-    //vector of vectors
+    /** 
+     * Vector containing child Vector objects, the children contain Answer objects
+     * for the questionHTML at the same index in questions
+     */
     private Vector answers;
     
-    
-
+    /** title of the question*/
     private String title;
     
-    //used to help determine layout
+    /**used to help determine layout*/
     private int totalQuestions = 0;
+    
+    /**used to help determine layout*/
     private int totalAnswers = 0;
     
+    /**HTML to show before questions */
     private String htmlIntro;
     
-    //used to track which answer the user has currently selected
+    /**used to track which answer the user has currently selected*/
     private int[] selectedAnswers;
     
-    ///used to track stuff
+    /**the HTMLComponent that will be used to show feedback - one for each question*/
     private HTMLComponent[] fbackAreas;
     
-    //if there is an audio file to play when first loading
+    /**if there is an audio file to play when first loading*/
     private String audioURL;
     
+    /** The main LWUIT form */
     Form form;
     
     //false if question not yet answered/attempted by student
     boolean[] qAttempted;
 
+    /** 
+     * Constructor - setup the for, dig through the questions and answers
+     * that are there.
+     * 
+     * @param host the midlet host
+     * @param data the XML data to construct with
+     */
     public MCQIdevice(MLearnPlayerMidlet host, XmlNode data) {
         super(host);
         
@@ -98,6 +134,10 @@ public class MCQIdevice extends Idevice implements ActionListener {
         int done = 0;
     }
 
+    /**
+     * This is an LWUIT mode idevice 
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
@@ -174,6 +214,12 @@ public class MCQIdevice extends Idevice implements ActionListener {
         return form;
     }
 
+    /**
+     * Recognizes when the user has select an answer - shows the appropriate
+     * feedback
+     * 
+     * @param ae  ActionEvent
+     */
     public void actionPerformed(ActionEvent ae) {
         if(ae.getComponent() instanceof RadioButton) {
             ae.consume();
@@ -207,6 +253,9 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 
     }
 
+    /**
+     * Start the idevice and play the starting sound if there is one
+     */
     public void start() {
         super.start();
         if(audioURL != null) {
@@ -214,20 +263,35 @@ public class MCQIdevice extends Idevice implements ActionListener {
         }
     }
 
+    /**
+     * Stop the idevice - stop all media
+     */
     public void stop() {
         
         super.stop();
     }
 
+    /**
+     * Dispose of components
+     */
     public void dispose() {
         form.removeAll();
         super.dispose();
     }
 
+    /**
+     * This is a quiz mode idevice
+     * @return Idevice.LOG_QUIZ
+     */
     public int getLogType() {
         return Idevice.LOG_QUIZ;
     }
 
+    /**
+     * Provide the quiz scores for logging purposes
+     * 
+     * @return array of quiz scores 
+     */
     public int[] getScores() {
         return new int[] {correctFirst, MLearnUtils.countBoolValues(hadCorrect, true),
             questions.size()

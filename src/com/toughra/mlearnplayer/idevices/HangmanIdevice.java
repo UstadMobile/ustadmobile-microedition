@@ -1,4 +1,20 @@
 /*
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
 package com.toughra.mlearnplayer.idevices;
@@ -22,74 +38,95 @@ import com.toughra.mlearnplayer.MLearnUtils;
 import com.toughra.mlearnplayer.xml.XmlNode;
 
 /**
- *
+ * Implements the Hangman game.  
+ * 
  * @author mike
  */
 public class HangmanIdevice extends Idevice implements ActionListener{
 
-    /**
+    /*
      * Static constant colors for the buttons for picking letters
      */
+    /** Letter button background for a wrong selection*/
     static final int LB_WRONGCOL = 0xff0000;
+    /** Letter button background for a correct selection*/
     static final int LB_CORGUESS = 0x00ff00;
+    /** Letter button background for a letter not yet picked*/
     static final int LB_DEFAULT = 0x0000ff;
-    
+    /** foreground color for letter button selection*/
     static final int LB_FGCOLOR = 0xffffff;
     
+    /**Button objects used to select letters*/
     static Button[] letterButtons;
             
-    //The form for showing image of player status, hint and current answer in progress
+    /*The form for showing image of player status, hint and current answer in progress*/
     Form imageDisplayForm;
     
+    /**The label object which is used to show the current life image (e.g. picture of hangman at the current stage) */
     Label imageDisplayLabel;
     
+    /** The label that shows the hint for the current word */
     Label hintLabel;
     
+    /** the label that shows the word as the player has currently guessed it*/
     Label wordLabel;
     
+    /** text to use for the pick next letter button*/
     String pickText;
     
-    //The form for allowing another letter to be picked
+    /**The form for allowing another letter to be picked*/
     Form letterPickerForm;
     
-    //Alphabet to select from
+    /**Alphabet to select from e.g. abcdefg etc. can be any character set*/
     String alphabet;
     
+    /** Message to show for a wrong guess*/
     String wrongGuessMsg;
     
+    /** message to show when all levels are lost*/
     String lostLevelMsg;
     
+    /** message to show when a level has been passed*/
     String levelPassMsg;
     
+    /** message to show when a game has been won (all levels passed)*/
     String gameWonMsg;
     
-    //index of currently showing image
+    /**index of currently showing image*/
     int currentImageIndex;
     
-    //sources of images 
+    /**sources of images */
     String[] imgSrcs;
     
-    //Array of images to use
+    /**Array of images to use for different lives*/
     Image[] imgs;
     
-    //label object used to show images
+    /**label object used to show images*/
     Label imgLabel;
     
-    //words to be guessed
+    /**words to be guessed*/
     String[] words;
     
-    //String of the letters found so far
+    /**String of the letters found so far*/
     String lettersFound;
     
-    //hints for those words
+    /**hints for those words*/
     String[] hints;
     
+    /** the index of word the player is currently on (as per array words)*/
     int currentWordIndex;
     
+    /**number of attempts on this level*/
     int levelAttempts = 0;
     
+    /** if the game is complete */
     boolean gameComplete = false;
     
+    /**
+     * Constructor
+     * @param hostMidlet the host midlet 
+     * @param xmlData our xml data to load game parameters
+     */
     public HangmanIdevice(MLearnPlayerMidlet hostMidlet, XmlNode xmlData) {
         super(hostMidlet);  
         
@@ -144,6 +181,11 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         
     }
 
+    /**
+     * Event handler - show the letter picker form or pick a letter...
+     * 
+     * @param ae ActionEvent
+     */
     public void actionPerformed(ActionEvent ae) {
         Command cmd = ae.getCommand();
         if(cmd.getCommandName().equals(pickText) && gameComplete == false) {
@@ -154,7 +196,11 @@ public class HangmanIdevice extends Idevice implements ActionListener{
     }
     
     
-    
+    /**
+     * Starts a level (e.g. word with hint)
+     * 
+     * @param wordNum  index of the word to use as per the array words
+     */
     public void startLevel(int wordNum) {
         currentImageIndex = 0;
         lettersFound = "";
@@ -164,16 +210,27 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         imageDisplayForm.show();
     }
     
+    /**
+     * Updates the imageDisplayLabel to make sure it shows the correct image for the
+     * current life the player is on
+     */
     void updateImg() {
         imageDisplayLabel.setIcon(imgs[currentImageIndex]);
     }
     
+    
+    /**
+     * Called when the player has no remaining chances for this level and must reset
+     */
     void loseLevel() {
         showFeedback(lostLevelMsg, false);
         levelAttempts++;
         startLevel(currentWordIndex);
     }
     
+    /**
+     * Called when the player has successfully guessed the word
+     */
     void advanceLevel() {
         showFeedback(levelPassMsg, true);
         
@@ -193,11 +250,22 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         startLevel(++currentWordIndex);
     }
     
+    /**
+     * show feedback to the player
+     * @param feedback HTML to be shown
+     * @param isCorrect true if it's positive, false otherwise
+     */
     void showFeedback(String feedback, boolean isCorrect) {
         FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
         fbDialog.showFeedback(fbDialog, feedback, isCorrect);
     }
     
+    /**
+     * Generates the word as it should be displayed to the player.  Puts any
+     * letters the player has guessed in and replaces the others with -
+     * 
+     * @return word display formatted as mentioned in method description
+     */
     String genWordDisplay() {
         String wordDisplay = "";
         for(int i = 0; i < words[currentWordIndex].length(); i++) {
@@ -214,6 +282,12 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         return wordDisplay;
     }
     
+    /**
+     * Handles when the player chooses a letter as a guess
+     * 
+     * @param letter the letter the player has chosen (e.g. a)
+     * @param c The button that the player clicked on to choose that letter
+     */
     public void chooseLetter(String letter, Component c) {
         if(words[currentWordIndex].indexOf(letter) != -1) {
             c.getStyle().setBgColor(LB_CORGUESS);
@@ -251,11 +325,21 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         }
     }
     
-    
+    /**
+     * This is a LWUIT idevice
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
     
+    /**
+     * Puts the alphabet selection form together given the letters that can be 
+     * selected.
+     * 
+     * Puts the image display form together to show the player the life they
+     * are currently on
+     */
     private void buildForms() {
         if(letterPickerForm == null) {
             letterPickerForm = new Form();
@@ -306,24 +390,42 @@ public class HangmanIdevice extends Idevice implements ActionListener{
     }
     
 
+    /**
+     * The main LWUIT Idevice form
+     * @return LWUIT form with the idevice on it
+     */
     public Form getForm() {
         buildForms();
         return imageDisplayForm;
     }
 
+    /**
+     * idevice start
+     */ 
     public void start() {
         super.start();
         startLevel(0);
     }
 
+    /**
+     * idevice stop
+     */
     public void stop() {
         super.stop();
     }
 
+    /**
+     * Is a quiz style idevice
+     * @return Idevice.LOG_QUIZ
+     */
     public int getLogType() {
         return LOG_QUIZ;
     }
 
+    /**
+     * Returns scores for the log
+     * @return Scores array - see Idevice.getScores
+     */
     public int[] getScores() {
         return new int[] { correctFirst, MLearnUtils.countBoolValues(hadCorrect, true),
             words.length };

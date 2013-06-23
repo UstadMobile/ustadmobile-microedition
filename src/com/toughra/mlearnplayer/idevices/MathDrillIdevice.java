@@ -1,7 +1,23 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
+
 package com.toughra.mlearnplayer.idevices;
 import com.toughra.mlearnplayer.FeedbackDialog;
 import com.toughra.mlearnplayer.Idevice;
@@ -21,52 +37,91 @@ import com.toughra.mlearnplayer.xml.XmlNode;
 
 
 /**
- *
+ * Implements a MathDrill idevice for the user in J2ME
+ * 
  * @author mike
  */
 public class MathDrillIdevice extends Idevice implements ActionListener {
-    
+
+    /** the detected random part of the expression */
     public static final int SECTION_RAND = 0;
+    
+    /** the detected addon section (minimum number to generate*/
     public static final int SECTION_ADDON = 1;
     
+    /** operate in objects mode - show small pictures */
     public static final int MODE_OBJS = 0;
     
-    
+    /** The operator to use (+ - * /) */
     String operator;
     
+    /** The source of the object image to show */
     String imgSrc;
+    
+    /** Image object being used */
     Image objImg;
     
+    /** Image src to place over the top of the main object to show it's being crossed out
+     * for subtraction */
     String crossOutImgSrc;
+    
+    /** Image object to place over the top of the main object to show it's being crossed out
+     * for subtraction */
     Image crossedOutImg;
     
+    /** number of questions to show in the math drill */
     int numQuestions;
     
+    /** The main LWUIT form for the idevice */
     Form mainFrm;
     
+    /**
+     * QuestionOperators in the form of
+     * int[index] = SECTION_RAND, SECTION_ADDON
+     * So the question would generate Random*SECTION_RAND + SECTION_ADDON
+     */
     int[][] questionOperators;
     
+    /**
+     * The results of running that expression
+     */
     int[] exprResults;
     
+    /**
+     * The current correct answer
+     */
     int currentAnswer;
     
+    /** Object boxes */
     MathDrillObjectBox[] objectBoxes;
     
+    /** result box where user puts in the answer*/
     MathDrillObjectBox resultBox;
     
+    /** command that user wants answer checked*/
     Command checkCommand;
     
+    /** positiveFeedback HTML to show */
     String positiveFeedback;
     
+    /** negativeFeedback HTML to show */
     String negativeFeedback;
     
+    /** feedback to show for exercise complete*/
     String completeFeedback;
     
+    /** number of questions currently completed by the user*/
     int numQuestionsDone = 0;
     
+    /** number of attempts so far by the user*/
     int currentNumAttempts = 0;
             
-    
+    /**
+     * Constructor
+     * 
+     * @param host the host midlet
+     * @param data the xml data we need
+     */
     public MathDrillIdevice(MLearnPlayerMidlet host, XmlNode data) {
         super(host);
         
@@ -111,6 +166,10 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         completeFeedback = data.findFirstChildByTagName("completefeedback", true).getTextChildContent(0);        
     }
 
+    /**
+     * this is a LWUIT idevice
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
@@ -119,6 +178,11 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         
     }
 
+    /**
+     * Returns the main form that is going to be used to render this exercise
+     * 
+     * @return LWUIT form to be used to render this exercise
+     */
     public Form getForm() {
         if(mainFrm == null) {
             mainFrm = new Form();
@@ -173,6 +237,10 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         return mainFrm;
     }
     
+    /**
+     * Show the next question - generate the sum that is going to be shown, and 
+     * the answer of the sum.  Reset the answer box.
+     */
     public void showQuestion() {
         this.exprResults = new int[this.questionOperators.length];
         for(int i = 0; i < this.questionOperators.length;i++) {
@@ -208,6 +276,10 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         }
     }
 
+    /**
+     * Fired when the user wants their answer checked
+     * @param ae ActionEvent from button
+     */
     public void actionPerformed(ActionEvent ae) {
         if(ae.getCommand().equals(checkCommand)) {
             ae.consume();
@@ -234,43 +306,77 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         }
     }
 
+    /** 
+     * this is a quiz style idevice
+     * @return Idevice.LOG_QUIZ
+     */
     public int getLogType() {
         return Idevice.LOG_QUIZ;
     }
 
+    /**
+     * Return quiz scores
+     * @return array of int as per Idevice.getScores
+     */
     public int[] getScores() {
         return new int[] { correctFirst, numQuestionsDone, numQuestions };
     }
     
+    /**
+     * start and show first question
+     */
     public void start() {
         super.start();
         showQuestion();
     }
 
+    /**
+     * stop
+     */
     public void stop() {
         super.stop();
     }
     
     
 }
+
+/**
+ * Component that will show a given number of objects from a MathDrillIdevice
+ * 
+ * @author mike
+ */
 class MathDrillObjectBox extends Component {
     
+    /** our host idevice*/
     MathDrillIdevice device;
     
+    /** current number of objects*/
     int numObjects;
     
+    /** this is used just to display*/
     static final int MODE_DISPLAY = 0;
     
+    /** in add mode - when user clicks add */
     static final int MODE_ADD = 1;
     
+    /** subtact mode - when user clicks cross one out*/
     static final int MODE_SUBTRACT = 2;
     
+    /** if in subtract mode, the numbe to subtract from */
     int subtractFrom = 0;
     
+    /** mode to operate in MODE_DISPLAY, MODE_ADD or MODE_SUBTRACT */
     int mode;
     
+    /** number of items to show in one column */
     int numItemsInCol = 10;
     
+    /**
+     * Constructor
+     * 
+     * @param device host device
+     * @param numObjects the number of objects to show here
+     */
     public MathDrillObjectBox(MathDrillIdevice device, int numObjects) {
         this.device = device;
         this.numObjects = numObjects;
@@ -279,7 +385,10 @@ class MathDrillObjectBox extends Component {
         mode = MODE_DISPLAY;
     }
     
-    
+    /**
+     * Main paint method
+     * @param g Graphics object to use
+     */
     public void paint(Graphics g) {
         UIManager.getInstance().getLookAndFeel().setFG(g, this);
         Style style = getStyle();
@@ -314,7 +423,10 @@ class MathDrillObjectBox extends Component {
         }
     }
     
-    
+    /**
+     * If the user presses the main center button - decide what to do
+     * @param keyCode keyCode user pressed
+     */
     public void keyReleased(int keyCode) {
         if(keyCode == -5 && mode == MODE_ADD) {
             setNumObjects(numObjects + 1);
@@ -325,19 +437,36 @@ class MathDrillObjectBox extends Component {
         }
     }
     
+    /**
+     * LWUIT name of this type of component
+     * @return LWUIT name of this type of component
+     */
     public String getUIID() {
         return "MathDrillObjectBox";
     }
     
+    /**
+     * Hard coded preferred size
+     * @return Dimension(30,100)
+     */
     public Dimension calcPreferredSize() {
         return new Dimension(30, 100);
     }
     
+    
+    /**
+     * set number of objects currently active
+     * @param num  number of objects currently active here
+     */
     public void setNumObjects(int num) {
         this.numObjects = num;
         repaint();
     }
     
+    /**
+     * getter for number of objects currently active
+     * @return number of objects currently active.
+     */
     public int getNumObjects() {
         return numObjects;
     }

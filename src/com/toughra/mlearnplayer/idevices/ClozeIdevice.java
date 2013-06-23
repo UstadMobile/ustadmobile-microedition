@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer.idevices;
 
@@ -31,32 +46,59 @@ import com.toughra.mlearnplayer.xml.XmlNode;
 
 
 /**
- *
+ * This Idevice implements in J2ME the Cloze activity from EXE (fill in the blank)
+ * format.  It does so by generating an HTML form and using the HTMLComponent.
+ * 
+ * A Request Handler attached to the component will then check the answers that
+ * were provided and change the background color to green or red according to if
+ * the answer provided by the student was correct or incorrect.
+ * 
+ * When doing a mobile export EXE can also specify the format type of the data
+ * to be entered.  This has a system for specifying number only input which
+ * is pretty handy on cell phones to use the number pad directly instead of 
+ * going through all the keys.
+ * 
+ * The HTMLComponent will be made with an HTMLCallback method that will listen
+ * for when the user is entering answers and then fire an event when the link
+ * at the bottom of the form is clicked that will check the answers and refresh
+ * the page.
+ * 
  * @author mike
  */
 public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
 
-    
+    /** The HTML generated for the form to show */
     String formHTML;
     
+    /** the LWUIT form that represents this idevice*/
     Form frm;
     
+    /** the correct words that have been made blank*/
     String[] words;
     
+    /** the HTMLComponent being used to show this form*/
     HTMLComponent comp;
     
+    /** The answers of the learner as we currently know them */
     String[] currentAnswers;
     
+    /** the Your score is x / y feedback to show */
     String scoreStr;
     
-    //Input formats to use
+    /** Input Formats that are used on the text fields in the HTML form */
     String[][] wordFormats;
     
-    //The prefix of the fieldname used 
+    /**The prefix of the fieldname used in the htmlForm */
     final String prefix = "clozeBlank";
     
+    /**
+     * Constructor
+     * 
+     * @param hostMidlet MLearnPlayerMidlet we are using
+     * @param nodeData the XML node data that has been loaded
+     * 
+     */
     public ClozeIdevice(MLearnPlayerMidlet hostMidlet, XmlNode nodeData)  {
-        
         super(hostMidlet);
         formHTML = MLearnUtils.getTextProperty(nodeData, "formhtml");
         scoreStr = MLearnUtils.getTextProperty(nodeData, "scoretext");
@@ -84,8 +126,8 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
      * Converts a , separated list of formats (e.g. ABC,123) 
      * into a string array
      * 
-     * @param formats
-     * @return 
+     * @param formats comma separated list of input formats
+     * @return String[] array e.g. {"ABC", "123'}
      */
     private String[] expandWordFormats(String formats) {
         Vector formatsFound = new Vector();
@@ -109,10 +151,26 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
         return retVal;
     }
     
+    /**
+     * says that this a Idevice.MODE_LWUIT_FORM type idevice
+     * 
+     * @return Idevice.MODE_LWUIT_FORM
+     */
     public int getMode() {
         return Idevice.MODE_LWUIT_FORM;
     }
     
+    
+    /**
+     * handleSubRequest was used to try and look through params.  Unfortunately
+     * because of a bug in LWUITs HTMLComponent when the input format is set the 
+     * parameters do not actually get set properly.  Therefor we are using
+     * the HTMLCallback to find this info
+     * 
+     * @param di DocumentInfo
+     * @return InputStream with a blank HTML Document
+     * @throws IOException 
+     */
     public InputStream handleSubRequest(DocumentInfo di) throws IOException {
         String msg = "<html><body>Got your form mate</body></html>";
         String formParams = di.getParams();
@@ -127,6 +185,14 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
     }
     
 
+    /**
+     * Main idevice method that will generate the form that is going to be used
+     * It will setup the HTMLComponent and create an HTMLCallback object for it
+     * to monitor user input and get an event when the user clicks the check
+     * answers button
+     * 
+     * @return Form for idevice
+     */
     public Form getForm() {
         if(frm == null) {
             //change stuff for textfield
@@ -159,6 +225,11 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
         return frm;
     }
     
+    /**
+     * Checks the answers and makes up new HTML by modifying the existing HTML,
+     * inserting a background-color according to if the answer is correct or not
+     * 
+     */
     public void checkAnswers() {
         StringBuffer newHTML = new StringBuffer(formHTML);
         
@@ -215,26 +286,60 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
         
     }
     
+    /**
+     * Update the answer given by the user
+     * 
+     * @param index the word index
+     * @param answer the answer now entered by the user
+     */
     void updateUserAnswer(int index, String answer) {
         currentAnswers[index] = answer;
     }
     
+    /**
+     * Utility method for logging
+     * @return #correctly answered first attempt, #correctly answered, #blanks total
+     */
     public int[] getScores() {
         return new int[] { correctFirst, MLearnUtils.countBoolValues(hadCorrect, true), 
             words.length };
     }
     
+    /**
+     * This is a quiz style device
+     * 
+     * @return Idevice.LOG_QUIZ
+     */
     public int getLogType() {
         return LOG_QUIZ;
     }
     
 }
+
+/**
+ * This HTMLCallback is used to listen for when the user has entered an answer
+ * and figure out 
+ * @author mike
+ */
 class ClozeHTMLCallback extends DefaultHTMLCallback{
     
+    /** The ClozeIdevice that we are working for */
     ClozeIdevice clozeDev;
 
     
-    
+    /**
+     * This is a hackish method that we use to set the input formats on text fields.
+     * 
+     * All textfields are set to have a value of clozeBankINDEXNUM.  This is then
+     * recognized, and the TextField then has it's input formats set
+     * 
+     * We are using this because if we use the standard wap attribute/value pairs
+     * the events will not be fired and the parameter values will not be stored
+     * because of a bug in HTMLComponent in LWUIT.
+     * 
+     * @param c LWUIT container to dig through
+     * @return Vector of all child components in the container
+     */
     private Vector getChildComponents(Container c) {
         int numChildren = c.getComponentCount();
         Vector retVal = new Vector();
@@ -269,6 +374,15 @@ class ClozeHTMLCallback extends DefaultHTMLCallback{
         return retVal;
     }
     
+    /**
+     * This is listened for so that we can get the components, set the correct
+     * input formats and wipe out the clozeBlankINDEX part of the value in the 
+     * textfield
+     * 
+     * @param htmlC HTMLComponent concerned
+     * @param status DefaultHTMLCallBack.STATUS_ field
+     * @param url URL selected
+     */
     public void pageStatusChanged(HTMLComponent htmlC, int status, String url) {
         
         if(status == STATUS_DISPLAYED) {
@@ -282,17 +396,34 @@ class ClozeHTMLCallback extends DefaultHTMLCallback{
     }
 
     
-    
+    /**
+     * Does nothing
+     * 
+     * @param ae
+     * @param htmlc
+     * @param htmle 
+     */
     public void actionPerformed(ActionEvent ae, HTMLComponent htmlc, HTMLElement htmle) {
 
         System.out.println("EVENT ACTION PERFORMED");
         
     }
 
+    /**
+     * This is used to listen for when the user has entered a new value in a 
+     * textfield
+     * 
+     * @param type unused
+     * @param index unused
+     * @param htmlC concerned HTMLComponent
+     * @param textField concerned TextField
+     * @param element concerned HTMLElement containing the id attribute
+     */
     public void dataChanged(int type, int index, HTMLComponent htmlC, TextField textField, HTMLElement element) {
         String id = element.getAttribute("id");
         String val = textField.getText();
         
+        //spot if this is a clozeBlank field - if so update the answers from the user known
         if(id.startsWith(clozeDev.prefix)) {
             int wordNum = Integer.parseInt(id.substring(clozeDev.prefix.length()));
             clozeDev.updateUserAnswer(wordNum, val);
@@ -300,27 +431,14 @@ class ClozeHTMLCallback extends DefaultHTMLCallback{
         super.dataChanged(type, index, htmlC, textField, element);
     }
 
-    /*
-    public String fieldSubmitted(HTMLComponent htmlC, TextArea ta, String actionURL, String id, String value, int type, String errorMsg) {
-        System.out.println("submit: " +  value);
-        HTMLElement el = clozeDev.comp.getDOM();
-        String realVal = ta.getText();
-        Vector inputChildren = clozeDev.comp.getDOM().getDescendantsByTagName("input");
-        
-        String prefix = "clozeBlank";
-        for(int i = 0; i < inputChildren.size(); i++) {
-            HTMLElement currentChild = (HTMLElement)inputChildren.elementAt(i);
-            String childId = currentChild.getAttribute("id");
-            if(childId != null && childId.startsWith(prefix)) {
-                int wordNum = Integer.parseInt(childId.substring(prefix.length()));
-                String childValue = currentChild.getAttribute("value");
-                clozeDev.updateUserAnswer(wordNum, childValue);
-            }
-        }
-        return super.fieldSubmitted(htmlC, ta, actionURL, id, value, type, errorMsg);
-    }
-    */
-
+    /**
+     * Action Handler for when the link at the bottom to check answers gets
+     * clicked.  Will call the checkAnswers method and then update the form
+     * 
+     * @param htmlC concerned HTMLComponent
+     * @param url URL currently showing
+     * @return true to indicate continue with the event
+     */
     public boolean linkClicked(HTMLComponent htmlC, String url) {
         System.out.println("Clicked link for " + url);
         if(url.endsWith("#")) {

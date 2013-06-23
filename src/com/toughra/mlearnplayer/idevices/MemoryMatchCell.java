@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer.idevices;
 
@@ -15,38 +30,58 @@ import java.util.Vector;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 
 /**
- *
+ * Represents a cell in the Memory match Idevice
+ * 
  * @author mike
  */
 public class MemoryMatchCell extends Container{
     
+    /** Our host idevice*/
     MemoryMatchIdevice idevice;
     
-    //pair that we are part of
+    /**pair that we are part of*/
     MemoryMatchPair pair;
     
+    /** Cell is currently covered*/
     public static final int STATE_COVERED = 0;
     
+    /** Cell is currently showing waiting for another selection*/
     public static final int STATE_SHOWING = 1;
     
+    /** Cell is answered / done */
     public static final int STATE_ANSWERED = 2;
     
+    /** State of the cell as per STATE_ static variables */
     public int state;
     
+    /** The component that is showing for this cell right now*/
     private Component showing;
     
-    //label when covered
+    /**label when covered*/
     Label coverLabel;
     
-    //text comp
+    /** the html component that is being matched */
     HTMLComponent htmlCmp;
     
+    /** preferred size */
     private Dimension prefSize;
     
+    /** Action Listener for when this is clicked */
     Vector actionListeners;
     
+    /** ID for state change event */
     public static final int CMD_ID_STATECHG = 2;
     
+    
+    /**
+     * Constructor
+     * 
+     * @param idevice our host idevice
+     * @param hostMidlet our host midlet
+     * @param coverImg the cover Image for this cell to show when covered
+     * @param displayStr HTML of what to show inside this cell
+     * @param pair Pair object so we can figure out which other cell we match with
+     */
     public MemoryMatchCell(MemoryMatchIdevice idevice, MLearnPlayerMidlet hostMidlet, Image coverImg, String displayStr, MemoryMatchPair pair) {
         this.idevice = idevice;
         this.pair = pair;
@@ -67,6 +102,11 @@ public class MemoryMatchCell extends Container{
         actionListeners = new Vector();
     }
 
+    /**
+     * Provides the preferred dimension - refers back to idevice.cellWidth and cellHeight
+     * 
+     * @return Dimension representing preferred size
+     */
     protected Dimension calcPreferredSize() {
         if(prefSize == null) {
             prefSize = new Dimension(idevice.cellWidth, idevice.cellHeight);
@@ -74,6 +114,11 @@ public class MemoryMatchCell extends Container{
         return prefSize;
     }
 
+    /**
+     * Watch for when the main event happens.
+     * 
+     * @param k 
+     */
     public void keyReleased(int k) {
         System.out.println("Key " + k);
         if(k == -5) {
@@ -82,18 +127,37 @@ public class MemoryMatchCell extends Container{
         super.keyReleased(k);
     }
     
+    
+    /**
+     * LWUIT UIID for this component
+     * 
+     * @return "MemoryMatchCell"
+     */
     public String getUIID() {
         return "MemoryMatchCell";
     }
 
+    /**
+     * Add action listener
+     * @param l Listener to add
+     */
     public void addActionListener(ActionListener l) {
         actionListeners.addElement(l);
     }
     
+    /**
+     * Remove action listener
+     * 
+     * @param l Listener to remove
+     */
     public void removeActionListener(ActionListener l) {
         actionListeners.removeElement(l);
     }
     
+    /**
+     * Fires the event when the main button is pushed to change the state
+     * of this cell
+     */
     protected void fireActionEvent() {
         int num = actionListeners.size();
         Command cmd = new Command("statechg", CMD_ID_STATECHG);
@@ -104,6 +168,11 @@ public class MemoryMatchCell extends Container{
         }
     }
     
+    /**
+     * Handles a state change to the desired newState and paints the item
+     * appropriately 
+     * @param newState STATE_SHOWING, STATE_COVERED 
+     */
     public void changeState(int newState) {
         if(newState != this.state) {
             removeComponent(showing);
@@ -120,6 +189,11 @@ public class MemoryMatchCell extends Container{
         }
     }
     
+    /**
+     * See if this cell matches with another cell
+     * @param otherCell the other cell to check against
+     * @return true if this is a correct match, false otherwise
+     */
     public boolean isMatch(MemoryMatchCell otherCell) {
         MemoryMatchCell myOther;
         if(pair.aCell == this) {

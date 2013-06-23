@@ -1,10 +1,24 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer.datatx;
 
-//Taken from http://www.developer.nokia.com/Community/Wiki/HTTP_Post_multipart_file_upload_in_Java_ME
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,7 +31,19 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.EXEStrMgr;
- 
+
+/**
+ * Utility class that will send a file attachment as an http form multipart request
+ * 
+ * Usage:
+ * 
+ * 1. Instantiate the class
+ * 2. Call the send() method
+ * 
+ * Taken from http://www.developer.nokia.com/Community/Wiki/HTTP_Post_multipart_file_upload_in_Java_ME
+ * 
+ * @author mike
+ */
 public class HttpMultipartRequest
 {
 	static final String BOUNDARY = "----------V2ymHFg03ehbqgZCaKO6jy";
@@ -25,18 +51,31 @@ public class HttpMultipartRequest
 	//byte[] postBytes = null;
 	String url = null;
         
+        /**HTTP Response code from the Server - e.g. 200 for OK*/
         int respCode = -1;
         
-        //this is the file that will be read for the file field
+        /**The URI of the file - will use FileConnection to get it's contents to send*/
         String fileConURI;
         
+        /** Boundary message for http conversation*/
         String boundaryMessage;
         
+        /** end of boundary message for http conversation*/
         String endBoundary;
         
-        //if we need to skip bytes that were already sent
+        /** Bytes to skip from file (e.g. partial upload) */
         public long skipBytes = 0L;
  
+        /**
+         * 
+         * @param url URL to post to
+         * @param params HTTP fields to send as parameters to be accessed by script as key/value pairs
+         * @param fileField The HTTP field to use for sending the file
+         * @param fileName The name of the file to send as it will be presented to the server
+         * @param fileType The mime type of the file as it will be presented to the server
+         * @param fileConURI the URI of the file for FileConnection to get it's contents
+         * @throws Exception 
+         */
 	public HttpMultipartRequest(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI) throws Exception
 	{
 		this.url = url;
@@ -50,11 +89,26 @@ public class HttpMultipartRequest
                 this.fileConURI = fileConURI;
 	}
  
+        /**
+         * Getter for boundary string
+         * 
+         * @return 
+         */
 	String getBoundaryString()
 	{
 		return BOUNDARY;
 	}
  
+        /**
+         * Generates the boundary message
+         * 
+         * @param boundary boundary unique string
+         * @param params Hashtable of key/value pairs
+         * @param fileField the field to use for the file
+         * @param fileName The name of the file to present to the remote server
+         * @param fileType The mime type of the file to present to the remote server
+         * @return Boundary message to use with http request
+         */
 	String getBoundaryMessage(String boundary, Hashtable params, String fileField, String fileName, String fileType)
 	{
 		StringBuffer res = new StringBuffer("--").append(boundary).append("\r\n");
@@ -76,6 +130,13 @@ public class HttpMultipartRequest
 		return res.toString();
 	}
  
+        /**
+         * Send the message
+         * 
+         * @return The response of the server to the request
+         * 
+         * @throws Exception 
+         */
 	public byte[] send() throws Exception
 	{
 		HttpConnection hc = null;
@@ -127,17 +188,6 @@ public class HttpMultipartRequest
                     
                     dout.write(endBoundary.getBytes());
  
-                
-                    /*
-                    bos.write(boundaryMessage.getBytes());
-                    bos.write(fileBytes);
-                    bos.write(endBoundary.getBytes());
- 
-		this.postBytes = bos.toByteArray();
-                *                     dout.write(postBytes);
-
-                    */
-                    
                     dout.flush();
                     dout.close();
                     

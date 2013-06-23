@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 package com.toughra.mlearnplayer;
 
@@ -19,7 +34,8 @@ import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.xml.XmlNode;
 
 /**
- *
+ * Assortment of utility methods
+ * 
  * @author mike
  */
 public class MLearnUtils {
@@ -59,7 +75,14 @@ public class MLearnUtils {
         
         return retVal;
     }
-    
+   
+    /**
+     * Prints out the free memory, and checks vs. the last time free printFreeMem
+     * was called
+     * 
+     * @param midlet host midlet
+     * @param opMessage message to show alongside (e.g. what is going on before)
+     */
     public static void printFreeMem(MLearnPlayerMidlet midlet, String opMessage) {
         long memFreeBefore = memFree;
         long memFreeNow = checkFreeMem();
@@ -72,9 +95,9 @@ public class MLearnUtils {
     /**
      * Gets the text of the first node to match a given name - useful for
      * &lt;propname&gt;Text val&lt;/propname&gt;
-     * @param parent
-     * @param nodeName
-     * @return 
+     * @param parent the parent node to search through children of
+     * @param nodeName the name of the tag e.g. propname
+     * @return the value of text inside the &lt;propname&gt; e.g. Text val
      */
     public static String getTextProperty(XmlNode parent, String nodeName) {
         XmlNode node = (XmlNode)parent.findChildrenByTagName(nodeName, true).elementAt(0);
@@ -119,6 +142,13 @@ public class MLearnUtils {
         return -1;
     }
     
+    /**
+     * Shuffle an array (because java.util.Collections is not in j2me)
+     * 
+     * @param array Array to shuffle
+     * @param start starting pos
+     * @param length length to shuffle through
+     */
     public static void shuffleArray(Object[] array, int start, int length) {
         Object[] arrObj = (Object[])array;
         Random r = new Random();
@@ -132,6 +162,12 @@ public class MLearnUtils {
         }
     }
     
+    
+    /**
+     * Shuffle the entire array
+     * 
+     * @param array Array to shuffle
+     */
     public static void shuffleArray(Object array) {
         Object[] arrObj = (Object[])array;
         shuffleArray(arrObj, 0, arrObj.length);
@@ -153,9 +189,17 @@ public class MLearnUtils {
         return res;
     }
     
+    /**
+     * Gets the string contents of the file given by path - useful for flat files
+     * 
+     * @param path
+     * @return Contents of the file as a String
+     * 
+     */
     public static String readFile(String path) {
         String str = null;
         try {
+            //we'll use this method because it will read the whole thing adn close it
             ByteArrayInputStream bin = (ByteArrayInputStream)
                 IOWatcher.makeWatchedInputStream(path);
             str = Util.readToString(bin);
@@ -185,7 +229,7 @@ public class MLearnUtils {
     
     /**
      * 
-     * Used to find the collection id of a directory
+     * Used to find the collection title of a directory
      * 
      * @param dir
      * @return 
@@ -200,6 +244,13 @@ public class MLearnUtils {
         return str;
     }
     
+    /**
+     * Make a boolean array and fill it with the given value
+     * 
+     * @param value default value to set each element to
+     * @param size - length of the array to generate
+     * @return boolean[] array filled set to the given value
+     */
     public static boolean[] makeBooleanArray(boolean value, int size) {
         boolean[] retVal = new boolean[size];
         for (int i = 0; i < size; i++) {
@@ -209,6 +260,13 @@ public class MLearnUtils {
         return retVal;
     }
     
+    /**
+     * Count the number of occurences of value (eg. true/false) in the array
+     * 
+     * @param arr Array to search through
+     * @param val value to look for
+     * @return number of times val occurs in arr
+     */
     public static int countBoolValues(boolean[] arr, boolean val) {
         int count = 0;
         int size = arr.length;
@@ -221,7 +279,13 @@ public class MLearnUtils {
         return count;
     }
     
-    //Localization
+    /**
+     * Localization method to lookup a string from the locale currently in use
+     * 
+     * @param key string key
+     * 
+     * @return the translation of that key in the current language
+     */
     public static String _(String key) {
         Hashtable ht = MLearnPlayerMidlet.getInstance().localeHt;
         if(ht != null) {
@@ -233,6 +297,12 @@ public class MLearnUtils {
         return key;
     }
     
+    /**
+     * Puts all the remaining elements from an Enumeration into a vector
+     * 
+     * @param e Enumeration to use
+     * @return Vector with all remaining elements from Enumeration e
+     */
     public static Vector enumToVector(Enumeration e) {
         Vector v = new Vector();
         while(e.hasMoreElements()) {
@@ -242,6 +312,16 @@ public class MLearnUtils {
         return v;
     }
     
+    /**
+     * Opens a file in 'append' mode.  If the file does not exist - it will create
+     * the file.  If the file exists it will set the pointer to the file size
+     * (e.g. append to the end of the file)
+     * 
+     * @param fileCon FileConnection object for the file
+     * @return OutputStream for the file set to end of file
+     * 
+     * @throws IOException 
+     */
     public static OutputStream openFileOutputAppendMode(FileConnection fileCon) throws IOException{
         OutputStream out = null;
         if(fileCon.exists()) {
@@ -253,17 +333,35 @@ public class MLearnUtils {
         
         return out;
     }
-    
+
+    /**
+     * Simply copy from the inputstream to the outputstream
+     * 
+     * @param in InputStream 
+     * @param out  OutputStream
+     * @throws IOException 
+     */
     public static void copyStrm(InputStream in, OutputStream out) throws IOException {
         Util.copy(in, out);
     }
     
+    
+    /**
+     * Loads the Hashtable from the given fileURL
+     * 
+     * TODO: Point this to MLearnPreferences implementation - this is a duplicate
+     * 
+     * @param fileURL URL pointing to the serialized hashtable
+     * @return Hashtable from the fileURL
+     */
     public static Hashtable loadHTFile(String fileURL) {
         return loadHTFile(fileURL, false);
     }
     
     /**
      * Loads a datainputstream made ht table
+     * 
+     * TODO: Point this to MLearnPreferences implementation - this is a duplicate
      * 
      * @param fileURL - url to load (passed dir to connector.open)
      * @param autoBlank - if it does not exist - return a blank one

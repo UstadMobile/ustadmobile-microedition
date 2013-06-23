@@ -1,3 +1,23 @@
+/*
+ * Ustad Mobil.  
+ * Copyright 2011-2013 Toughra Technologies FZ LLC.
+ * www.toughra.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
 package com.toughra.mlearnplayer;
 
 import com.toughra.mlearnplayer.xml.XmlNode;
@@ -15,6 +35,12 @@ import com.toughra.mlearnplayer.idevices.SlideShowIdevice;
 import java.io.*;
 import org.kxml2.io.KXmlParser;
 
+/**
+ * This class is used to take an XML idevice input stream and turn it into the 
+ * appropriate type of idevice
+ * 
+ * @author mike
+ */
 public class IdeviceFactory {
 
         
@@ -28,15 +54,28 @@ public class IdeviceFactory {
             return ideviceNode;
         }
         
+        /**
+         * Overloaded method
+         * 
+         * @param input
+         * @param ideviceId
+         * @param host
+         * @return
+         * @throws Exception 
+         */
         public static Idevice makeIdevice(InputStream input, String ideviceId, MLearnPlayerMidlet host) throws Exception{
             return makeIdevice(input, ideviceId, host, null);
         }
         
     
 	/**
-	 * 
+	 * Returns an idevice object given the required inputstream
+         * and the device id to look for.  Will check through the types of
+         * devices it knows about and instantiate the correct class of object.
+         * 
 	 * @param input Input XML stream
 	 * @param ideviceId id of the idevice itself one is looking for
+         * @param host - the host midlet
          * @param ideviceNode XmlNode data for the idevice if it is already available (e.g. it was cached)
 	 * @return
 	 */
