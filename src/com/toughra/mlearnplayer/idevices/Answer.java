@@ -42,6 +42,9 @@ public class Answer {
     /**URI to audio to playback for feedback*/
     public String fbAudio;
 
+    /** The Question ID that this answer is tied to (optional) */
+    public int questionId;
+    
     /**
      * Constructor
      * 

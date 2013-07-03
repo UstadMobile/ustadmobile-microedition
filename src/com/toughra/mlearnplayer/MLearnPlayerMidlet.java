@@ -229,7 +229,19 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.02 (16/June/2013)";
+    public static final String versionInfo = "V: 0.9.1 (2/July/2013)";
+    
+    /** Set the RTL Mode on the basis of the package language */
+    public static final int RTLMODE_PACKAGE = 0;
+    
+    /** Set the RTL Mode on the basis of the settings for the app */
+    public static final int RTLMODE_SETTINGS = 1;
+    
+    /** Decide on RTL on the basis of settings language or package language */
+    public static int rtlMode = RTLMODE_SETTINGS;
+    
+    /** If an idevice needs some to be focused after a form is shown - set me here*/
+    public Component focusMeAfterFormShows;
     
     /**
      * Not really used - using EXEStrMgr instead
@@ -886,6 +898,12 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 
                 //save where we are if we are using a collection
                 deviceForm.show();
+                if(focusMeAfterFormShows != null) {
+                    Component currentFocus = deviceForm.getFocused();
+                    deviceForm.setFocused(null);
+                    deviceForm.setFocused(focusMeAfterFormShows);
+                    focusMeAfterFormShows = null;
+                }
                 
                 MLearnUtils.printFreeMem(this, "show " + device.getClass().getName());
                 

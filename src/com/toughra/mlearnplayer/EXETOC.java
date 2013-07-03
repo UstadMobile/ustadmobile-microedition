@@ -327,7 +327,12 @@ public class EXETOC implements ActionListener{
             cache = new TOCCache();
             XmlNode rootNode = gParser.parseXML((KXmlParser)parsers[RET_KXMLPARSER],
                     true);
-            String lang = rootNode.getAttribute("xml:lang");
+            String lang = null;
+            if(MLearnPlayerMidlet.rtlMode == MLearnPlayerMidlet.RTLMODE_SETTINGS) {
+                lang = EXEStrMgr.getInstance().getPref("locale");
+            }else {
+                lang = rootNode.getAttribute("xml:lang");
+            }
             boolean thisIsRTL = false;
             if(lang != null) {
                 lang = lang.substring(0, 2);

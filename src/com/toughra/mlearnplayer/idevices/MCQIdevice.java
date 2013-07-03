@@ -25,7 +25,10 @@ import com.sun.lwuit.events.ActionEvent;
 import com.toughra.mlearnplayer.Idevice;
 import com.sun.lwuit.*;
 import com.sun.lwuit.events.ActionListener;
+import com.sun.lwuit.events.FocusListener;
+import com.sun.lwuit.geom.Dimension;
 import com.sun.lwuit.html.HTMLComponent;
+import com.sun.lwuit.layouts.GridLayout;
 import com.sun.lwuit.plaf.Border;
 import com.sun.lwuit.table.TableLayout;
 import java.util.*;
@@ -76,6 +79,22 @@ public class MCQIdevice extends Idevice implements ActionListener {
     
     //false if question not yet answered/attempted by student
     boolean[] qAttempted;
+    
+    /** width of border when an item is hilighted to be moved */
+    static int borderWidthHilight = 3;
+    
+    /** normal width of border of item*/
+    static int borderWidthNormal = 1;
+    
+    /** padding between the button and it's html contents */
+    static int padding = 5;
+    
+    /** color of border normally */
+    static int normalColor = 0x000000;
+    
+    /** color of border when hilighted to be moved */
+    static int activeColor = 0xff0000;
+    
 
     /** 
      * Constructor - setup the for, dig through the questions and answers
@@ -118,6 +137,7 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 Answer answer = new Answer(answerText,
                         currentAnswer.getAttribute("iscorrect").equals("true"), 
                         new Integer(i), feedback);
+                answer.questionId = i;
                 
                 if(feedbackNode.hasAttribute("audio")) {
                     answer.fbAudio = feedbackNode.getAttribute("audio");
@@ -149,27 +169,35 @@ public class MCQIdevice extends Idevice implements ActionListener {
      */
     public Form getForm() {
         form = new Form();
+
         
-        TableLayout tLayout = new TableLayout((totalQuestions*2) + totalAnswers,
+        //GridLayout gLayout = new GridLayout(totalQuestions + totalAnswers, 1);
+        TableLayout tLayout = new TableLayout(totalQuestions + totalAnswers, 1);
+        /*TableLayout tLayout = new TableLayout((totalQuestions*2) + totalAnswers,
                 2);
         TableLayout.setMinimumSizePerColumn(20);
+        form.setLayout(tLayout);
+        */
         form.setLayout(tLayout);
         
         selectedAnswers = new int[totalQuestions];
 
+        Component toFocus = null;
+        
         for(int i = 0; i < questions.size(); i++) {
-            TableLayout.Constraint qConstrtaint = tLayout.createConstraint();
-            qConstrtaint.setHorizontalSpan(2);
             
             HTMLComponent qHTML = hostMidlet.makeHTMLComponent(questions.elementAt(i).toString());
             qHTML.setFocusable(false);
-            form.addComponent(qConstrtaint, qHTML);
+            form.addComponent(qHTML);
             
             Vector questionAnswers = (Vector)answers.elementAt(i);
             String qId = String.valueOf(i);
-            RadioButton[] buttonArr = new RadioButton[questionAnswers.size()];
+            
+            //RadioButton[] buttonArr = new RadioButton[questionAnswers.size()];
+            MCQAnswerItem[] itemArr = new MCQAnswerItem[questionAnswers.size()];
             
             for(int j = 0; j < questionAnswers.size();j++) {
+                /*
                 Answer currentAnswer = (Answer)questionAnswers.elementAt(j);
                 RadioButton rButton = new RadioButton();
                 buttonArr[j] = rButton;
@@ -177,39 +205,57 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 rButton.setText("");
                 rButton.setGroup(qId);
                 rButton.addActionListener(this);
+                boolean canFocus = rButton.isFocusable();
+                rButton.setFocusable(true);
+                if(j == 0) {
+                    rButton.setSelected(true);
+                }
                 TableLayout.Constraint rButtonCon = tLayout.createConstraint();
                 rButtonCon.setWidthPercentage(20);
                 rButton.setAlignment(Component.CENTER);
                 form.addComponent(rButtonCon, rButton);
+                if(j == 0 && i == 0) {
+                    
+                    hostMidlet.focusMeAfterFormShows = rButton;
+                }
+                
+                
                 
                 TableLayout.Constraint answerCon = tLayout.createConstraint();
                 answerCon.setWidthPercentage(80);
                 HTMLComponent answerComp = hostMidlet.makeHTMLComponent(currentAnswer.answerText);
                 //answerComp.setFocusable(false);
                 form.addComponent(answerCon, answerComp);
+                */
+                Answer currentAnswer = (Answer)questionAnswers.elementAt(j);
+                HTMLComponent answerComp = hostMidlet.makeHTMLComponent(currentAnswer.answerText);
+                MCQAnswerItem thisItem = new MCQAnswerItem(this, answerComp, currentAnswer);
+                
+                thisItem.updateStyle();
+                itemArr[j] = thisItem;
+                TableLayout.Constraint tConst = tLayout.createConstraint();
+                tConst.setWidthPercentage(100);
+                form.addComponent(tConst, thisItem);
+                
+                if(i == 0 && j == 0) {
+                    form.setFocused(thisItem);
+                    thisItem.setFocus(true);
+                    thisItem.updateStyle();
+                }
+                thisItem.addActionListener(this);
             }
             
             for(int j = 0; j < questionAnswers.size();j++) {
                 if(j > 0) {
-                    buttonArr[j].setNextFocusUp(buttonArr[j-1]);
+                    itemArr[j].setNextFocusUp(itemArr[j-1]);
                 }
                 if(j < questionAnswers.size() -1) {
-                    buttonArr[j].setNextFocusDown(buttonArr[j+1]);
-                }
-                
-                if (j == 0) {
-                    buttonArr[j].requestFocus();
+                    itemArr[j].setNextFocusDown(itemArr[j+1]);
                 }
             }
             
             
         }
-        TableLayout.Constraint bConstrain2 =  tLayout.createConstraint();
-        Label labelSpan = new Label(" ");
-        labelSpan.getStyle().setBorder(Border.createBevelRaised());
-        bConstrain2.setHorizontalSpan(2);
-        form.addComponent(bConstrain2, labelSpan);
-                
         
         return form;
     }
@@ -221,19 +267,15 @@ public class MCQIdevice extends Idevice implements ActionListener {
      * @param ae  ActionEvent
      */
     public void actionPerformed(ActionEvent ae) {
-        if(ae.getComponent() instanceof RadioButton) {
+        if(ae.getComponent() instanceof MCQAnswerItem) {
             ae.consume();
-            RadioButton srcButton = (RadioButton)ae.getComponent();
-            int qId = Integer.parseInt(srcButton.getGroup());
+            MCQAnswerItem ansItem = (MCQAnswerItem)ae.getComponent();
             
             
-            selectedAnswers[qId] = srcButton.getCommand().getId();
-        
-            int selectedAnswerNum = selectedAnswers[qId];
             FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
-            Answer selectedAnswer = (Answer)
-                    ((Vector)answers.elementAt(qId)).elementAt(selectedAnswerNum);
-            fbDialog.showFeedback(srcButton, selectedAnswer.feedback, selectedAnswer.isCorrect);
+            Answer selectedAnswer = ansItem.answer;
+            fbDialog.showFeedback(ansItem, selectedAnswer.feedback, selectedAnswer.isCorrect);
+            int qId = selectedAnswer.questionId;
             
             if(!qAttempted[qId]) {
                 qAttempted[qId] = true;
@@ -297,5 +339,165 @@ public class MCQIdevice extends Idevice implements ActionListener {
             questions.size()
         };
     }
+    
+}
+
+
+
+/**
+ * Utility container class to represent an MCQ Answer item.  Replaces the 
+ * RadioButton based version so that it's easier to select and has fewer
+ * focus issues
+ * 
+ * 
+ * @author mike
+ */
+class MCQAnswerItem extends Container implements FocusListener{
+    
+    /** our host idevice*/
+    private MCQIdevice idevice;
+    
+    protected Answer answer;
+    
+    HTMLComponent realComp;
+    
+    /**
+     * Constructor 
+     * 
+     * @param idevice our host idevice
+     */
+    MCQAnswerItem(MCQIdevice idevice,HTMLComponent realComp, Answer answer) {
+        this.idevice = idevice;
+        this.answer = answer;
+        addFocusListener(this);
+        GridLayout layout = new GridLayout(1,1);
+        setLayout(layout);
+        this.realComp = realComp;
+        
+        realComp.setFocusable(false);
+        realComp.setScrollable(false);
+        addComponent(realComp);
+        setFocusable(true);
+        Form f;
+    }
+    
+    public Dimension getPreferredSize() {
+        Dimension d = realComp.getPreferredSize();
+        
+        return new Dimension(d.getWidth() + (idevice.borderWidthHilight*2) + (idevice.padding * 2),
+                d.getHeight() + (idevice.borderWidthHilight * 2) + (idevice.padding * 2));
+    }
+    
+    /**
+     * Comparator method to be used to check for correct ordering by the user
+     * 
+     * @param other
+     * @return true if this is the same object, false otherwise
+     */
+    public boolean equals(Object other) {
+        if(other == this) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    public void keyReleased(int k) {
+        //the big button
+        if(k == -5) {
+            fireActionEvent(k);
+        }
+        super.keyReleased(k); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
+
+    /**
+     * When we get focus - tell the parent idevice about this
+     * 
+     * @param cmpnt 
+     */
+    public void focusGained(Component cmpnt) {
+        int x = 0;
+    }
+
+    public void focusLost(Component cmpnt) {
+        int x = 0;
+    }
+    
+    
+    /**item is held down / ready to move*/
+    boolean active = false;
+    
+    /** action listeners - used for going active/inactive*/
+    Vector actionListeners;
+    
+    /**
+     * Add ActionListener for when this item goes active/inactive
+     * @param l ActionListener
+     */
+    public void addActionListener(ActionListener l) {
+        if(actionListeners == null) {
+            actionListeners = new Vector();
+        }
+        actionListeners.addElement(l);
+    }
+    
+    /**
+     * Remove an ActionListener for when this item goes active/inactive
+     * 
+     * @param l ActionListener
+     */
+    public void removeActionListener(ActionListener l) {
+        actionListeners.removeElement(l);
+    }
+    
+    /**
+     * Fire event for keycode
+     * @param k keycode
+     */
+    void fireActionEvent(int k) {
+        ActionEvent evt = new ActionEvent(this, k);
+        MLearnUtils.fireActionEventToAll(actionListeners, evt);
+    }
+    
+    /**
+     * Update the style to set the border color and width for this item according
+     * to whether it is currently active or inactive
+     */
+    public void updateStyle() {
+        for(int j = 0; j < SortIdevice.allDirs.length; j++) {
+            //TODO: remove dependency on SortIdevice
+            getStyle().setPadding(SortIdevice.allDirs[j], idevice.padding, true);
+            getSelectedStyle().setPadding(SortIdevice.allDirs[j], idevice.padding, true);
+        }
+        
+        int color = (active == true) ? idevice.activeColor : 0x000000;
+
+        getStyle().setBorder(
+                Border.createLineBorder(idevice.borderWidthNormal, color));
+
+        getSelectedStyle().setBorder(
+                Border.createLineBorder(idevice.borderWidthHilight, color));
+
+    }
+    
+    /**
+     * Set whether this so it can be moved around (or not) 
+     * @param active true if it should be 
+     */
+    public void setActive(boolean active) {
+        if(active) {
+            getSelectedStyle().setBorder(Border.createLineBorder(
+                    MCQIdevice.borderWidthHilight, SortIdevice.activeColor));
+        }else {
+            getSelectedStyle().setBorder(Border.createLineBorder(
+                    MCQIdevice.borderWidthHilight, SortIdevice.normalColor));
+        }
+        
+        this.active = active;
+        repaint();
+    }
+    
     
 }

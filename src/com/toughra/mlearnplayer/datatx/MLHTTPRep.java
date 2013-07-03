@@ -51,12 +51,68 @@ import com.toughra.mlearnplayer.MLearnUtils;
  */
 public class MLHTTPRep {
      
+    /** Used to access the replication status of our own logs*/
+    protected Hashtable repStatus;
+    
+    /** Return from sendLog indicates all data was sent already - nothing more to send*/
+    public static final int STATUS_ALREADYSENT = 0;
+    
+    /** Return from send log indicating there was an error */
+    public static final int STATUS_SEND_ERROR = -1;
+    
+    /**
+     * This function shall send our own logs (e.g. those from this phone)
+     * over the http connection (e.g. instead of using the bluetooth replication
+     * functionality)
+     * 
+     */
+    public void sendOwnLogs(MLObjectPusher pusher) {
+        String logSendMethod = EXEStrMgr.getInstance().getPref("logsend.method");
+        if(logSendMethod != null && logSendMethod.equals("http")) {
+            String url = EXEStrMgr.getInstance().getPref("httptx.url");
+            Vector selfRepList = pusher.checkRepFiles();
+            Hashtable repStatusHT = pusher.getRepStatus();
+            
+            for(int i = 0; i < selfRepList.size(); i++) {
+                String cFname = selfRepList.elementAt(i).toString();
+                
+                long alreadySent = pusher.getReplicationSent(repStatusHT, cFname);
+                boolean doSwap = false;
+                if(EXEStrMgr.getInstance().logFileOpen(cFname)) {
+                    EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOBUF);
+                    doSwap = true;
+                }
+                
+                System.out.println("need to send: ");
+                
+                String fileURL = EXEStrMgr.getInstance().getPref("basefolder") +
+                        "/" + cFname;
+                
+                try {
+                    long sizeSentTo = sendLog(fileURL, cFname, true, alreadySent);
+                    if(sizeSentTo > 0) {
+                        repStatusHT.put(cFname, String.valueOf(sizeSentTo));
+                    }
+                }catch(Exception e) {
+                    EXEStrMgr.po(e, "Exception attempting to send log directly");
+                }
+                
+                if(doSwap) {
+                    EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOFILE);
+                }
+                
+            }
+            
+            pusher.saveRepStatus(repStatusHT);
+        }
+    }
+    
     /**
      * the main logic of the class - will pick up settings from the preferences
      * and look for any logs that need sent (e.g. modified since .sent file was
      * last modified)
      */
-    public void sendLogs() {
+    public void sendLogs(MLObjectPusher pusher) {
         try {
             //make sure that the server knows that we exist
             checkCallHome();
@@ -66,6 +122,10 @@ public class MLHTTPRep {
             if(url == null) {
                 return;
             }
+            
+            //if we are set to do so - send our own logs directly to the server.
+            sendOwnLogs(pusher);
+            
             String logBaseDir =EXEStrMgr.getInstance().getPref("basefolder")
                     + "/logrx";
             FileConnection dirCon = (FileConnection)Connector.open(logBaseDir);
@@ -76,7 +136,16 @@ public class MLHTTPRep {
             for(int i = 0; i < fileList.size(); i++) {
                 String bname = fileList.elementAt(i).toString();
                 try {
-                    sendLog(logBaseDir + "/" + bname, bname);
+                    String fileURI = logBaseDir + "/" + bname;
+                    String sentFileURI = fileURI + ".sent";
+                    long alreadySent = MLearnUtils.getIntFromFile(sentFileURI);
+                    
+                    long fileSizeSent = sendLog(fileURI, bname, false, alreadySent);
+                    
+                    //TODO: potential for trouble as we are writing an int - this should be long
+                    MLearnUtils.writeIntToFile((int)fileSizeSent, sentFileURI);
+                    
+                    EXEStrMgr.po("Updated sent file " + sentFileURI, EXEStrMgr.DEBUG);
                     EXEStrMgr.po("Sent " + bname, EXEStrMgr.DEBUG);
                 }catch(IOException e) {
                     EXEStrMgr.po(e, " Exception sending " + bname);
@@ -138,20 +207,33 @@ public class MLHTTPRep {
      * 
      * @param fileURI The complete URI to pass to Connector
      * @param basename The basename of the file which is used to set the filename in the HTTP request
+     * @param alreadySent - the number of bytes already sent
      * @throws Exception if something goes wrong
      */
-    public void sendLog(String fileURI, String basename) throws Exception{
+    public long sendLog(String fileURI, String basename, boolean isOwnLog, long alreadySent) throws Exception{
         FileConnection fcon = (FileConnection)Connector.open(fileURI, Connector.READ, true);
-        String sentFileURI = fileURI + ".sent";
-        int alreadySent = MLearnUtils.getIntFromFile(sentFileURI);
+        
+        
+        
         Hashtable params = new Hashtable();
         
-        String studentUUID = basename.substring(0, basename.indexOf('-'));
-        Hashtable stdNames = MLServerThread.getInstance().getStudentNames();
-        String studentName = stdNames.get(studentUUID) != null ? 
-                stdNames.get(studentUUID).toString() : "unknown";
-        params.put("student_uuid", studentUUID);
-        params.put("student_learnername", studentName);
+        String studentUUID = null;
+        if(isOwnLog) {
+            studentUUID = EXEStrMgr.getInstance().getPref("uuid");
+        }else {
+            studentUUID = basename.substring(0, basename.indexOf('-'));
+        }
+        
+        if(isOwnLog) {
+            params.put("student_uuid", EXEStrMgr.getInstance().getPref("uuid"));
+            params.put("student_learnername", EXEStrMgr.getInstance().getPref("learnername"));
+        }else {
+            Hashtable stdNames = MLServerThread.getInstance().getStudentNames();
+            String studentName = stdNames.get(studentUUID) != null ? 
+                    stdNames.get(studentUUID).toString() : "unknown";
+            params.put("student_uuid", studentUUID);
+            params.put("student_learnername", studentName);
+        }
         
         String dataUsername = EXEStrMgr.getInstance().getPref("httptx.username");
         String dataPass = EXEStrMgr.getInstance().getPref("httptx.password");
@@ -159,16 +241,26 @@ public class MLHTTPRep {
         params.put("txuser", dataUsername);
         params.put("txpass", dataPass);
         
-        int fileSize = (int)fcon.fileSize();
+        long fileSize = fcon.fileSize();
         fcon.close();
         
         if(alreadySent >= fileSize) {
             EXEStrMgr.po("Already sent " + fileURI + " : " + alreadySent + " bytes", EXEStrMgr.DEBUG);
-            return;
+            return STATUS_ALREADYSENT;
+        }
+        
+        if(alreadySent >= 0) {
+            EXEStrMgr.po("Already sent " + alreadySent + " bytes out of " + fileSize, EXEStrMgr.DEBUG);
         }
         
         
         String url = EXEStrMgr.getInstance().getPref("httptx.url");
+        
+        //if we are sending our own logs - rename this as the server expects it
+        if(isOwnLog) {
+            basename = EXEStrMgr.getInstance().getPref("uuid") + "-" + basename;
+        }
+        
         HttpMultipartRequest req = new HttpMultipartRequest(
                 url, params, "filecontent", basename, "text/plain", fileURI);
         
@@ -184,14 +276,16 @@ public class MLHTTPRep {
             
             if(respCode == 200) {
                 //everything OK - write a log of how much we have sent
-                MLearnUtils.writeIntToFile(fileSize, sentFileURI);
-                EXEStrMgr.po("Updated sent file " + sentFileURI, EXEStrMgr.DEBUG);
+                return fileSize;
             }
             
             EXEStrMgr.po("Server says : " + respCode + " : " + responseStr, EXEStrMgr.DEBUG);
         }else {
             EXEStrMgr.po("Null came back ... ", EXEStrMgr.WARN);
         }
+        
+        //this means that we did not get to a response - so something went wrong
+        return -1;
     }
     
 }

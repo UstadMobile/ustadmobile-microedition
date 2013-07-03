@@ -85,7 +85,7 @@ public class MLObjectPusher extends Thread{
                 }
                 
                 //also - send the logs through if that has been set
-                new MLHTTPRep().sendLogs();
+                new MLHTTPRep().sendLogs(this);
                 
                 countDown = REPDELAY;
             }
@@ -301,6 +301,23 @@ public class MLObjectPusher extends Thread{
         EXEStrMgr.po("Saved repstatus " + fileBaseName + "sent " + fileLen, EXEStrMgr.DEBUG);
     }
     
+    /**
+     * Given the filename of the activity log that you want to check - sees 
+     * how much of that has been sent
+     * 
+     * @param repStatus Hashtable mapped size -> Long object
+     * @param cFname filename
+     * 
+     * @return size in bytes of replication data already sent
+     */
+    public long getReplicationSent(Hashtable repStatus, String cFname) {
+        Object sentSizeObj = repStatus.get(cFname);
+        long alreadySent = -1;
+        if(sentSizeObj != null) {
+            alreadySent = Long.parseLong(sentSizeObj.toString());
+        }
+        return alreadySent;    
+    }
     
     /**
      * Sends the log data files the Bluetooth connection - Look over all the
@@ -358,12 +375,9 @@ public class MLObjectPusher extends Thread{
                 
                 EXEStrMgr.getInstance().po("Checking status for " + cFname, EXEStrMgr.DEBUG);
                 //check rep status
-                Object sentSizeObj = repStatus.get(cFname);
-                long alreadySent = -1;
-                if(sentSizeObj != null) {
-                    alreadySent = Long.parseLong(sentSizeObj.toString());
-                }
-
+                long alreadySent = getReplicationSent(repStatus, cFname);
+                
+                
                 EXEStrMgr.getInstance().po("Found we have sent " + alreadySent + " for " + cFname,
                         EXEStrMgr.DEBUG);
 

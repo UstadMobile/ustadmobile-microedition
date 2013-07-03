@@ -176,6 +176,16 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     /** The http send command*/
     Command cmdHTTPSend;
     
+    /** Select to send via bluetooth or direct */
+    ButtonGroup logSendingGroup;
+    
+    /** setting indicates send via bluetooth */
+    public final static int LOG_SEND_BLUETOOTH = 0;
+    
+    /** setting indicates send direct via http */
+    public final static int LOG_SEND_HTTP = 1;
+    
+    
     //===end http stuff===
     
     /**
@@ -323,17 +333,18 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         }
         settingsForm.addComponent(svrOnCheckBox);
         
+        //http replications settings
+        cmdShowHTTP = new Command("Log Sending", 200);
+        Button httpRepButton = new Button(cmdShowHTTP);
+        httpRepButton.addActionListener(this);
+        settingsForm.addComponent(httpRepButton);
+        
 
         ///settings OK button
         Button settingOKButton = new Button(setOKCmd);
         settingOKButton.addActionListener(this);
         settingsForm.addComponent(settingOKButton);
         
-        //http replications settings
-        cmdShowHTTP = new Command("Log Sending", 200);
-        Button httpRepButton = new Button(cmdShowHTTP);
-        httpRepButton.addActionListener(this);
-        settingsForm.addComponent(httpRepButton);
         
         makeHTTPFrm();
         
@@ -341,7 +352,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     }
     
     /**
-     * Do the setup of the HTPT settings form.
+     * Do the setup of the HTTP settings form.
      * 
      * This will look for the umobiledata/txsettings/*.ht and expect a serialized
      * hashtable file.  Expects the keys server.username, server.url, and server.password
@@ -362,16 +373,47 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             
             httpSettingsList = MLearnUtils.enumToVector(con.list("*.ht", true));
             httpSettingGrp = new ButtonGroup();
+            String httpSetnameNow = EXEStrMgr.getInstance().getPref("httptx.setname");
             for(int i = 0; i < httpSettingsList.size(); i++) {
-                RadioButton rb = new RadioButton(httpSettingsList.elementAt(i).toString());
+                String thisSetName = httpSettingsList.elementAt(i).toString();
+                RadioButton rb = new RadioButton(thisSetName);
                 httpSettingGrp.add(rb);
                 frmHTTP.addComponent(rb);
+                if(httpSetnameNow != null && httpSetnameNow.equals(thisSetName)) {
+                    rb.setSelected(true);
+                    httpSettingGrp.setSelected(rb);
+                }
             }
             RadioButton noTXBtn = new RadioButton("None");
             httpSettingGrp.add(noTXBtn);
             frmHTTP.addComponent(noTXBtn);
+            if(httpSetnameNow == null) {
+                noTXBtn.setSelected(true);
+                httpSettingGrp.setSelected(noTXBtn);
+            }
+            
         }catch(IOException e) {
             EXEStrMgr.po(e, "Exception making http settings form");
+        }
+        
+        frmHTTP.addComponent(new Label(MLearnUtils._("Log Sending Method")));
+        logSendingGroup = new ButtonGroup();
+        
+        RadioButton sendBTButton = new RadioButton("Via Teacher/Bluetooth");
+        logSendingGroup.add(sendBTButton);
+        frmHTTP.addComponent(sendBTButton);
+        
+        RadioButton sendHTTPButton = new RadioButton("Direct via Internet");
+        logSendingGroup.add(sendHTTPButton);
+        frmHTTP.addComponent(sendHTTPButton);
+        
+        String logSendSetting = EXEStrMgr.getInstance().getPref("logsend.method");
+        if(logSendSetting != null && logSendSetting.equals("http")) {
+            sendHTTPButton.setSelected(true);
+            logSendingGroup.setSelected(1);
+        }else {
+            sendBTButton.setSelected(true);
+            logSendingGroup.setSelected(0);
         }
         
         frmHTTP.addComponent(new Label(MLearnUtils._("Username")));
@@ -422,11 +464,14 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     private void updateHTTPSettings() {
         int httpSel = httpSettingGrp.getSelectedIndex();
         
+        int logSendingSel = logSendingGroup.getSelectedIndex();
+        
         if(httpSel == httpSettingsList.size()) {
             //they have select no tx
             EXEStrMgr.getInstance().delPref("httptx.url");
             EXEStrMgr.getInstance().delPref("httptx.username");
             EXEStrMgr.getInstance().delPref("httptx.password");    
+            EXEStrMgr.getInstance().delPref("httptx.setname");
             EXEStrMgr.getInstance().savePrefs();
         }else {
             String basename = httpSettingsList.elementAt(httpSel).toString();
@@ -434,6 +479,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                     + "/txsettings/" + basename);
             if(setHT != null) {
                 String txURL = setHT.get("server.url").toString();
+                EXEStrMgr.getInstance().setPref("httptx.setname", basename);
                 EXEStrMgr.getInstance().setPref("httptx.url", 
                         txURL);
                 EXEStrMgr.getInstance().setPref("httptx.username",
@@ -447,6 +493,13 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 EXEStrMgr.po("Failure updating http settings", EXEStrMgr.DEBUG);
             }
         }
+        
+        if(logSendingSel == LOG_SEND_HTTP) {
+            EXEStrMgr.getInstance().setPref("logsend.method", "http");
+        }else {
+            EXEStrMgr.getInstance().setPref("logsend.method", "bluetooth");
+        }
+        
     }
     
     /**

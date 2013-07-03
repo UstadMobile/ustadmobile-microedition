@@ -29,6 +29,12 @@ import java.util.Hashtable;
  * 
  * For preference keys supported by the application please see the Wiki
  * 
+ * learnername - user's first / last name
+ * locale - the current locale
+ * logsend.method - set to 'http' to directly send log over http
+ * server.enabled - set to true to enable Bluetooth log replication server
+ * uuid - the UUID for this installation of Ustad Mobil
+ * 
  * @author mike
  */
 public class MLearnPreferences {
