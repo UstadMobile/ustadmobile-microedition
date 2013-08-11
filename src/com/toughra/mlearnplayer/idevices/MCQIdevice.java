@@ -193,40 +193,9 @@ public class MCQIdevice extends Idevice implements ActionListener {
             Vector questionAnswers = (Vector)answers.elementAt(i);
             String qId = String.valueOf(i);
             
-            //RadioButton[] buttonArr = new RadioButton[questionAnswers.size()];
             MCQAnswerItem[] itemArr = new MCQAnswerItem[questionAnswers.size()];
             
             for(int j = 0; j < questionAnswers.size();j++) {
-                /*
-                Answer currentAnswer = (Answer)questionAnswers.elementAt(j);
-                RadioButton rButton = new RadioButton();
-                buttonArr[j] = rButton;
-                rButton.setCommand(new Command(String.valueOf(j), j));
-                rButton.setText("");
-                rButton.setGroup(qId);
-                rButton.addActionListener(this);
-                boolean canFocus = rButton.isFocusable();
-                rButton.setFocusable(true);
-                if(j == 0) {
-                    rButton.setSelected(true);
-                }
-                TableLayout.Constraint rButtonCon = tLayout.createConstraint();
-                rButtonCon.setWidthPercentage(20);
-                rButton.setAlignment(Component.CENTER);
-                form.addComponent(rButtonCon, rButton);
-                if(j == 0 && i == 0) {
-                    
-                    hostMidlet.focusMeAfterFormShows = rButton;
-                }
-                
-                
-                
-                TableLayout.Constraint answerCon = tLayout.createConstraint();
-                answerCon.setWidthPercentage(80);
-                HTMLComponent answerComp = hostMidlet.makeHTMLComponent(currentAnswer.answerText);
-                //answerComp.setFocusable(false);
-                form.addComponent(answerCon, answerComp);
-                */
                 Answer currentAnswer = (Answer)questionAnswers.elementAt(j);
                 HTMLComponent answerComp = hostMidlet.makeHTMLComponent(currentAnswer.answerText);
                 MCQAnswerItem thisItem = new MCQAnswerItem(this, answerComp, currentAnswer);

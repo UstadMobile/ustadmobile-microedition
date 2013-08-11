@@ -148,4 +148,12 @@ public class MLearnPreferences {
         prefs.put(key, value);
     }
     
+    /**
+     * Delete a given key
+     * 
+     * @param key
+     */
+    public void deletePref(String key) {
+        prefs.remove(key);
+    }
 }

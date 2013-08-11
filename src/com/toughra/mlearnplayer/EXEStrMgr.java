@@ -125,8 +125,13 @@ public class EXEStrMgr {
                 prefs = new MLearnPreferences();
                 prefs.load(bout.toByteArray());
                 
+                //avoid weird things - even though there is no way it should be
+                //possible to load without a UUID
                 uuid = prefs.getPref("uuid");
-                
+                if(uuid == null) {
+                    uuid = makeUUID();
+                    prefs.setPref("uuid", uuid);
+                }
                 bout.close();
             }catch(IOException e) {
                 e.printStackTrace();
@@ -134,8 +139,7 @@ public class EXEStrMgr {
         }else {
             //this is our first run - create and generate a uuid
             prefs = new MLearnPreferences();
-            Random r = new Random(System.currentTimeMillis());
-            uuid = String.valueOf(Math.abs(r.nextLong()));
+            uuid = makeUUID();
             prefs.setPref("uuid", uuid);            
         }
         
@@ -143,6 +147,36 @@ public class EXEStrMgr {
             setupBaseFolder();
         }
         baseFolder = prefs.getPref("basefolder");
+    }
+    
+    /**
+     * Make a UUIID
+     */
+    public String makeUUID() {
+        Random r = new Random(System.currentTimeMillis());
+        String uuid = String.valueOf(Math.abs(r.nextLong()));
+        return uuid;
+    }
+    
+    public String getCloudUser() {
+        return prefs.getPref("clouduser");
+    }
+    
+    public void setCloudUser(String cloudUser) {
+        prefs.setPref("clouduser", cloudUser);
+    }
+    
+    public String getCloudPass() {
+        return prefs.getPref("cloudpass");
+    }
+    
+    public void setCloudPass(String cloudPass) {
+        prefs.setPref("cloudpass", cloudPass);
+    }
+    
+    public void doCloudLogout() {
+        prefs.deletePref("clouduser");
+        prefs.deletePref("cloudpass");
     }
     
     /**

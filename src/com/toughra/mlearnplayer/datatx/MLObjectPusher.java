@@ -78,11 +78,17 @@ public class MLObjectPusher extends Thread{
         while(enabled) {
             countDown -= TICK;
             if(countDown <= 0) {
-                String conURL = EXEStrMgr.getInstance().getPref("server.bt.url");
-                if(conURL != null) {
-                    checkRepFiles();
-                    sendData(conURL);
+                String logSendMethod = EXEStrMgr.getInstance().getPref("logsend.method");
+                
+                //see if we need to send logs over bluetooth...
+                if(logSendMethod == null && logSendMethod.equals("bluetooth")) {
+                   String conURL = EXEStrMgr.getInstance().getPref("server.bt.url");
+                    if(conURL != null) {
+                        checkRepFiles();
+                        sendData(conURL);
+                    }
                 }
+                
                 
                 //also - send the logs through if that has been set
                 new MLHTTPRep().sendLogs(this);
@@ -167,6 +173,8 @@ public class MLObjectPusher extends Thread{
      */
     public Vector checkRepFiles() {
         //check files to be replicated
+        
+        
         
         String baseDir = EXEStrMgr.getInstance().getPref("basefolder");
         Vector repList = new Vector();

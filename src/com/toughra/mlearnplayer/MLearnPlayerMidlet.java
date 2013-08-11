@@ -48,6 +48,7 @@ import com.toughra.mlearnplayer.datatx.MLServerThread;
 import com.toughra.mlearnplayer.idevices.EXERequestHandler;
 import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
+import gov.nist.siplite.stack.ServerLog;
 
 //#ifdef NOKIA
 //# import com.nokia.mid.ui.*;
@@ -229,7 +230,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.1 (2/July/2013)";
+    public static final String versionInfo = "V: 0.9.4 (10/Aug/2013)";
     
     /** Set the RTL Mode on the basis of the package language */
     public static final int RTLMODE_PACKAGE = 0;
@@ -243,6 +244,15 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** If an idevice needs some to be focused after a form is shown - set me here*/
     public Component focusMeAfterFormShows;
     
+    /** The main server that we talk to for all operations */
+    //#ifndef SERVER
+    public final static String masterServer = "nsmvpn.paiwastoon.net";
+    //#endif
+    
+    //#ifdef SERVER
+    //#expand public final static String masterServer = "%SERVER%";
+    //#endif
+    
     /**
      * Not really used - using EXEStrMgr instead
      * @see EXEStrMgr
@@ -251,32 +261,6 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      */
     public void logMsg(String msg) {
         System.out.println(msg);
-        /*if(debugStrm == null && currentPackageURI != null && currentPackageURI.length() > 8) {
-                OutputStream out = null;
-                try {
-                    String printOutDest = currentPackageURI + "/" + debugLogFile;
-                    System.out.println("Attempt to open for writing debug log: " + printOutDest);
-                    FileConnection fileCon = (FileConnection)Connector.open(printOutDest, 
-                            Connector.READ_WRITE);
-                    if(fileCon.exists()) {
-                        fileCon.truncate(0);
-                    }else {
-                        fileCon.create();
-                    }
-                    
-                    out = fileCon.openOutputStream();
-                }catch (Exception e) {
-                    e.printStackTrace();
-                }
-                debugStrm = new PrintStream(out);
-        }
-        
-        if(debugStrm != null) {
-            debugStrm.println(msg);
-            debugStrm.flush();
-        }
-        * 
-        */
     }
     
     /**
@@ -297,7 +281,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      */
     public void startApp() {
         hostMidlet = this;//uses for getInstance
-
+                
         com.sun.lwuit.Display.init(this);
         navListener = new NavigationActionListener(this);
         EXEStrMgr mgr = EXEStrMgr.getInstance(this);
@@ -326,9 +310,15 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         
         currentPackageURI = "/mxml1";
         
-        contentBrowser = new ContentBrowseForm(this);
-        contentBrowser.makeForm();
-        contentBrowser.show();
+        
+        //TODO: If not logged in show login form
+        if(EXEStrMgr.getInstance().getCloudUser() == null) {
+            showLoginForm();
+        }else {
+            contentBrowser = new ContentBrowseForm(this);
+            contentBrowser.makeForm();
+            contentBrowser.show();
+        }
         
         pushThread = new MLObjectPusher();
         pushThread.start(); 
@@ -340,6 +330,23 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
 //#             DeviceControl.setLights(0, 100);
 //#     new Thread(this).start();
         //#endif
+    }
+    
+    public void showLoginForm() {
+        showLoginForm(false);
+    }
+    
+    /**
+     * 
+     * @param forceLogout if true will nullify current cloud credentials
+     */
+    public void showLoginForm(boolean forceLogout) {
+        if(forceLogout) {
+            EXEStrMgr.getInstance().doCloudLogout();
+        }
+        ServerLoginForm loginForm = new ServerLoginForm(this);
+        loginForm.addActionListener(this);
+        loginForm.show();
     }
     
     /**
@@ -991,6 +998,11 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             //System.gc();
             currentHref = pageHref;
             loadPage(pageHref);
+        }else if(src instanceof ServerLoginForm) {
+            //dispose of the src
+            contentBrowser = new ContentBrowseForm(this);
+            contentBrowser.makeForm();
+            contentBrowser.show();
         }else if(src instanceof Form) {
             int key = evt.getKeyEvent();
             if(key == KEY_NEXT) {

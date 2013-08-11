@@ -20,7 +20,6 @@
 package com.toughra.mlearnplayer;
 
 import com.toughra.mlearnplayer.datatx.MLClientManager;
-import com.toughra.mlearnplayer.datatx.MLReportRequest;
 import com.toughra.mlearnplayer.datatx.MLServerThread;
 import com.toughra.mlearnplayer.datatx.MLObjectPusher;
 import com.sun.lwuit.*;
@@ -45,7 +44,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     private MLearnPlayerMidlet host;
     
     /** The keys that are used in the menu (looked up in the localization res) */
-    String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "teacherreport", "quit"};
+    String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "about", "quit", "logout"};
     
     /** Continue command ID */
     private static final int CONTINUE = 0;
@@ -74,7 +73,14 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     /** Quit command ID*/
     private static final int QUIT = 8;
     
+    /** Logout command ID*/
+    private static final int LOGOUT = 9;
+    
     private static final int SEARCHBT = 43;
+    
+    private static final int LOGOUTYES = 102;
+    
+    private static final int LOGOUTNO = 100;
     
     /** The main form object for the settings dialog*/
     Form settingsForm;
@@ -157,6 +163,9 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     
     /** Form that contains the about dialog*/
     Form aboutForm;
+    
+    /** Yes/No confirmation form */
+    Form logoutForm;
     
     /** Vector in the form of index -> filename for settings files (e.g. name.ht) */
     Vector httpSettingsList;
@@ -348,7 +357,17 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         
         makeHTTPFrm();
         
+        logoutForm = new Form(MLearnUtils._("Are you sure?"));
+        logoutForm.setLayout(new BoxLayout(BoxLayout.Y_AXIS));
         
+        String[] cmdLabels = {"No", "Yes"};
+        int[] cmdIds = {LOGOUTNO, LOGOUTYES};
+        for(int i = 0; i < cmdLabels.length; i++) {
+            Command cmd = new Command(MLearnUtils._(cmdLabels[i]), cmdIds[i]);
+            Button btn = new Button(cmd);
+            btn.addActionListener(this);
+            logoutForm.addComponent(btn);
+        }
     }
     
     /**
@@ -547,13 +566,17 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 MLObjectPusher.countDown = 0;//set this to zero to force the thread to run next tick
             }else if(cmd.getId() == ABOUTFORM) {
                 aboutForm.show();
+            }else if(cmd.getId() == LOGOUT) {
+                logoutForm.show();
             }else if(cmd.getId() == cmdShowHTTP.getId()) {
                 frmHTTP.show();
             }else if(cmd.getId() == cmdHTTPOK.getId()) {
                 updateHTTPSettings();
                 settingsForm.show();
-            }else if(cmd.getId() == cmdHTTPSend.getId()) {
-                
+            }else if(cmd.getId() == LOGOUTNO) {
+                show();
+            }else if(cmd.getId() == LOGOUTYES) {
+                MLearnPlayerMidlet.getInstance().showLoginForm(true);
             }
         }
     }

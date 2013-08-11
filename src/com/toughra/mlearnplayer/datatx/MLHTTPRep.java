@@ -20,12 +20,8 @@
 
 package com.toughra.mlearnplayer.datatx;
 
-import com.sun.lwuit.io.ConnectionRequest;
-import com.sun.lwuit.io.NetworkManager;
 import com.sun.lwuit.io.util.Util;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Vector;
 import javax.microedition.io.Connector;
@@ -33,6 +29,8 @@ import javax.microedition.io.HttpConnection;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnUtils;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
 /**
  * This class takes care of sending student logs collected from other devices
@@ -124,33 +122,38 @@ public class MLHTTPRep {
             }
             
             //if we are set to do so - send our own logs directly to the server.
+            EXEStrMgr.po("Starting to send own files", EXEStrMgr.DEBUG);
             sendOwnLogs(pusher);
+            EXEStrMgr.po("Finished sending own files", EXEStrMgr.DEBUG);
             
+            EXEStrMgr.po("Starting to look for files from other devices to replicate", EXEStrMgr.DEBUG);
             String logBaseDir =EXEStrMgr.getInstance().getPref("basefolder")
                     + "/logrx";
             FileConnection dirCon = (FileConnection)Connector.open(logBaseDir);
-            Vector fileList = MLearnUtils.enumToVector(dirCon.list("*activity.log", true));
-            dirCon.close();
-                        
-            //go through all the files in the list
-            for(int i = 0; i < fileList.size(); i++) {
-                String bname = fileList.elementAt(i).toString();
-                try {
-                    String fileURI = logBaseDir + "/" + bname;
-                    String sentFileURI = fileURI + ".sent";
-                    long alreadySent = MLearnUtils.getIntFromFile(sentFileURI);
-                    
-                    long fileSizeSent = sendLog(fileURI, bname, false, alreadySent);
-                    
-                    //TODO: potential for trouble as we are writing an int - this should be long
-                    MLearnUtils.writeIntToFile((int)fileSizeSent, sentFileURI);
-                    
-                    EXEStrMgr.po("Updated sent file " + sentFileURI, EXEStrMgr.DEBUG);
-                    EXEStrMgr.po("Sent " + bname, EXEStrMgr.DEBUG);
-                }catch(IOException e) {
-                    EXEStrMgr.po(e, " Exception sending " + bname);
+            
+            if(dirCon.isDirectory()) {
+                Vector fileList = MLearnUtils.enumToVector(dirCon.list("*activity.log", true));
+                dirCon.close();
+
+                //go through all the files in the list
+                for(int i = 0; i < fileList.size(); i++) {
+                    String bname = fileList.elementAt(i).toString();
+                    try {
+                        String fileURI = logBaseDir + "/" + bname;
+                        String sentFileURI = fileURI + ".sent";
+                        long alreadySent = MLearnUtils.getIntFromFile(sentFileURI);
+
+                        long fileSizeSent = sendLog(fileURI, bname, false, alreadySent);
+
+                        //TODO: potential for trouble as we are writing an int - this should be long
+                        MLearnUtils.writeIntToFile((int)fileSizeSent, sentFileURI);
+
+                        EXEStrMgr.po("Updated sent file " + sentFileURI, EXEStrMgr.DEBUG);
+                        EXEStrMgr.po("Sent " + bname, EXEStrMgr.DEBUG);
+                    }catch(IOException e) {
+                        EXEStrMgr.po(e, " Exception sending " + bname);
+                    }
                 }
-                
             }
         }catch(Exception e) {
             EXEStrMgr.po(e, "Exception sending logs ");
@@ -166,37 +169,83 @@ public class MLHTTPRep {
     public void checkCallHome() {
         String calledHome = EXEStrMgr.getInstance().getPref("player.calledhome");
         long lastCallHomeTime = 0L;
+        EXEStrMgr.po("Doing check call home", EXEStrMgr.DEBUG);
         if(calledHome != null) {
             lastCallHomeTime = Long.parseLong(calledHome);
         }
         long timeNow = System.currentTimeMillis() / 1000;
         
         //has it been more than an hour since we called home?
-        if((timeNow - lastCallHomeTime) > 3600) {
+        long timeDiff = (timeNow - lastCallHomeTime);
+        
+        //just in case the date was set wrong
+        if(timeDiff > 600 || timeDiff < 0) {
             //do the call home to make sure that the phone is talking before it goes out
+            String uuid = EXEStrMgr.getInstance().getPref("uuid");
+            String learnerName = EXEStrMgr.getInstance().getPref("learnername");
+            EXEStrMgr.po("Preparing call home for " + uuid + " / " + learnerName,
+                    EXEStrMgr.DEBUG);
+            
             String url = EXEStrMgr.getInstance().getPref("httptx.url");
             
             Hashtable params = new Hashtable();
-            String uuid = EXEStrMgr.getInstance().getPref("uuid");
+            
             params.put("action", "callhome");
             params.put("uuid", uuid);
-            params.put("learnername", EXEStrMgr.getInstance().getPref("learnername"));
+            params.put("learnername", learnerName);
             
+            HttpConnection hc = null;
+            InputStream din = null;
+            
+            //TODO: Encode these values
+            String requestStr = "action=callhome&uuid=" + uuid + "&learnername=" 
+                    + Util.encodeUrl(learnerName) 
+                    + "&utime=" + String.valueOf(System.currentTimeMillis());
+            EXEStrMgr.po("Preparing call to with arg " + requestStr,
+                    EXEStrMgr.DEBUG);
             try {
-                HttpMultipartRequest req = new HttpMultipartRequest(
-                    url, params, "filecontent", uuid, "text/plain", null);
-                byte[] response = req.send();
-                String respStr  = new String(response);
-                if(req.respCode == 200) {
-                    long utime = System.currentTimeMillis() / 1000;
+                String fullURL = url + "?" + requestStr;
+                hc = (HttpConnection)Connector.open(fullURL);
+                hc.setRequestMethod(HttpConnection.GET);
+                
+                din = hc.openInputStream();
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                int b;
+                while((b = din.read()) != -1) {
+                    bout.write(b);
+                }
+                din.close();
+                din = null;
+                
+                bout.flush();
+                String responseStr = new String(bout.toByteArray());
+                bout.close();
+                bout = null;
+                
+                if(hc.getResponseCode() == 200) {
+                    long utime = System.currentTimeMillis()/1000;
                     EXEStrMgr.getInstance().setPref(
                             "player.calledhome", String.valueOf(utime));
+                    EXEStrMgr.po("Sent callhome : got response: " + responseStr, 
+                            EXEStrMgr.DEBUG);
+                }else {
+                    EXEStrMgr.po("Callhome error: " + hc.getResponseCode() + ": " +
+                            responseStr, EXEStrMgr.DEBUG);
                 }
             }catch(Exception e) {
                 EXEStrMgr.po(e, "Error running callhome");
+            }finally {
+                try {
+                    if(din != null) din.close();
+                    if(hc != null) hc.close();
+                }catch(IOException e) {
+                    EXEStrMgr.po(e, "Error ending/closing callhome");
+                }
             }
             
         }
+        
+        EXEStrMgr.po("Finished check call home", EXEStrMgr.DEBUG);
     }
     
     /**

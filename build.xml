@@ -156,7 +156,8 @@ supported character set.
                 srcdir="${src.dir}" 
                 destdir="${src.preprocessed.NOKIA}"
                 device="Nokia"
-                symbols="NOKIA,MEDIAENABLED,DEBUGLOG"
+                version="2"
+                symbols="NOKIA,MEDIAENABLED,DEBUGLOG,SERVER=nsmvpn.paiwastoon.net"
                 printsymbols="true"/>
             </target>
             
@@ -194,7 +195,7 @@ supported character set.
                     <attribute name="MicroEdition-Profile" value="MIDP-${wtk.midp.version}"/>
                     <attribute name="Nokia-MIDlet-Category" value="Application"/>
                     <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.obex.client, javax.microedition.io.Connector.obex.server, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
-                    
+                    <attribute name="Umobile-Server" value="ustadmobile.com"/>
                     
                     <attribute name="progressive_download" value="enabled"/>
                     
