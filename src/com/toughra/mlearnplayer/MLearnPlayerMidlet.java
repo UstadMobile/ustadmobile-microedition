@@ -296,7 +296,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
 
             EXEStrMgr.getInstance().p("Ustad Mobile version: " + this.versionInfo, EXEStrMgr.DEBUG);
             EXEStrMgr.getInstance().p("Loaded theme", 1);
-            
+            if(EXEStrMgr.rootMessages != null) {
+                EXEStrMgr.po(EXEStrMgr.rootMessages, EXEStrMgr.DEBUG);
+            }
             //setup locale management
             EXEStrMgr.getInstance().initLocale();
             

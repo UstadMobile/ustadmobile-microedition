@@ -181,7 +181,7 @@ supported character set.
                 <wtkjad jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" 
                     jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
                     name="Ustad Mobile"
-                    vendor="PAIWASTOON">
+                    vendor="Toughra Technologies FZ LLC">
                         
                         
                     <midlet icon="exemobicon.png" name="${Midlet_1_name}" class="${Midlet_1_class}"></midlet>

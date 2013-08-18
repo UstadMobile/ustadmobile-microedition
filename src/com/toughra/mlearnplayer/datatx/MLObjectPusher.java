@@ -78,17 +78,18 @@ public class MLObjectPusher extends Thread{
         while(enabled) {
             countDown -= TICK;
             if(countDown <= 0) {
-                String logSendMethod = EXEStrMgr.getInstance().getPref("logsend.method");
+                //String logSendMethod = EXEStrMgr.getInstance().getPref("logsend.method");
                 
                 //see if we need to send logs over bluetooth...
+                
+                /* This is no longer really supported for the moment
                 if(logSendMethod == null && logSendMethod.equals("bluetooth")) {
                    String conURL = EXEStrMgr.getInstance().getPref("server.bt.url");
                     if(conURL != null) {
                         checkRepFiles();
                         sendData(conURL);
                     }
-                }
-                
+                }*/
                 
                 //also - send the logs through if that has been set
                 new MLHTTPRep().sendLogs(this);
@@ -173,7 +174,7 @@ public class MLObjectPusher extends Thread{
      */
     public Vector checkRepFiles() {
         //check files to be replicated
-        
+        EXEStrMgr.po("checkRepFiles() looking for logs to send ",EXEStrMgr.DEBUG);
         
         
         String baseDir = EXEStrMgr.getInstance().getPref("basefolder");
@@ -185,6 +186,7 @@ public class MLObjectPusher extends Thread{
             Enumeration e= dirCon.list();
             while(e.hasMoreElements()) {
                 String name = e.nextElement().toString();
+                EXEStrMgr.po("checkRepFiles() found file : " + name ,EXEStrMgr.DEBUG);
                 if(name.endsWith("-activity.log")) {
                     repList.addElement(name);
                     EXEStrMgr.po("Should replicate "+ name, EXEStrMgr.DEBUG);
@@ -320,7 +322,7 @@ public class MLObjectPusher extends Thread{
      */
     public long getReplicationSent(Hashtable repStatus, String cFname) {
         Object sentSizeObj = repStatus.get(cFname);
-        long alreadySent = -1;
+        long alreadySent = 0;
         if(sentSizeObj != null) {
             alreadySent = Long.parseLong(sentSizeObj.toString());
         }

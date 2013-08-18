@@ -28,6 +28,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.EXEStrMgr;
+import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -65,44 +66,43 @@ public class MLHTTPRep {
      * 
      */
     public void sendOwnLogs(MLObjectPusher pusher) {
-        String logSendMethod = EXEStrMgr.getInstance().getPref("logsend.method");
-        if(logSendMethod != null && logSendMethod.equals("http")) {
-            String url = EXEStrMgr.getInstance().getPref("httptx.url");
-            Vector selfRepList = pusher.checkRepFiles();
-            Hashtable repStatusHT = pusher.getRepStatus();
-            
-            for(int i = 0; i < selfRepList.size(); i++) {
-                String cFname = selfRepList.elementAt(i).toString();
-                
-                long alreadySent = pusher.getReplicationSent(repStatusHT, cFname);
-                boolean doSwap = false;
-                if(EXEStrMgr.getInstance().logFileOpen(cFname)) {
-                    EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOBUF);
-                    doSwap = true;
-                }
-                
-                System.out.println("need to send: ");
-                
-                String fileURL = EXEStrMgr.getInstance().getPref("basefolder") +
-                        "/" + cFname;
-                
-                try {
-                    long sizeSentTo = sendLog(fileURL, cFname, true, alreadySent);
-                    if(sizeSentTo > 0) {
-                        repStatusHT.put(cFname, String.valueOf(sizeSentTo));
-                    }
-                }catch(Exception e) {
-                    EXEStrMgr.po(e, "Exception attempting to send log directly");
-                }
-                
-                if(doSwap) {
-                    EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOFILE);
-                }
-                
+        String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
+        
+        Vector selfRepList = pusher.checkRepFiles();
+        Hashtable repStatusHT = pusher.getRepStatus();
+
+        for(int i = 0; i < selfRepList.size(); i++) {
+            String cFname = selfRepList.elementAt(i).toString();
+
+            long alreadySent = pusher.getReplicationSent(repStatusHT, cFname);
+            boolean doSwap = false;
+            if(EXEStrMgr.getInstance().logFileOpen(cFname)) {
+                EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOBUF);
+                doSwap = true;
             }
-            
-            pusher.saveRepStatus(repStatusHT);
+
+            System.out.println("need to send: " + cFname);
+
+            String fileURL = EXEStrMgr.getInstance().getPref("basefolder") +
+                    "/" + cFname;
+
+            try {
+                long sizeSentTo = sendLog(fileURL, cFname, true, alreadySent);
+                if(sizeSentTo > 0) {
+                    repStatusHT.put(cFname, String.valueOf(sizeSentTo));
+                }
+            }catch(Exception e) {
+                EXEStrMgr.po(e, "Exception attempting to send log directly");
+            }
+
+            if(doSwap) {
+                EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOFILE);
+            }
+
         }
+
+        pusher.saveRepStatus(repStatusHT);
+
     }
     
     /**
@@ -112,10 +112,8 @@ public class MLHTTPRep {
      */
     public void sendLogs(MLObjectPusher pusher) {
         try {
-            //make sure that the server knows that we exist
-            checkCallHome();
+            String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
             
-            String url = EXEStrMgr.getInstance().getPref("httptx.url");
             //if the url is null it means no data transmission
             if(url == null) {
                 return;
@@ -160,93 +158,6 @@ public class MLHTTPRep {
         }
     }
     
-    /**
-     * A callhome message is a utility so that you can see from an http server
-     * if a phone sent out has been active or not.  Send a callhome every hour
-     * whilst running
-     * 
-     */
-    public void checkCallHome() {
-        String calledHome = EXEStrMgr.getInstance().getPref("player.calledhome");
-        long lastCallHomeTime = 0L;
-        EXEStrMgr.po("Doing check call home", EXEStrMgr.DEBUG);
-        if(calledHome != null) {
-            lastCallHomeTime = Long.parseLong(calledHome);
-        }
-        long timeNow = System.currentTimeMillis() / 1000;
-        
-        //has it been more than an hour since we called home?
-        long timeDiff = (timeNow - lastCallHomeTime);
-        
-        //just in case the date was set wrong
-        if(timeDiff > 600 || timeDiff < 0) {
-            //do the call home to make sure that the phone is talking before it goes out
-            String uuid = EXEStrMgr.getInstance().getPref("uuid");
-            String learnerName = EXEStrMgr.getInstance().getPref("learnername");
-            EXEStrMgr.po("Preparing call home for " + uuid + " / " + learnerName,
-                    EXEStrMgr.DEBUG);
-            
-            String url = EXEStrMgr.getInstance().getPref("httptx.url");
-            
-            Hashtable params = new Hashtable();
-            
-            params.put("action", "callhome");
-            params.put("uuid", uuid);
-            params.put("learnername", learnerName);
-            
-            HttpConnection hc = null;
-            InputStream din = null;
-            
-            //TODO: Encode these values
-            String requestStr = "action=callhome&uuid=" + uuid + "&learnername=" 
-                    + Util.encodeUrl(learnerName) 
-                    + "&utime=" + String.valueOf(System.currentTimeMillis());
-            EXEStrMgr.po("Preparing call to with arg " + requestStr,
-                    EXEStrMgr.DEBUG);
-            try {
-                String fullURL = url + "?" + requestStr;
-                hc = (HttpConnection)Connector.open(fullURL);
-                hc.setRequestMethod(HttpConnection.GET);
-                
-                din = hc.openInputStream();
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                int b;
-                while((b = din.read()) != -1) {
-                    bout.write(b);
-                }
-                din.close();
-                din = null;
-                
-                bout.flush();
-                String responseStr = new String(bout.toByteArray());
-                bout.close();
-                bout = null;
-                
-                if(hc.getResponseCode() == 200) {
-                    long utime = System.currentTimeMillis()/1000;
-                    EXEStrMgr.getInstance().setPref(
-                            "player.calledhome", String.valueOf(utime));
-                    EXEStrMgr.po("Sent callhome : got response: " + responseStr, 
-                            EXEStrMgr.DEBUG);
-                }else {
-                    EXEStrMgr.po("Callhome error: " + hc.getResponseCode() + ": " +
-                            responseStr, EXEStrMgr.DEBUG);
-                }
-            }catch(Exception e) {
-                EXEStrMgr.po(e, "Error running callhome");
-            }finally {
-                try {
-                    if(din != null) din.close();
-                    if(hc != null) hc.close();
-                }catch(IOException e) {
-                    EXEStrMgr.po(e, "Error ending/closing callhome");
-                }
-            }
-            
-        }
-        
-        EXEStrMgr.po("Finished check call home", EXEStrMgr.DEBUG);
-    }
     
     /**
      * Sends a log file to the server.  It will look up the student information
@@ -284,12 +195,6 @@ public class MLHTTPRep {
             params.put("student_learnername", studentName);
         }
         
-        String dataUsername = EXEStrMgr.getInstance().getPref("httptx.username");
-        String dataPass = EXEStrMgr.getInstance().getPref("httptx.password");
-        
-        params.put("txuser", dataUsername);
-        params.put("txpass", dataPass);
-        
         long fileSize = fcon.fileSize();
         fcon.close();
         
@@ -303,32 +208,27 @@ public class MLHTTPRep {
         }
         
         
-        String url = EXEStrMgr.getInstance().getPref("httptx.url");
+        String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
         
         //if we are sending our own logs - rename this as the server expects it
         if(isOwnLog) {
             basename = EXEStrMgr.getInstance().getPref("uuid") + "-" + basename;
         }
         
-        HttpMultipartRequest req = new HttpMultipartRequest(
-                url, params, "filecontent", basename, "text/plain", fileURI);
+        byte[] response = MLCloudConnector.getInstance().sendFile(url, params, "filecontent", 
+                basename, "text/plain", fileURI, alreadySent);
         
-        //used for partial uploads
-        if(alreadySent > 0) {
-            req.skipBytes = alreadySent;
-        }
         
-        byte[] response = req.send();
         if(response != null) {
             String responseStr = new String(response);
-            int respCode = req.respCode;
+            int respCode = MLCloudConnector.getInstance().getLastResponseCode();
+            EXEStrMgr.po("Cloud Server says : " + respCode + " : " + responseStr, EXEStrMgr.DEBUG);
             
             if(respCode == 200) {
                 //everything OK - write a log of how much we have sent
                 return fileSize;
             }
             
-            EXEStrMgr.po("Server says : " + respCode + " : " + responseStr, EXEStrMgr.DEBUG);
         }else {
             EXEStrMgr.po("Null came back ... ", EXEStrMgr.WARN);
         }

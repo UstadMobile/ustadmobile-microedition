@@ -21,9 +21,12 @@ package com.toughra.mlearnplayer.datatx;
 
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
+import com.toughra.mlearnplayer.MLearnUtils;
 import javax.microedition.io.*;
 import java.io.*;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import javax.microedition.io.file.FileConnection;
 
 /**
  *
@@ -31,14 +34,32 @@ import java.util.Hashtable;
  */
 public class MLCloudConnector {
     
+    /** Instance of self */
     private static MLCloudConnector instance;
     
     /** Socket connection to the server*/
     private SocketConnection  conn;
     
+    /** InputStream going to the server */
     private InputStream in;
     
+    /** OutputStream coming from the server*/
     private OutputStream out;
+    
+    /** The boundary for HTTP Post requests */
+    static final String BOUNDARY = "----------V2ymHFg03ehbqgZCaKO6jy";
+    
+    /** HTTP response code of last request */
+    private int lastResponseCode;
+    
+    /** The string to append to the server URL for login*/
+    public static String CLOUD_LOGIN_PATH="/login.php";
+    
+    /** The String to append to the server URL for log submission */
+    public static String CLOUD_LOGSUBMIT_PATH="/umobile/datarxdummy.php";
+    
+    /** The String to append to the server URL for callhome submission */
+    public static String CLOUD_CALLHOME_PATH="/umobile/datarxdummy.php";
     
     public static final MLCloudConnector getInstance() {
         if(instance == null) {
@@ -58,6 +79,10 @@ public class MLCloudConnector {
      *     being used.
      */
     private void openConnection() {
+        if(conn != null) {
+            return;
+        }
+        
         try {
             conn = (SocketConnection)Connector.open("socket://" + MLearnPlayerMidlet.masterServer
                     + ":80");
@@ -70,7 +95,7 @@ public class MLCloudConnector {
             
             in = conn.openInputStream();
             out = conn.openOutputStream();
-            
+            System.out.println("Opened up connection to cloud server");
         }catch(Exception e) {
             e.printStackTrace();
             EXEStrMgr.po(e, "Exception getting connection to server going");
@@ -91,65 +116,56 @@ public class MLCloudConnector {
         try {
             // now reading the response
             EXEStrMgr.po("Request header sent, waiting for response...", EXEStrMgr.DEBUG);
-            byte[] buf = new byte[1024];
-            int contentLength = -1;
             
             ByteArrayOutputStream headerStream = new ByteArrayOutputStream(800);
+            long contentLength = -1;
+            
+            //first read all of the header
+            boolean inHeader = true;
+            int b = -1;
             byte numCRs = 0;
             byte numLFs = 0;
             int bytesToGo = 1;
-            while (bytesToGo > 0) {
-                int count = in.read(buf);
-                int headerCount = 0;
-                
-                if (count == -1) {
-                    // end-of-stream
-                    break;
-                }
-                if (headerStream != null) {
-                    for (int i = 0; i < count; i++) {
-                        headerCount++;
-                        if (buf[i] == '\n') {
-                            numLFs++;
-                            if (numLFs == 2 && numCRs == 2) {
-                                // end of HTTP 1.1 header (ascii)
-                                String hdrText = new String(headerStream.toByteArray());
-                                responseStatus = Integer.parseInt(hdrText.substring(9, 12));
-                                int clPos = hdrText.toLowerCase().indexOf("content-length: ");
-                                if (clPos == -1) {
-                                    // reading till the end of stream
-                                    bytesToGo = Integer.MAX_VALUE;
-                                } else {
-                                    contentLength = Integer.parseInt(
-                                            hdrText.substring(clPos + 16,
-                                            hdrText.indexOf("\r\n", clPos + 17)));
-                                    bytesToGo = contentLength - (count - i - 1);
-                                }
-
-                                EXEStrMgr.po("Got header, receiving body...", EXEStrMgr.DEBUG);
-                                headerStream = null;
-                                
-                                //write the remainder to the main output stream
-                                out.write(buf, headerCount, count - headerCount);
-                                
-                                break;
-                            }
-                        } else if (buf[i] == '\r') {
-                            numCRs++;
-                        } else {
-                            numLFs = 0;
-                            numCRs = 0;
-                        }
-                        headerStream.write(buf[i]);
+            do {
+                b = in.read();
+                if(b == '\n') {
+                    numLFs++;
+                    if(numCRs == 2 && numLFs == 2) {
+                        inHeader = false;
+                        break;//header is over
                     }
+                }else if(b == '\r') {
+                    numCRs++;
                 }else {
-                    out.write(buf);
-                    bytesToGo -= count;
-                    if (contentLength != -1) {
-                        EXEStrMgr.po("Loading body, " + bytesToGo
-                                + " more byte(s) to receive", EXEStrMgr.DEBUG);
-                    }
+                    numLFs = 0;
+                    numCRs = 0;
                 }
+                headerStream.write(b);
+            }while(inHeader && b != -1);
+            
+            String hdrText = new String(headerStream.toByteArray());
+            responseStatus = Integer.parseInt(hdrText.substring(9, 12));
+            lastResponseCode = responseStatus;
+            int clPos = hdrText.toLowerCase().indexOf("content-length: ");
+            if (clPos == -1) {
+                // reading till the end of stream
+                throw new IllegalArgumentException("MLCloudConnector: Content-length was not specified on response.");
+            } else {
+                contentLength = Integer.parseInt(
+                        hdrText.substring(clPos + 16,
+                        hdrText.indexOf("\r\n", clPos + 17)));
+                bytesToGo = (int)contentLength;
+            }
+            
+            //imagine one byte
+            b = 0;
+            while(bytesToGo > 0) {
+                b = in.read();
+                if(b == -1) {
+                    break;//end of stream..
+                }
+                out.write(b);
+                bytesToGo--;
             }
             out.flush();
         }catch(Exception e) {
@@ -162,38 +178,47 @@ public class MLCloudConnector {
     }
     
     /**
+     * Make an HTTP 1.1 Request header
+     * 
+     * Will default to GET method
+     * 
+     * @param targetURL URL to request
+     * 
+     * @return The header as a string
+     */
+    public String getRequestHeader(String targetURL) {
+        return getRequestHeader(targetURL, HttpConnection.GET, null);
+    }
+    
+    /**
      * Makes an HTTP 1.1 Request header
      * 
+     * @param endRequest - if set true (normal) will end with a \n so request goes through.  False so you can add your own stuff
      */ 
-    private String getRequestHeader(String targetURL) {
+    public String getRequestHeader(String targetURL, String method, Hashtable headers) {
         StringBuffer buf = new StringBuffer(512);
-        buf.append("GET " + targetURL + " HTTP/1.1\n");
-        // extracting the target host and port number
-        int portDelPos = targetURL.indexOf(':');
-        int firstSlashPos = targetURL.indexOf('/');
-        String targetHost = targetURL;
-        String targetPort = "80";
-        if (portDelPos != -1 && portDelPos < firstSlashPos) {
-            // has port specified
-            targetHost = targetURL.substring(0, portDelPos);
-            if (firstSlashPos == -1) {
-                targetPort = targetURL.substring(portDelPos + 1);
-            } else {
-                targetPort = targetURL.substring(portDelPos + 1, firstSlashPos);
-            }
-        } else {
-            // no port - using default
-            if (firstSlashPos != -1) {
-                targetHost = targetURL.substring(0, firstSlashPos);
-            }
-        }
+        
+        String[] urlParts = MLearnUtils.getURLParts(targetURL);
+        
+        buf.append(method + " " + urlParts[MLearnUtils.URLPART_RESOURCE] + " HTTP/1.1\n");
+        
         buf.append("Host: ");
-        buf.append(targetHost);
+        buf.append(urlParts[MLearnUtils.URLPART_HOST]);
         buf.append(':');
-        buf.append(targetPort);
+        buf.append(urlParts[MLearnUtils.URLPART_PORT]);
         buf.append('\n');
         buf.append("Accept: */*\n");
         buf.append("Cache-control: no-transform\n");
+        buf.append("Connection: Keep-Alive\n");
+        if(headers != null) {
+            Enumeration e = headers.keys();
+            while(e.hasMoreElements()) {
+                String headerName = e.nextElement().toString();
+                buf.append(headerName).append(": ");
+                buf.append(headers.get(headerName).toString()).append("\n");
+            }
+        }
+        
         // if you want keep-alive - remove the following line
         //buf.append("Connection: close\n");
         buf.append("User-Agent: MIDP2.0\n");
@@ -206,13 +231,16 @@ public class MLCloudConnector {
     public int checkLogin(String userID, String userPass) {
         int result = -1;
         try {
-            String url = "http://" + MLearnPlayerMidlet.masterServer + "/login.php";
-            openConnection();
-            EXEStrMgr.po("MLCloudConnect: Connection opened", EXEStrMgr.DEBUG);
-            out.write(getRequestHeader(url).getBytes());
-            EXEStrMgr.po("Connected OK - request sent", EXEStrMgr.DEBUG);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            result = readResponse(bout, new Hashtable());
+            ByteArrayOutputStream bout = null;
+            synchronized(this) { 
+                String url = "http://" + MLearnPlayerMidlet.masterServer + CLOUD_LOGSUBMIT_PATH;
+                openConnection();
+                EXEStrMgr.po("MLCloudConnect: Connection opened", EXEStrMgr.DEBUG);
+                out.write(getRequestHeader(url).getBytes());
+                EXEStrMgr.po("Connected OK - request sent", EXEStrMgr.DEBUG);
+                bout = new ByteArrayOutputStream();
+                result = readResponse(bout, new Hashtable());
+            }
             String serverSays = new String(bout.toByteArray());
             EXEStrMgr.po("Server says " + serverSays, EXEStrMgr.DEBUG);
         }catch(Exception e) {
@@ -220,6 +248,137 @@ public class MLCloudConnector {
         }
         
         return result;
+    }
+    
+    String getBoundaryString() {
+        return BOUNDARY;
+    }
+    
+    /**
+    * Generates the boundary message
+    * 
+    * @param boundary boundary unique string
+    * @param params Hashtable of key/value pairs
+    * @param fileField the field to use for the file
+    * @param fileName The name of the file to present to the remote server
+    * @param fileType The mime type of the file to present to the remote server
+    * @return Boundary message to use with http request
+    */
+    String getBoundaryMessage(String boundary, Hashtable params, String fileField, String fileName, String fileType) {
+        StringBuffer res = new StringBuffer("--").append(boundary).append("\r\n");
+
+        Enumeration keys = params.keys();
+
+        while (keys.hasMoreElements()) {
+            String key = (String) keys.nextElement();
+            String value = (String) params.get(key);
+
+            res.append("Content-Disposition: form-data; name=\"").append(key).append("\"\r\n")
+                    .append("\r\n").append(value).append("\r\n")
+                    .append("--").append(boundary).append("\r\n");
+        }
+        res.append("Content-Disposition: form-data; name=\"").append(fileField).append("\"; filename=\"").append(fileName).append("\"\r\n")
+                .append("Content-Type: ").append(fileType).append("\r\n\r\n");
+
+        return res.toString();
+    }
+    
+    /**
+     * 
+     * @param url
+     * @param params
+     * @param fileField
+     * @param fileName
+     * @param fileType
+     * @param fileConURI
+     * @param skipBytes
+     * @return
+     * @throws Exception 
+     */
+    public byte[] sendFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
+        openConnection();
+        
+        String boundary = getBoundaryString();
+ 
+        String boundaryMessage = getBoundaryMessage(boundary, params, fileField, fileName, fileType);
+ 
+	String endBoundary = "\r\n--" + boundary + "--\r\n";
+                
+        FileConnection fcon = null;
+        InputStream is = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        InputStream fin = null;
+ 
+        byte[] responseBytes = null;
+ 
+        try{
+            EXEStrMgr.po("Opening Connection to " + url, EXEStrMgr.DEBUG);
+                    
+            Hashtable requestHeaders = new Hashtable();
+            requestHeaders.put("Content-Type", "multipart/form-data; boundary=" + getBoundaryString());
+            
+            if(fileConURI != null) {
+                fcon = (FileConnection)Connector.open(fileConURI);
+                fin = fcon.openInputStream();
+            }else {
+                String msg = "No File Loaded";
+                fin = new ByteArrayInputStream(msg.getBytes());
+            }
+            
+            long sizeAvailable = fcon.fileSize();
+            long fileSizeToSend = sizeAvailable - skipBytes;
+            byte[] boundaryMessageBytes = boundaryMessage.getBytes();
+            byte[] endBoundaryBytes = endBoundary.getBytes();
+            long contentLength = boundaryMessageBytes.length
+                    + fileSizeToSend + endBoundaryBytes.length;
+            
+            requestHeaders.put("Content-Length", String.valueOf(contentLength));
+            
+            String requestHeader = getRequestHeader(url, HttpConnection.POST, requestHeaders);
+            
+            out.write(requestHeader.getBytes());
+            out.write(boundaryMessageBytes);
+            
+            if(skipBytes > 0) {
+                EXEStrMgr.po("HTTP Rep skipping " + skipBytes + " bytes already sent", EXEStrMgr.DEBUG);
+                fin.skip(skipBytes);
+            }
+            
+            int count = 0;
+            byte[] buf = new byte[1024];
+            
+            while((count = fin.read(buf)) != -1) {
+                out.write(buf, 0, count);
+            }
+            
+            fin.close();
+            if(fcon != null) {
+                fcon.close();
+            }
+            out.write(endBoundaryBytes);
+            out.flush();
+            
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            Hashtable respHeaders = new Hashtable();
+            int result = readResponse(bout, respHeaders);
+            responseBytes = bout.toByteArray();
+            String responseStr = new String(responseBytes);
+            int x = 0;
+        }catch(Exception e) {
+            System.err.println("bad whilst attempting to send file");
+            e.printStackTrace();
+        }
+        
+        return responseBytes;
+    }
+    
+    /** 
+     * The result of the most recent request
+     * 
+     * @return result of the most recent request
+     */
+    public int getLastResponseCode() {
+        return lastResponseCode;
     }
     
 }

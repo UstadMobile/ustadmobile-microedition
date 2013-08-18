@@ -48,8 +48,17 @@ public class MLearnUtils {
     
     public static final int  RESIZE_FILL = 3;
     
-    
     static long memFree = 0;
+    
+    /** Position of Host in return value of getURLParts */
+    public static final int URLPART_HOST = 0;
+    
+    /** Position of Port in return value of getURLParts */
+    public static final int URLPART_PORT = 1;
+    
+    /** Position of Resource in return value of getURLParts */
+    public static final int URLPART_RESOURCE = 2;
+    
     
     public static long checkFreeMem() {
         System.gc();
@@ -449,5 +458,45 @@ public class MLearnUtils {
         }
         
         return retVal;
+    }
+    
+    /**
+     * Utility method to extract the host and port from an HTTP(s) URL
+     * 
+     * @param targetURL
+     * @return 
+     */
+    public static String[] getURLParts(String targetURL) {
+        //see if we have http at the start
+        boolean startsHTTP = targetURL.toLowerCase().startsWith("http:");
+        boolean startsHTTPS = targetURL.toLowerCase().startsWith("https:");
+        
+        if(startsHTTP || startsHTTPS) {
+            int slashPos2 = targetURL.indexOf("/") + 1;// because it will be //
+            targetURL = targetURL.substring(slashPos2+1);
+        }
+        
+        int portDelPos = targetURL.indexOf(':');
+        int firstSlashPos = targetURL.indexOf('/');
+        
+        String targetResource = targetURL.substring(firstSlashPos);
+        String targetHost = targetURL;
+        String targetPort = startsHTTPS ? "443" : "80";
+        if (portDelPos != -1 && portDelPos < firstSlashPos) {
+            // has port specified
+            targetHost = targetURL.substring(0, portDelPos);
+            if (firstSlashPos == -1) {
+                targetPort = targetURL.substring(portDelPos + 1);
+            } else {
+                targetPort = targetURL.substring(portDelPos + 1, firstSlashPos);
+            }
+        } else {
+            // no port - using default
+            if (firstSlashPos != -1) {
+                targetHost = targetURL.substring(0, firstSlashPos);
+            }
+        }
+        
+        return new String[] {targetHost, targetPort, targetResource};
     }
 }

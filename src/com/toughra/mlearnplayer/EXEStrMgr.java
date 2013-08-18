@@ -98,6 +98,8 @@ public class EXEStrMgr {
     /** used when we are buffering as a file is being transmitted */
     ByteArrayOutputStream bufOut;
     
+    public static String rootMessages;
+    
     /*
      * Constructor - 
      * 
@@ -464,27 +466,10 @@ public class EXEStrMgr {
      */
     public void setupBaseFolder() {
         Enumeration e = FileSystemRegistry.listRoots();
-        String biggestRoot = null;
-        long spaceFound = 0;
-        
-        while(e.hasMoreElements()) {
-            String thisRoot = "file://localhost" + "/" + e.nextElement().toString();
-            try {
-                FileConnection fc = (FileConnection)Connector.open(thisRoot);
-                long spaceFoundHr = fc.availableSize();
-                fc.close();
-                
-                if(spaceFoundHr > spaceFound) {
-                    spaceFound = spaceFoundHr;
-                    biggestRoot = thisRoot;
-                }
-            }catch(Exception e2) {
-                e2.printStackTrace();
-            }
+         
+        String firstRoot = "file://localhost" + "/" + e.nextElement().toString();
             
-        }
-        
-        String baseFolder = biggestRoot + "umobiledata";
+        String baseFolder = firstRoot + "umobiledata";
         try {
             FileConnection bCon = (FileConnection)Connector.open(baseFolder);
             if(!bCon.isDirectory()) {

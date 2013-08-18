@@ -150,6 +150,7 @@ public class HttpMultipartRequest
 		try
 		{
                     EXEStrMgr.po("Opening Connection to " + url, EXEStrMgr.DEBUG);
+                    
                     hc = (HttpConnection) Connector.open(url, Connector.READ_WRITE);
                     
                     hc.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + getBoundaryString());
