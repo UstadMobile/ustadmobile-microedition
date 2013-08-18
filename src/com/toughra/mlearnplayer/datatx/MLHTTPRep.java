@@ -87,6 +87,7 @@ public class MLHTTPRep {
                     "/" + cFname;
 
             try {
+                EXEStrMgr.po("Attempt to send " + fileURL + " as " + cFname + " from " + alreadySent, EXEStrMgr.DEBUG);
                 long sizeSentTo = sendLog(fileURL, cFname, true, alreadySent);
                 if(sizeSentTo > 0) {
                     repStatusHT.put(cFname, String.valueOf(sizeSentTo));

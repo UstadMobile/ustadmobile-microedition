@@ -133,6 +133,7 @@ public class EXEStrMgr {
                 if(uuid == null) {
                     uuid = makeUUID();
                     prefs.setPref("uuid", uuid);
+                    prefs.setPref("learnername", "");
                 }
                 bout.close();
             }catch(IOException e) {
@@ -465,11 +466,8 @@ public class EXEStrMgr {
      * with the maximum amount of space (this should be the memory card generally)
      */
     public void setupBaseFolder() {
-        Enumeration e = FileSystemRegistry.listRoots();
-         
-        String firstRoot = "file://localhost" + "/" + e.nextElement().toString();
-            
-        String baseFolder = firstRoot + "umobiledata";
+        String baseFolder = System.getProperty("fileconn.dir.photos") + "umobiledata";
+        
         try {
             FileConnection bCon = (FileConnection)Connector.open(baseFolder);
             if(!bCon.isDirectory()) {
