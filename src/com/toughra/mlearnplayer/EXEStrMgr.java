@@ -38,6 +38,12 @@ import javax.microedition.io.file.FileSystemRegistry;
  * the greatest amount of space available.  This should normally mean in most
  * j2me environments the memory card.
  * 
+ * Property replication change tracking works by having a key called replist
+ * with property names with a : at each end - e.g. :propname1::propname2: 
+ * 
+ * When a property gets changed it is added to the list to be replicated.  Once
+ * the change is done the property is reset.
+ * 
  * Manages the preferences for Ustad Mobil.
  * 
  * @author mike
@@ -99,6 +105,21 @@ public class EXEStrMgr {
     ByteArrayOutputStream bufOut;
     
     public static String rootMessages;
+    
+    /**The key for setting the preference replicate list*/
+    public static final String KEY_REPLIST = "replist";
+    
+    /** The key representing the current cloud user */
+    public static final String KEY_CLOUDUSER = "clouduser";
+    
+    /** The key representing the current cloud password */
+    public static final String KEY_CLOUDPASS = "cloudpass";
+    
+    /** The key representing the learner name */
+    public static final String KEY_LEARNERNAME = "learnername";
+    
+    /** A list of preferences that should not be replicated to/from the cloud*/
+    public static final String[] DONOTREPKEYS = {KEY_REPLIST, KEY_CLOUDUSER, KEY_CLOUDPASS};
     
     /*
      * Constructor - 
@@ -162,24 +183,24 @@ public class EXEStrMgr {
     }
     
     public String getCloudUser() {
-        return prefs.getPref("clouduser");
+        return prefs.getPref(KEY_CLOUDUSER);
     }
     
     public void setCloudUser(String cloudUser) {
-        prefs.setPref("clouduser", cloudUser);
+        prefs.setPref(KEY_CLOUDUSER, cloudUser);
     }
     
     public String getCloudPass() {
-        return prefs.getPref("cloudpass");
+        return prefs.getPref(KEY_CLOUDPASS);
     }
     
     public void setCloudPass(String cloudPass) {
-        prefs.setPref("cloudpass", cloudPass);
+        prefs.setPref(KEY_CLOUDPASS, cloudPass);
     }
     
     public void doCloudLogout() {
-        prefs.deletePref("clouduser");
-        prefs.deletePref("cloudpass");
+        prefs.deletePref(KEY_CLOUDUSER);
+        prefs.deletePref(KEY_CLOUDPASS);
     }
     
     /**
@@ -513,7 +534,85 @@ public class EXEStrMgr {
      * @param val 
      */
     public void setPref(String key, String val){
+        String currentVal = prefs.getPref(key);
+        if(currentVal != null) {
+            if(!currentVal.equals(val) && isReplicatePref(key)) {
+                //this preference has been changed and should be replicated
+                addKeyToReplicate(key);
+            }
+        }
         prefs.setPref(key, val);
+    }
+    
+    /**
+     * Set a preference key as it has loaded from cloud (e.g. don't add to
+     * replication list)
+     * 
+     * @param key
+     * @param val
+     */
+    public void setPrefDirect(String key, String val) {
+        prefs.setPref(key, val);
+    }
+    
+    /**
+     * This will check if the given key should be replicated
+     * 
+     * @param keyname Name of the key to check
+     * 
+     * @return true if it should be, false otherwise
+     */
+    private boolean isReplicatePref(String keyname) {
+        for(int i = 0; i < DONOTREPKEYS.length; i++) {
+            if(keyname.equals(DONOTREPKEYS[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Adds a preference key to the list of those that need replicated
+     * 
+     * @param keyname
+     * 
+     */
+    private void addKeyToReplicate(String keyname) {
+        String repList = getPref(KEY_REPLIST);
+        
+        if(repList == null) {
+            repList = "";
+        }
+        
+        String keyNameCoded = ":" + keyname + ":";
+        if(repList.indexOf(keyNameCoded) == -1) {
+            repList += keyNameCoded;
+            prefs.setPref(KEY_REPLIST, repList);
+        }
+    }
+    
+    /**
+     * Gets a list of the keys that need replicated to the cloud
+     */
+    public String[] getReplicateList() {
+        Vector repList = new Vector();
+        String prefListStr = prefs.getPref(KEY_REPLIST);
+        if(prefListStr == null) {
+            return new String[] {};//zero length string means nothing to replicate
+        }
+        
+        int pos = 0;
+        while(pos < prefListStr.length()) {
+            //search for the next property - all property names start with a :
+            int nextPos = prefListStr.indexOf(':', pos+1);
+            String propName = prefListStr.substring(pos+1, nextPos);
+            repList.addElement(propName);
+            pos = nextPos + 1;//e.g. after the ending : for that property
+        }
+        String[] repArr = new String[repList.size()];
+        repList.copyInto(repArr);
+        
+        return repArr;
     }
     
     /**

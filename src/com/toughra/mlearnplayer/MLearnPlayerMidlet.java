@@ -570,6 +570,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      * Shows the main options menu (continue, repeat, about, settings, etc)
      */
     public void showMenu() {
+        menuFrm.updateFieldsFromPrefs();
         menuFrm.show();
     }
     

@@ -155,10 +155,10 @@ class LoginCheckThread extends Thread {
     
     public void run() {
         MLCloudConnector cloudCon = MLCloudConnector.getInstance();
-        try { Thread.sleep(5000); }
-        catch(Exception e) {}
-        
         int result = cloudCon.checkLogin(userID, passcode);
+        if(result == 200) {
+            cloudCon.getPreferences();//load preferences from server.
+        }
         loginForm.lastResult = result;
         Display.getInstance().callSerially(loginForm);
     }

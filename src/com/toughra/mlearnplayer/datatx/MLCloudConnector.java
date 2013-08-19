@@ -19,17 +19,34 @@
  */
 package com.toughra.mlearnplayer.datatx;
 
+import com.sun.lwuit.io.util.Util;
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
+import com.toughra.mlearnplayer.xml.GenericXmlParser;
+import com.toughra.mlearnplayer.xml.XmlNode;
 import javax.microedition.io.*;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 import javax.microedition.io.file.FileConnection;
+import org.kxml2.io.KXmlParser;
 
 /**
- *
+ * MLCloudConnector manages maintaining a connection between the app and the
+ * Ustad Mobile cloud server.  
+ * 
+ * This is done using a raw socket level connection because J2ME does not provide
+ * guaranteed support of keep-alive persistent connections which are needed
+ * to avoid wasting bandwidth on TCP and SSL handshakes.
+ * 
+ * In accordance with the HTTP spec server responses and requests MUST have a
+ * content-length header.  Only that number of bytes specified by the header
+ * must be read or written.
+ * 
+ * To maintain thread safety all I/O is in a synchronized(this) block
+ * 
  * @author mike
  */
 public class MLCloudConnector {
@@ -54,6 +71,12 @@ public class MLCloudConnector {
     
     /** The string to append to the server URL for login*/
     public static String CLOUD_LOGIN_PATH="/login.php";
+    
+    /** The string to append to the server URL for sending preferences to cloud */
+    public static String CLOUD_SETPREF_PATH="/echoparams.php";
+    
+    /** The string to append to the server URL for getting preferences from cloud as XML*/
+    public static String CLOUD_GETPREF_PATH="/umobile/dummypreferences.php";
     
     /** The String to append to the server URL for log submission */
     public static String CLOUD_LOGSUBMIT_PATH="/umobile/datarxdummy.php";
@@ -219,9 +242,7 @@ public class MLCloudConnector {
             }
         }
         
-        // if you want keep-alive - remove the following line
-        //buf.append("Connection: close\n");
-        buf.append("User-Agent: MIDP2.0\n");
+        buf.append("User-Agent: UstadMobile(J2ME)\n");
         buf.append('\n');
 
         return buf.toString();
@@ -233,7 +254,7 @@ public class MLCloudConnector {
         try {
             ByteArrayOutputStream bout = null;
             synchronized(this) { 
-                String url = "http://" + MLearnPlayerMidlet.masterServer + CLOUD_LOGSUBMIT_PATH;
+                String url = "http://" + MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH;
                 openConnection();
                 EXEStrMgr.po("MLCloudConnect: Connection opened", EXEStrMgr.DEBUG);
                 out.write(getRequestHeader(url).getBytes());
@@ -285,14 +306,18 @@ public class MLCloudConnector {
     
     /**
      * 
-     * @param url
-     * @param params
-     * @param fileField
-     * @param fileName
-     * @param fileType
-     * @param fileConURI
-     * @param skipBytes
-     * @return
+     * sendFile method makes a multipart post request to the server (used to send
+     * logs)
+     * 
+     * @param url full HTTP URL that we are talking to
+     * @param params Hashtable of key/value pairs that will be sent as form fields
+     * @param fileField The fieldname for the file field that will be used
+     * @param fileName Filename to present to the server -eg. studentname.log
+     * @param fileType Type of file being sent - e.g. text/plain
+     * @param fileConURI The URI to use with the FileConnection method (source data)
+     * @param skipBytes Number of bytes of the file to skip (e.g. data already sent before)
+     * 
+     * @return byte array of the response sent by the server
      * @throws Exception 
      */
     public byte[] sendFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
@@ -335,41 +360,127 @@ public class MLCloudConnector {
             requestHeaders.put("Content-Length", String.valueOf(contentLength));
             
             String requestHeader = getRequestHeader(url, HttpConnection.POST, requestHeaders);
+            synchronized(this) {
+                out.write(requestHeader.getBytes());
+                out.write(boundaryMessageBytes);
+
+                if(skipBytes > 0) {
+                    EXEStrMgr.po("HTTP Rep skipping " + skipBytes + " bytes already sent", EXEStrMgr.DEBUG);
+                    fin.skip(skipBytes);
+                }
+
+                int count = 0;
+                byte[] buf = new byte[1024];
+
+                while((count = fin.read(buf)) != -1) {
+                    out.write(buf, 0, count);
+                }
+
+                fin.close();
+                if(fcon != null) {
+                    fcon.close();
+                }
+                out.write(endBoundaryBytes);
+                out.flush();
             
-            out.write(requestHeader.getBytes());
-            out.write(boundaryMessageBytes);
             
-            if(skipBytes > 0) {
-                EXEStrMgr.po("HTTP Rep skipping " + skipBytes + " bytes already sent", EXEStrMgr.DEBUG);
-                fin.skip(skipBytes);
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                Hashtable respHeaders = new Hashtable();
+                int result = readResponse(bout, respHeaders);
+                responseBytes = bout.toByteArray();
             }
-            
-            int count = 0;
-            byte[] buf = new byte[1024];
-            
-            while((count = fin.read(buf)) != -1) {
-                out.write(buf, 0, count);
-            }
-            
-            fin.close();
-            if(fcon != null) {
-                fcon.close();
-            }
-            out.write(endBoundaryBytes);
-            out.flush();
-            
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            Hashtable respHeaders = new Hashtable();
-            int result = readResponse(bout, respHeaders);
-            responseBytes = bout.toByteArray();
-            String responseStr = new String(responseBytes);
-            int x = 0;
         }catch(Exception e) {
             System.err.println("bad whilst attempting to send file");
             e.printStackTrace();
         }
         
         return responseBytes;
+    }
+    
+    /**
+     * Gets preferences from the cloud.  They are returned by the server in the 
+     * form of:
+     */
+    public void getPreferences() {
+        try {
+            openConnection();
+            String url = MLearnPlayerMidlet.masterServer + CLOUD_GETPREF_PATH;
+            String requestStr = getRequestHeader(url);
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            int responseCode = 0;
+            synchronized(this) {
+                //TODO: add the userid and password to this
+                out.write(requestStr.getBytes());
+                responseCode = readResponse(bout, new Hashtable());
+            }
+            
+            String responseStr = new String(bout.toByteArray());
+            if(responseCode == 200) {
+                byte[] xmlDocByte = bout.toByteArray();
+                GenericXmlParser gParser = new GenericXmlParser();
+                KXmlParser parser = new KXmlParser();
+                InputStreamReader reader = new InputStreamReader(
+                        new ByteArrayInputStream(xmlDocByte), "UTF-8");
+                parser.setInput(reader);
+                XmlNode node = gParser.parseXML(parser, true);
+                Vector prefVector = node.findChildrenByTagName("pref", true);
+                for(int i = 0; i < prefVector.size(); i++) { 
+                    XmlNode currentPref = (XmlNode)prefVector.elementAt(i);
+                    String prefKey = currentPref.getAttribute("key");
+                    String prefVal = currentPref.getAttribute("value");
+                    EXEStrMgr.getInstance().setPrefDirect(prefKey, prefVal);
+                }
+            }
+        }catch(Exception e) {
+            EXEStrMgr.po("Exception attempting to set preferences from cloud", lastResponseCode);
+        }
+    }
+    
+    /**
+     * Sends the preferences that have been changed to the cloud
+     * 
+     * @return true if everything was OK, false if any error happened
+     */
+    public boolean sendPreferences() {
+        boolean doneOK = false;
+        try {
+            String[] prefNames = EXEStrMgr.getInstance().getReplicateList();
+            if(prefNames.length == 0) {
+                return true;//nothing to do
+            }
+            
+            openConnection();
+            
+            StringBuffer url = new StringBuffer(MLearnPlayerMidlet.masterServer)
+                .append(MLCloudConnector.CLOUD_SETPREF_PATH).append('?');
+            
+            url.append("userid=").append(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDUSER)).append('&');
+            url.append("password=").append(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDPASS)).append('&');
+            
+            for(int i = 0; i < prefNames.length; i++) {
+                url.append(prefNames[i]).append('=');
+                url.append(Util.encodeUrl(EXEStrMgr.getInstance().getPref(prefNames[i])));
+                if(i < prefNames.length - 1) {
+                    url.append('&');
+                }
+            }
+            String urlStr = url.toString();
+            
+            //now send the request
+            String requestStr = getRequestHeader(urlStr);
+            out.write(requestStr.getBytes());
+            Hashtable headers = new Hashtable();
+            ByteArrayOutputStream respBytes = new ByteArrayOutputStream();
+            int respCode = readResponse(respBytes, headers);
+            if(respCode == 200) {
+                doneOK = true;
+                EXEStrMgr.getInstance().delPref(EXEStrMgr.KEY_REPLIST);
+            }
+        }catch(Exception e) {
+            EXEStrMgr.po(e, "Exception attempting to send preferences to cloud");
+        }
+        
+        return doneOK;
     }
     
     /** 

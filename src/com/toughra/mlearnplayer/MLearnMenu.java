@@ -25,6 +25,7 @@ import com.toughra.mlearnplayer.datatx.MLObjectPusher;
 import com.sun.lwuit.*;
 import com.sun.lwuit.events.*;
 import com.sun.lwuit.layouts.BoxLayout;
+import com.toughra.mlearnplayer.datatx.MLCloudConnector;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -162,7 +163,6 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     /** Yes/No confirmation form */
     Form logoutForm;
     
-   
     
     /**
      * Constructor
@@ -330,6 +330,19 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         }
     }
     
+    public void updateFieldsFromPrefs() {
+        nameField.setText(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_LEARNERNAME));
+        int langSelIndex = 0;
+        String localeNow = EXEStrMgr.getInstance().getLocale();
+        
+        for(int i = 0; i < langCodeStr.length; i++) {
+            if(localeNow.equals(langCodeStr[i])) {
+                langSelIndex = i;
+            }
+        }
+        
+        langCombo.setSelectedIndex(langSelIndex);
+    }
     
     /**
      * Continue back to the main menu of the form.  Check for certain settings
