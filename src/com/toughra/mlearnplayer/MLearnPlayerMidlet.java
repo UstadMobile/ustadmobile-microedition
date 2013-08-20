@@ -244,9 +244,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** If an idevice needs some to be focused after a form is shown - set me here*/
     public Component focusMeAfterFormShows;
     
-    /** The main server that we talk to for all operations */
+    /** The main server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String masterServer = "nsmvpn.paiwastoon.net";
+    public final static String masterServer = "intranet.paiwastoon.net:80";
     //#endif
     
     //#ifdef SERVER

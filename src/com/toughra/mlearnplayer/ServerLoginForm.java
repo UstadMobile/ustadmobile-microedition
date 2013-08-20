@@ -117,8 +117,6 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         loadingDialog = null;
         
         if(result == 200) {
-            EXEStrMgr.getInstance().setCloudUser(userIDField.getText());
-            EXEStrMgr.getInstance().setCloudPass(passcodeField.getText());
             fireActionEvent();
         }else {
             final Dialog errorWin = new Dialog(MLearnUtils._("Error"));

@@ -216,7 +216,7 @@ public class MLHTTPRep {
             basename = EXEStrMgr.getInstance().getPref("uuid") + "-" + basename;
         }
         
-        byte[] response = MLCloudConnector.getInstance().sendFile(url, params, "filecontent", 
+        byte[] response = MLCloudConnector.getInstance().sendLogFile(url, params, "filecontent", 
                 basename, "text/plain", fileURI, alreadySent);
         
         
@@ -239,3 +239,5 @@ public class MLHTTPRep {
     }
     
 }
+
+
