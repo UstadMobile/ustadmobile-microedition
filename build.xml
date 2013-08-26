@@ -157,7 +157,7 @@ supported character set.
                 destdir="${src.preprocessed.NOKIA}"
                 device="Nokia"
                 version="2"
-                symbols="NOKIA,MEDIAENABLED,DEBUGLOG,SERVER=nsmvpn.paiwastoon.net"
+                symbols="NOKIA,MEDIAENABLED,DEBUGLOG,SERVER=intranet.paiwastoon.net:80"
                 printsymbols="true"/>
             </target>
             
@@ -195,7 +195,6 @@ supported character set.
                     <attribute name="MicroEdition-Profile" value="MIDP-${wtk.midp.version}"/>
                     <attribute name="Nokia-MIDlet-Category" value="Application"/>
                     <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.obex.client, javax.microedition.io.Connector.obex.server, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
-                    <attribute name="Umobile-Server" value="ustadmobile.com"/>
                     
                     <attribute name="progressive_download" value="enabled"/>
                     
@@ -206,8 +205,9 @@ supported character set.
                     <fileset dir="${src.dir}/icons"/>
                 </copy>
                 
-                <copy file="${src.dir}/theme2.res" tofile="${classes.dir.NOKIA}/theme2.res"/>
+                
                 <copy file="${src.dir}/localization.res" tofile="${classes.dir.NOKIA}/localization.res"/>
+                <copy file="${src.dir}/theme2.res" tofile="${classes.dir.NOKIA}/theme2.res"/>
                 
                 <copy file="${src.dir}/exemobicon.png" tofile="${classes.dir.NOKIA}/exemobicon.png"/>
                 
@@ -216,7 +216,7 @@ supported character set.
                     jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
                     config="CLDC-1.1"
                     profile="MIDP-2.1"
-                    obfuscate="false"
+                    obfuscate="true"
                     preverify="true"
                     bootclasspath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}" 
                     includes="${javac.includes}">

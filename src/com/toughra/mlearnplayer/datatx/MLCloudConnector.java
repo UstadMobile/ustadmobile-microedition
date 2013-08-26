@@ -32,6 +32,8 @@ import java.util.Hashtable;
 import java.util.Vector;
 import javax.microedition.io.file.FileConnection;
 import org.kxml2.io.KXmlParser;
+import net.sf.jazzlib.*;
+
 
 /**
  * MLCloudConnector manages maintaining a connection between the app and the
@@ -76,16 +78,17 @@ public class MLCloudConnector {
     public static final int RETRY_ATTEMPTS = 3;
     
     /** The string to append to the server URL for login*/
-    public static String CLOUD_LOGIN_PATH="/UMCloud-18586311361890088819.0/app/login.xhtml";
+    public static String CLOUD_LOGIN_PATH="/umcloud/app/login.xhtml";
     
     /** The string to append to the server URL for sending preferences to cloud */
-    public static String CLOUD_SETPREF_PATH="/UMCloud-18586311361890088819.0/app/setPreference.xhtml";
+    public static String CLOUD_SETPREF_PATH="/umcloud/app/setPreference.xhtml";
     
     /** The string to append to the server URL for getting preferences from cloud as XML*/
-    public static String CLOUD_GETPREF_PATH="/UMCloud-18586311361890088819.0/app/getPreference.xhtml";
+    public static String CLOUD_GETPREF_PATH="/umcloud/app/getPreference.xhtml";
     
     /** The String to append to the server URL for log submission */
-    public static String CLOUD_LOGSUBMIT_PATH="/UMCloud-18586311361890088819.0/app/uploadLog.xhtml";
+    public static String CLOUD_LOGSUBMIT_PATH="/test.php";
+    //public static String CLOUD_LOGSUBMIT_PATH="/umcloud/app/uploadLog.xhtml";
     
     /** The String to append to the server URL for callhome submission */
     public static String CLOUD_CALLHOME_PATH="/umobile/datarxdummy.php";
@@ -112,6 +115,7 @@ public class MLCloudConnector {
             return;
         }
         
+        
         try {
             conn = (SocketConnection)Connector.open("socket://" + MLearnPlayerMidlet.masterServer);
             
@@ -136,12 +140,12 @@ public class MLCloudConnector {
      * Reads the HTTP response of a server
      * 
      * @param out The output stream in which to place the response
-     * @param params Hashtable in which http headers will be placed
+     * @param headers Hashtable in which http headers will be placed.  Important: headers field names will be made lower case
      * 
      * @return the HTTP status code
      * 
      */
-    private int readResponse(OutputStream out, Hashtable params) throws Exception{
+    private int readResponse(OutputStream out, Hashtable headers) throws Exception{
         int responseStatus = 0;
 
         // now reading the response
@@ -176,6 +180,26 @@ public class MLCloudConnector {
         String hdrText = new String(headerStream.toByteArray());
         responseStatus = Integer.parseInt(hdrText.substring(9, 12));
         lastResponseCode = responseStatus;
+        
+        //we need to go through the string line by line
+        String[] lines = MLearnUtils.getLines(hdrText);
+        for(int i = 1; i < lines.length; i++) {
+            int colonPos = lines[i].indexOf(':');
+            String headerName = lines[i].substring(0, colonPos).toLowerCase();
+            String headerValue = lines[i].substring(colonPos+2);
+            headers.put(headerName, headerValue);
+        }
+        
+        //check and see if its gzipped
+        Object encodingObj = headers.get("content-encoding");
+        boolean isGzipped = false;
+        if(encodingObj != null) {
+            if(encodingObj.equals("gzip")) {
+                isGzipped = true;
+            }
+        }
+        
+        
         //TODO: check for connection: close
         int clPos = hdrText.toLowerCase().indexOf("content-length: ");
         if (clPos == -1) {
@@ -186,10 +210,15 @@ public class MLCloudConnector {
                     hdrText.substring(clPos + 16,
                     hdrText.indexOf("\r\n", clPos + 17)));
             bytesToGo = (int)contentLength;
-            //temp just to see what the hell happens
-            //bytesToGo = bytesToGo -1;
         }
 
+        ByteArrayOutputStream gzipBuf = null;
+        OutputStream outToUse = out;
+        gzipBuf = new ByteArrayOutputStream();
+        if(isGzipped) {
+            outToUse = gzipBuf;
+        }
+        
         //imagine one byte
         byte[] buf = new byte[1024];
         int count = 0;
@@ -198,11 +227,27 @@ public class MLCloudConnector {
             if(count == -1) {
                 break;//end of stream
             }
-            out.write(buf, 0, count);
+            outToUse.write(buf, 0, count);
             bytesToGo -= count;
         }
         
-        out.flush();
+        outToUse.flush();
+        
+        //if it's gzipped - now gunzip it
+        if(isGzipped) {
+            //just for debug
+            byte[] gzippedBytes = gzipBuf.toByteArray();            
+            ByteArrayInputStream gzipIn = new ByteArrayInputStream(gzippedBytes);
+            
+            GZIPInputStream gin = new GZIPInputStream(gzipIn);
+            Util.copy(gin, out);
+        }
+        
+        Object conObj = headers.get("connection");
+        if(conObj != null && conObj.toString().toLowerCase().equals("close")) {
+            System.out.println("Server demands connection closed");
+            closeConnections();
+        }
 
         return responseStatus;
     }
@@ -240,6 +285,7 @@ public class MLCloudConnector {
         buf.append("Accept: */*\n");
         buf.append("Cache-control: no-transform\n");
         buf.append("Connection: Keep-Alive\n");
+        buf.append("Accept-Encoding: gzip\n");
         if(headers != null) {
             Enumeration e = headers.keys();
             while(e.hasMoreElements()) {
@@ -271,17 +317,27 @@ public class MLCloudConnector {
             try {
                 synchronized(this) {
                     openConnection();
-                    byte[] reqBytes = request.getRequestBytes(this);
-                    String requestStr = new String(reqBytes);
-                    out.write(reqBytes);
+                    InputStream reqIn = request.getInputStream();
+                    byte[] buf = new byte[1024];
+                    int count = 0;
+                    while((count = reqIn.read(buf)) != -1) {
+                        out.write(buf, 0, count);
+                    }
+                    reqIn.close();
                     respCode = readResponse(respOut, respHeaders);
                 }
+                if(respCode == 400) {
+                    //we did something bad - close connections
+                    closeConnections();
+                }
+                
                 return respCode;
             }catch(Exception e) {
                 e.printStackTrace();
                 EXEStrMgr.po(e, "Something went wrong with request");
                 closeConnections();
             }
+            
             try { Thread.sleep(RETRY_WAIT); }
             catch(InterruptedException i) {}
         }
@@ -322,16 +378,8 @@ public class MLCloudConnector {
             StringBuffer url = new StringBuffer(
                     MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH).append('?');
             appendCredentialsToURL(url, userID, userPass);
-            MLCloudRequest loginRequest = new MLCloudSimpleRequest(url.toString());
+            MLCloudRequest loginRequest = new MLCloudSimpleRequest(this, url.toString());
             EXEStrMgr.po("MLCloudConnect: Connection opened", EXEStrMgr.DEBUG);
-            /*
-            String urlStr = url.toString();
-            out.write(getRequestHeader(urlStr).getBytes());
-            EXEStrMgr.po("Connected OK - request sent", EXEStrMgr.DEBUG);
-
-
-            result = readResponse(bout, new Hashtable());
-            */
             
             result = doRequest(loginRequest, bout, new Hashtable());
             if(result == 200) {
@@ -352,6 +400,17 @@ public class MLCloudConnector {
         return BOUNDARY;
     }
     
+    StringBuffer appendFormFieldStart(StringBuffer res, String paramName) {
+        res.append("Content-Disposition: form-data; name=\"").append(paramName).append("\"\r\n")
+                    .append("\r\n");
+        return res;
+    }
+    
+    StringBuffer appendFormFieldEnd(StringBuffer res, String boundary) {
+        res.append("\r\n").append("--").append(boundary).append("\r\n");
+        return res;
+    }
+    
     /**
     * Generates the boundary message
     * 
@@ -370,10 +429,8 @@ public class MLCloudConnector {
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
             String value = (String) params.get(key);
-
-            res.append("Content-Disposition: form-data; name=\"").append(key).append("\"\r\n")
-                    .append("\r\n").append(value).append("\r\n")
-                    .append("--").append(boundary).append("\r\n");
+            appendFormFieldStart(res, key).append(value);
+            appendFormFieldEnd(res, boundary);
         }
         
         if(fileField != null) {
@@ -407,78 +464,13 @@ public class MLCloudConnector {
         byte[] responseBytes = null;
  
         try{
-            String boundary = getBoundaryString();
-        
-            FileConnection fcon = null;
-            InputStream is = null;
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            InputStream fin = null;
-            
-            if(fileConURI != null) {
-                fcon = (FileConnection)Connector.open(fileConURI);
-                fin = fcon.openInputStream();
-            }else {
-                String msg = "No File Loaded";
-                fin = new ByteArrayInputStream(msg.getBytes());
-            }
-            
-            if(skipBytes > 0) {
-                EXEStrMgr.po("HTTP Rep skipping " + skipBytes + " bytes already sent", EXEStrMgr.DEBUG);
-                fin.skip(skipBytes);
-            }
-
-            int count = 0;
-            byte[] buf = new byte[1024];
-
-            while((count = fin.read(buf)) != -1) {
-                bos.write(buf, 0, count);
-            }
-
-            fin.close();
-            if(fcon != null) {
-                fcon.close();
-            }
-            bos.flush();
-            String fileContents = new String(bos.toByteArray());
-            bos.close();
-            bos = null;
-            
-            params.put(fileField, fileContents);
-            
-            String boundaryMessage = getBoundaryMessage(boundary, params, null, null, null);
-
-            String endBoundary = "\r\n--" + boundary + "--\r\n";
-
-            EXEStrMgr.po("Opening Connection to " + url, EXEStrMgr.DEBUG);
-                    
-            Hashtable requestHeaders = new Hashtable();
-            requestHeaders.put("Content-Type", "multipart/form-data; boundary=" + getBoundaryString());
-            
-            
-            
-            //long sizeAvailable = fcon.fileSize();
-            //long fileSizeToSend = sizeAvailable - skipBytes;
-            byte[] boundaryMessageBytes = boundaryMessage.getBytes();
-            byte[] endBoundaryBytes = endBoundary.getBytes();
-            long contentLength = boundaryMessageBytes.length + endBoundaryBytes.length;
-            
-            requestHeaders.put("Content-Length", String.valueOf(contentLength));
-            
-            String requestHeader = getRequestHeader(url, HttpConnection.POST, requestHeaders);
-            synchronized(this) {
-                out.write(requestHeader.getBytes());
-                out.write(boundaryMessageBytes);
-
-                
-                out.write(endBoundaryBytes);
-                out.flush();
-            
-            
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                Hashtable respHeaders = new Hashtable();
-                int result = readResponse(bout, respHeaders);
-                responseBytes = bout.toByteArray();
-            }
+            params.put("userid", EXEStrMgr.getInstance().getCloudUser());
+            params.put("password", EXEStrMgr.getInstance().getCloudPass());
+            MLCloudRequest request = new MLCloudFileRequest(this, url, params, fileField, fileConURI, skipBytes);
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            Hashtable respHeaders = new Hashtable();
+            int respCode = doRequest(request, bout, respHeaders);
+            responseBytes = bout.toByteArray();
         }catch(Exception e) {
             System.err.println("bad whilst attempting to send file");
             e.printStackTrace();
@@ -497,7 +489,7 @@ public class MLCloudConnector {
                     .append(CLOUD_GETPREF_PATH).append('?');
             appendCredentialsToURL(url);
             String urlStr = url.toString();
-            MLCloudRequest request = new MLCloudSimpleRequest(urlStr);
+            MLCloudRequest request = new MLCloudSimpleRequest(this, urlStr);
             url = null;
             
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -571,11 +563,10 @@ public class MLCloudConnector {
             String urlStr = url.toString();
             
             //now send the request
-            String requestStr = getRequestHeader(urlStr);
-            out.write(requestStr.getBytes());
+            MLCloudRequest request = new MLCloudSimpleRequest(this, urlStr);
             Hashtable headers = new Hashtable();
             ByteArrayOutputStream respBytes = new ByteArrayOutputStream();
-            int respCode = readResponse(respBytes, headers);
+            int respCode = doRequest(request, respBytes, headers);
             if(respCode == 200) {
                 doneOK = true;
                 EXEStrMgr.getInstance().delPref(EXEStrMgr.KEY_REPLIST);
@@ -599,39 +590,175 @@ public class MLCloudConnector {
 }
 
 
-class MLCloudSimpleRequest implements MLCloudRequest {
-    String url;
+
+
+/**
+ * Simple get request wrapper
+ * 
+ * @author mike
+ */
+class MLCloudSimpleRequest implements MLCloudRequest  {
     
-    MLCloudSimpleRequest(String url) {
-        this.url = url;
+    byte[] reqBytes;
+    int pos = 0;
+    int reqBytesLen = 0;
+
+    MLCloudSimpleRequest(MLCloudConnector connector, String url) {
+        this.reqBytes = connector.getRequestHeader(url).getBytes();
+        this.reqBytesLen = reqBytes.length;
+    }
+
+    public void retry() {
+        this.pos = 0;
+    }
+    
+    
+    public InputStream getInputStream() {
+        return new ByteArrayInputStream(reqBytes);
+    }
+    
+    public int read() throws IOException {
+        int retVal = -1;
+        if(pos < reqBytesLen) {
+            retVal = reqBytes[pos];
+            pos++;
+        }
+        
+        return retVal;
     }
     
     public byte[] getRequestBytes(MLCloudConnector connector) {
-        String request = connector.getRequestHeader(url);
-        return request.getBytes();
+        return reqBytes;
     }
 }
 
 /**
- * A request containing a file upload
+ * A request containing a file upload for the cloud server.  
+ * 
+ * Regrettably Java Enterprise Edition makes it difficult to capture 
+ * multipart file fields that would normally be binary safe and the best
+ * way to do things.  We also want to zip this up as much as possible
+ * to minimize data transfer usage.
+ * 
+ * Therefor a field named as per the variable fileField will be sent containing
+ * data that is gzipped and then encoded in Base64.
  * 
  * @author mike
  */
 class MLCloudFileRequest  implements  MLCloudRequest{
     
-    String url;
-    Hashtable params;
-    String fileField;
+    /** Any file greater than this size in bytes will be cached into a file, smaller will work in memory*/
+    static long MAXMEMFILESIZE = 200000;
+        
+    static final int COMP_BOUNDARYMESSAGE= 0;
+    static final int COMP_STARTFILEFIELD = 1;
+    static final int COMP_ENDREQ = 2;
     
-    public MLCloudFileRequest(String url, Hashtable params, String fileField) {
-        this.url = url;
-        this.params = params;
-        this.fileField = fileField;
-    }
+    boolean zipIt = true;
     
-    public byte[] getRequestBytes(MLCloudConnector connector) {
-        return null;
-    }
-}
+    int zippedLength;
+    
+    byte[] wholeRequestBytes;
+    
+    public MLCloudFileRequest(MLCloudConnector connector, String url, Hashtable params, String fileField, String fileConURI, long skipBytes) {
+        //figure out this request details
+        
+        FileConnection fCon = null;
+        InputStream fin = null;
+        
+        byte[][] contentBytes = null;
+        
+        byte[] zippedBytes = null;
+        
+        long filesize = 0;
+        
+        try {
+            fCon = (FileConnection)Connector.open(fileConURI);
+            filesize = fCon.fileSize();
+            
+            String[] reqCompStr = new String[3];
+            String boundary = connector.getBoundaryString();
 
+            reqCompStr[COMP_BOUNDARYMESSAGE] = connector.getBoundaryMessage(boundary, params, null, null, null);
+            reqCompStr[COMP_STARTFILEFIELD] = connector.appendFormFieldStart(new StringBuffer(), fileField).toString();
+
+            //end of the message is the end of that field and then the end boundary message
+            String endBoundary =  "\r\n--" + boundary + "--\r\n";
+            reqCompStr[COMP_ENDREQ] = connector.appendFormFieldEnd(new StringBuffer(), boundary).toString()
+                    + endBoundary;
+
+            contentBytes = new byte[3][0];
+            long contentByteCount = 0;
+
+            for(int i = 0; i < reqCompStr.length; i++) {
+                contentBytes[i] = reqCompStr[i].getBytes();
+                contentByteCount += contentBytes[i].length;
+            }
+            OutputStream gzOutDest = new ByteArrayOutputStream();
+            ByteArrayOutputStream contentZipped = new ByteArrayOutputStream();
+
+
+            GZIPOutputStream gzOut = new GZIPOutputStream(contentZipped);
+            gzOutDest.write(contentBytes[COMP_BOUNDARYMESSAGE]);
+            gzOutDest.write(contentBytes[COMP_STARTFILEFIELD]);
+            //now the file itself
+            fin = fCon.openInputStream();
+            if(skipBytes > 0) {
+                fin.skip(skipBytes);
+            }
+            int count = 0;
+            byte[] buf = new byte[1024];
+            while((count = fin.read(buf)) != -1) {
+                gzOut.write(buf, 0, count);
+            }
+            
+            gzOut.flush();
+            gzOut.close();
+
+            //now encode this in base64
+            String gzBase64 = Base64.encode(contentZipped.toByteArray());
+            byte[] gzBase64Bytes = gzBase64.getBytes();
+            gzOutDest.write(gzBase64Bytes);
+
+            gzOutDest.write(contentBytes[COMP_ENDREQ]);
+            gzOutDest.flush();
+
+            zippedBytes = ((ByteArrayOutputStream)gzOutDest).toByteArray();
+            zippedLength = zippedBytes.length;
+        }catch(IOException e) {
+            EXEStrMgr.po(e, "Exception preparing cloud file request");
+            e.printStackTrace();
+        }finally {
+            if(fin != null) {
+                try { fin.close(); }
+                catch(IOException e2) { EXEStrMgr.po(e2, "Exception closing fin"); }
+            }
+            fin = null;
+            if(fCon != null) {
+                try { fCon.close(); }
+                catch(IOException e3) { EXEStrMgr.po(e3, "Exception closing fCon"); }
+            }
+        }
+
+        
+        Hashtable requestHeaders = new Hashtable();
+        
+        requestHeaders.put("Content-Length", String.valueOf(zippedLength));
+        requestHeaders.put("Content-Type", "multipart/form-data; boundary=" + connector.getBoundaryString());
+        
+        String requestStr = connector.getRequestHeader(url, HttpConnection.POST, requestHeaders);
+        byte[] requestBytes = requestStr.getBytes();
+        
+        
+        //build a byte[] array of what we do before the file field comes
+        this.wholeRequestBytes = new byte[requestBytes.length + zippedLength];
+        System.arraycopy(requestBytes, 0, wholeRequestBytes,0, requestBytes.length);
+        System.arraycopy(zippedBytes, 0, wholeRequestBytes, requestBytes.length, zippedBytes.length);
+    }
+    
+    public InputStream getInputStream() {
+        return new ByteArrayInputStream(wholeRequestBytes);
+    }
+    
+}
 

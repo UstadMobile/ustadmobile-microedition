@@ -499,4 +499,33 @@ public class MLearnUtils {
         
         return new String[] {targetHost, targetPort, targetResource};
     }
+    
+    /**
+     * Splits a string up line by line - removes the \n or \r symbols
+     * 
+     * @param str
+     * @return 
+     */
+    public static String[] getLines(String str) {
+        Vector lines = new Vector();
+        int lastLineStart = 0;
+        for(int i = 0; i < str.length(); i++) {
+            char currentChar = str.charAt(i);
+            boolean isNewLineChar = (currentChar == '\n' || currentChar == '\r');
+            if(isNewLineChar && i > lastLineStart) {
+                //we have found the end of the line
+                String lineContent = str.substring(lastLineStart, i);
+                lines.addElement(lineContent);
+            }
+            
+            if(isNewLineChar) {
+                lastLineStart = i+1;
+            }
+            
+        }
+        
+        String[] linesStr = new String[lines.size()];
+        lines.copyInto(linesStr);
+        return linesStr;
+    }
 }

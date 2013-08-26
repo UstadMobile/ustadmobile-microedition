@@ -24,5 +24,7 @@ git clone git://git.code.sf.net/p/ustadmobil/codelwuitmidpui MIDP_UI
 4. Resolve any reference problems in NetBeans and make sure that you have a suitable 
    Wireless Toolkit (WTK) installed - this has been tested with 2.5.2 building in Linux
 
-
-
+5. Note: if receiving an invalid first byte 100... RuntimeException on Linux under
+    emulator add this line to /opt/WTK2.5.2/wtklib/Linux/ktools.properties
+ 
+   microedition.encoding= *encoding*

@@ -92,10 +92,12 @@ public class MLObjectPusher extends Thread{
                 }*/
                 
                 //check and see if we need to send updated preferences
-                //MLCloudConnector.getInstance().sendPreferences();
-                
-                //also - send the logs through if that has been set
-                //new MLHTTPRep().sendLogs(this);
+                if(EXEStrMgr.getInstance().getCloudUser() != null) {
+                    MLCloudConnector.getInstance().sendPreferences();
+
+                    //also - send the logs through if that has been set
+                    new MLHTTPRep().sendLogs(this);
+                }
                 
                 
                 countDown = REPDELAY;

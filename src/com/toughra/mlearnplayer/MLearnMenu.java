@@ -331,7 +331,11 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     }
     
     public void updateFieldsFromPrefs() {
-        nameField.setText(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_LEARNERNAME));
+        String learnerName = EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_LEARNERNAME);
+        if(learnerName != null) {
+            nameField.setText(learnerName);
+        }
+        
         int langSelIndex = 0;
         String localeNow = EXEStrMgr.getInstance().getLocale();
         

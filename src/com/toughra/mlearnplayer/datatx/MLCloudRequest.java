@@ -20,6 +20,8 @@
 
 package com.toughra.mlearnplayer.datatx;
 
+import java.io.InputStream;
+
 /**
  * The interface represents a request and an abstract method to get the whole
  * request.  This makes it possible for one method to be used to generate retry
@@ -29,6 +31,6 @@ package com.toughra.mlearnplayer.datatx;
  */
 public interface MLCloudRequest {
     
-    public byte[] getRequestBytes(MLCloudConnector connector);
+    public InputStream getInputStream();
     
 }
