@@ -32,6 +32,7 @@ import com.sun.lwuit.html.DocumentInfo;
 import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.html.HTMLElement;
 import com.sun.lwuit.layouts.BorderLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ import com.toughra.mlearnplayer.Idevice;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
 import com.toughra.mlearnplayer.xml.XmlNode;
+
 
 
 
@@ -104,7 +106,9 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
         scoreStr = MLearnUtils.getTextProperty(nodeData, "scoretext");
         Vector wordChldrn = nodeData.findChildrenByTagName("word", true);
         int numWords = wordChldrn.size();
+        
         hadCorrect = MLearnUtils.makeBooleanArray(false, numWords);
+        hasAttempted = MLearnUtils.makeBooleanArray(false, numWords);
         
         words = new String[numWords];
         currentAnswers = new String[numWords];
@@ -121,6 +125,34 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
             wordFormats[i] = wordFormat;
         }
     }
+
+    public void start() {
+        super.start(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void stop() {
+        super.stop(); //To change body of generated methods, choose Tools | Templates.
+        
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                MLearnUtils.countBoolValues(hadCorrect, true), //num correctly answered
+                correctFirst, //num answered correct first attempt
+                MLearnUtils.countBoolValues(hasAttempted, true), //num questions attempted
+                LOGDEVCOMPLETE, //verb
+                0, //score
+                0, //maxScorePossible
+                "",//answer given 
+                "");//remarks
+    }
+    
+    
+
+    public String getDeviceTypeName() {
+        return "cloze";
+    }
+    
+    
     
     /**
      * Converts a , separated list of formats (e.g. ABC,123) 
@@ -232,6 +264,7 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
      */
     public void checkAnswers() {
         StringBuffer newHTML = new StringBuffer(formHTML);
+        StringBuffer answerLogLine = new StringBuffer();
         
         Component[] allComps = new Component[comp.getComponentCount()];
         for(int i = 0; i < allComps.length; i++) {
@@ -255,18 +288,30 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
             newHTML.delete(valueStart, valueStart+8);
             String newAttribs = " value=\"" + elementId + ":" + currentAnswers[i] + "\" ";
             boolean isCorrect = words[i].equalsIgnoreCase(currentAnswers[i]);
+            if(!currentAnswers[i].equals("")) {
+                hasAttempted[i] = true;
+            }
+            
             if(hadCorrect[i] == false && isCorrect == true) {
                 hadCorrect[i] = true;
             }
             
+            answerLogLine.append("Blank ").append(i+1).append(" \'").append(currentAnswers[i]).append('\'');
             if(isCorrect) {
                 //correct
                 newAttribs += "style='background-color: green' ";
                 numCorrect++;
+                answerLogLine.append(" (Correct)");
             }else {
                 //wrong
+                answerLogLine.append(" (Incorrect wanted '").append(words[i]).append("')");
                 newAttribs += "style='background-color: red' ";
             }
+            
+            if(i < (words.length - 1)) {
+                answerLogLine.append(',');
+            }
+            
             newHTML.insert(idPos, newAttribs);
         }
         
@@ -283,7 +328,7 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
         dlg.addComponent(new Label(msg));
         dlg.setTimeout(hostMidlet.fbTime);
         dlg.showDialog();
-        
+        EXEStrMgr.lg(this, 0, 0, 0, 0, 0, EXEStrMgr.VERB_ANSWERED, numCorrect, words.length, answerLogLine.toString(), "");
     }
     
     /**
@@ -315,7 +360,6 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
     }
     
 }
-
 /**
  * This HTMLCallback is used to listen for when the user has entered an answer
  * and figure out 

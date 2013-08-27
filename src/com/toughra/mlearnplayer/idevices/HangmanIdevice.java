@@ -29,6 +29,7 @@ import com.sun.lwuit.Label;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
 import com.sun.lwuit.table.TableLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.FeedbackDialog;
 import java.io.IOException;
 import java.util.Vector;
@@ -122,6 +123,9 @@ public class HangmanIdevice extends Idevice implements ActionListener{
     /** if the game is complete */
     boolean gameComplete = false;
     
+    /** For recording logs */
+    StringBuffer pickList;
+    
     /**
      * Constructor
      * @param hostMidlet the host midlet 
@@ -181,6 +185,12 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         
     }
 
+    public String getDeviceTypeName() {
+        return "hangman";
+    }
+    
+    
+
     /**
      * Event handler - show the letter picker form or pick a letter...
      * 
@@ -208,6 +218,7 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         wordLabel.setText(genWordDisplay());
         updateImg();
         imageDisplayForm.show();
+        pickList = new StringBuffer();
     }
     
     /**
@@ -223,6 +234,18 @@ public class HangmanIdevice extends Idevice implements ActionListener{
      * Called when the player has no remaining chances for this level and must reset
      */
     void loseLevel() {
+        EXEStrMgr.lg(this, //idevice
+                currentWordIndex, //question id
+                0, //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_FAILED, //verb
+                0, //score
+                imgSrcs.length, //maxScorePossible
+                pickList.toString(),//answer given 
+                "Wanted " + words[currentWordIndex] + " Hint was " + hints[currentWordIndex]);//remarks
+
         showFeedback(lostLevelMsg, false);
         levelAttempts++;
         startLevel(currentWordIndex);
@@ -289,6 +312,7 @@ public class HangmanIdevice extends Idevice implements ActionListener{
      * @param c The button that the player clicked on to choose that letter
      */
     public void chooseLetter(String letter, Component c) {
+        pickList.append(letter).append(',');
         if(words[currentWordIndex].indexOf(letter) != -1) {
             c.getStyle().setBgColor(LB_CORGUESS);
             c.getUnselectedStyle().setBgColor(LB_CORGUESS);
@@ -311,6 +335,19 @@ public class HangmanIdevice extends Idevice implements ActionListener{
         
         if(wordDisplay.equals(words[currentWordIndex])) {
             //level passed
+            EXEStrMgr.lg(this, //idevice
+                currentWordIndex, //question id
+                0, //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                imgSrcs.length - currentImageIndex, //score
+                imgSrcs.length, //maxScorePossible
+                pickList.toString(),//answer given 
+                "Wanted " + words[currentWordIndex] + " Hint was " + hints[currentWordIndex]);//remarks
+        
+            
             if(currentWordIndex < words.length - 1) {
                 advanceLevel();
             }else {
@@ -412,6 +449,18 @@ public class HangmanIdevice extends Idevice implements ActionListener{
      */
     public void stop() {
         super.stop();
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                currentWordIndex, //num correctly answered
+                correctFirst, //num answered correct first attempt
+                currentWordIndex, //num questions attempted
+                Idevice.LOGDEVCOMPLETE, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
+        
     }
 
     /**

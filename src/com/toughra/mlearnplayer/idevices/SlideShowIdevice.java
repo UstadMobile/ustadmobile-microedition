@@ -25,6 +25,8 @@ import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.xml.XmlNode;
 import com.sun.lwuit.*;
 import com.sun.lwuit.events.ActionListener;
+import com.toughra.mlearnplayer.EXEStrMgr;
+import com.toughra.mlearnplayer.MLearnUtils;
 import java.util.Vector;
 
 /**
@@ -91,6 +93,12 @@ public class SlideShowIdevice extends Idevice implements Runnable, ActionListene
             slideNodes[i] = (XmlNode)slides.elementAt(i);
         }
     }
+
+    public String getDeviceTypeName() {
+        return "slideshow";
+    }
+    
+    
 
     public void actionPerformed(ActionEvent ae) {
         
@@ -169,6 +177,31 @@ public class SlideShowIdevice extends Idevice implements Runnable, ActionListene
         if(autoMoveFlag == false) {
             running = false;
         }
+        
+        //saw verb
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_SAW, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
+        
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                Idevice.LOGDEVCOMPLETE, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
     }
     
     public void dispose() {

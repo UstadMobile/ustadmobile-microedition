@@ -77,7 +77,7 @@ public class MLHTTPRep {
             long alreadySent = pusher.getReplicationSent(repStatusHT, cFname);
             boolean doSwap = false;
             if(EXEStrMgr.getInstance().logFileOpen(cFname)) {
-                EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOBUF);
+                EXEStrMgr.getInstance().swap(EXEStrMgr.SWAP_TOBUF);
                 doSwap = true;
             }
 
@@ -97,7 +97,7 @@ public class MLHTTPRep {
             }
 
             if(doSwap) {
-                EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOFILE);
+                EXEStrMgr.getInstance().swap(EXEStrMgr.SWAP_TOFILE);
             }
 
         }

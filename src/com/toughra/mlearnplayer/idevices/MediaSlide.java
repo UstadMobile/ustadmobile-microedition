@@ -24,6 +24,7 @@ import com.toughra.mlearnplayer.xml.XmlNode;
 import com.toughra.mlearnplayer.Idevice;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.sun.lwuit.*;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
@@ -56,7 +57,7 @@ public class MediaSlide extends Idevice implements Runnable{
     /**set this if it also needs to be stopped - e.g. this MediaSlide is part of
      * a slideshow - so stop the slideshow object when stop is called
      */
-    public SlideShowIdevice slideShow;
+    public SlideShowIdevice slideShow = null;
     
     /**add the hostMidlet defined transition wait before starting media*/
     public boolean transWait = true;
@@ -71,6 +72,12 @@ public class MediaSlide extends Idevice implements Runnable{
         this.dataNode = dataNode;
     }
 
+    public String getDeviceTypeName() {
+        return "mediaslide";
+    }
+
+    
+    
     /**
      * This is an LWUIT form mode Idevice
      * @return Idevice.MODE_LWUIT_FORM
@@ -190,6 +197,10 @@ public class MediaSlide extends Idevice implements Runnable{
         if(videoURI != null  && hostMidlet.mediaEnabled == true) {
             videoComp.start();
         }
+        
+        if(slideShow == null) {
+            EXEStrMgr.lg(this, -1, 0, 0, 0, 0, "saw", 0, 0, "", "");
+        }
     }
     
     /**
@@ -197,6 +208,9 @@ public class MediaSlide extends Idevice implements Runnable{
      */
     public void stop() {
         super.stop();
+        if(slideShow == null) {
+            EXEStrMgr.lg(this, -1, getTimeOnDevice(), 0, 0, 0, LOGDEVCOMPLETE, 0, 0, "", "");
+        }
         if(videoComp != null) {
             Object nativePeer = videoComp.getNativePeer();
             videoComp.stop();

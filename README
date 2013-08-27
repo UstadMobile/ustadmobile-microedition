@@ -28,3 +28,10 @@ git clone git://git.code.sf.net/p/ustadmobil/codelwuitmidpui MIDP_UI
     emulator add this line to /opt/WTK2.5.2/wtklib/Linux/ktools.properties
  
    microedition.encoding= *encoding*
+
+
+List of error codes:
+
+100: IOException writing to logStream in EXEStrMgr.java
+101: IOException in saveAll flushing log output to buffer/disk
+

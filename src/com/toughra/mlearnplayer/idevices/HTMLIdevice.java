@@ -25,6 +25,7 @@ import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.sun.lwuit.*;
 import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.layouts.BorderLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
 
         
 /**
@@ -55,6 +56,11 @@ public class HTMLIdevice extends Idevice {
             htmlStr = "";
         }
     }
+
+    public String getDeviceTypeName() {
+        return "html";
+    }
+    
     
     
     /**
@@ -109,7 +115,9 @@ public class HTMLIdevice extends Idevice {
     public void stop() {
         super.stop();
         
-        if(slideShow != null) {
+        if(slideShow == null) {
+            EXEStrMgr.lg(this, -1, getTimeOnDevice(), 0, 0, 0, LOGDEVCOMPLETE, 0, 0, "", "");
+        }else {
             slideShow.stop();
         }
     }

@@ -48,7 +48,6 @@ import com.toughra.mlearnplayer.datatx.MLServerThread;
 import com.toughra.mlearnplayer.idevices.EXERequestHandler;
 import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
-import gov.nist.siplite.stack.ServerLog;
 
 //#ifdef NOKIA
 //# import com.nokia.mid.ui.*;
@@ -230,7 +229,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.5 (23/Aug/2013)";
+    public static final String versionInfo = "V: 0.9.6 (27-Aug-2013)";
     
     /** Set the RTL Mode on the basis of the package language */
     public static final int RTLMODE_PACKAGE = 0;
@@ -726,6 +725,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         int index = (goLast == false) ? 0 : ideviceIdList.length -1;
         EXEStrMgr.po("Showing idevice for page " + pageHref + " : " + index, EXEStrMgr.DEBUG);
 
+        
+        
         if(ideviceIdList.length == 0) {
             //this needs to show an idevice (blank html or something should do)
             Idevice blankHTMLDevice = new HTMLIdevice(this, " ");
@@ -734,7 +735,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             showIdevice(myHref, ideviceIdList[index]);
         }
         
-        currentHref = myHref;
+        
     }
     
  
@@ -852,7 +853,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     void stopCurrentIdevice() {
         if(currentIdeviceObj != null) {
             currentIdeviceObj.stop();
-            EXEStrMgr.getInstance().l("", currentIdeviceObj);
+            
             
             currentIdeviceObj.dispose();
             currentIdeviceObj = null;
@@ -951,6 +952,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      */
     public void showIdevice(String pageHREF, String ideviceId) {
         stopCurrentIdevice();
+        
+        currentHref = pageHREF;
+        
         try {
             EXEStrMgr.po("Loading idevice now for " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
             InputStream inStream = getInputStreamReaderByURL(currentPackageURI + "/"

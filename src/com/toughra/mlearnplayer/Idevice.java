@@ -64,6 +64,9 @@ public abstract class Idevice {
     //use to follow how many were eventually gotten correct
     protected boolean[] hadCorrect;
     
+    //use to follow how many questions were attempted
+    protected boolean[] hasAttempted;
+    
     /**
      * Indicates this is an info only idevice
      */
@@ -74,6 +77,8 @@ public abstract class Idevice {
      */
     public static int LOG_QUIZ = 1;
     
+    public static final String BLANK = " ";
+    
     /**
      * deviceType: 'info' or 'quiz'
      */
@@ -83,6 +88,8 @@ public abstract class Idevice {
      * Log types that are implemented
      */
     static final String[] logTypes = new String[] {"info", "quiz"};
+    
+    public static final String LOGDEVCOMPLETE = "idevicecomplete";
 
     /**
      * Constructor
@@ -117,7 +124,15 @@ public abstract class Idevice {
      * etc
      */
     public void start() {
-        startTime = new Date().getTime();
+        startTime = System.currentTimeMillis();
+    }
+    
+    public int getTimeOnDevice() {
+        if(startTime == -1) {
+            return 0;//nothing really happened yet
+        }
+        
+        return (int)(System.currentTimeMillis() - startTime);
     }
 
     /**
@@ -142,15 +157,11 @@ public abstract class Idevice {
         return LOG_INFO;
     }
     
-    //TODO: Implement this timer here between start and stop
-    public int getTimeonDevice() {
-        return (int)(new Date().getTime() - startTime);
-    }
     
     
     public String getLogLine() {
         String retVal = ideviceId + " " + deviceType + " " + logTypes[getLogType()]
-                + " " + getTimeonDevice();
+                + " " + getTimeOnDevice();
         int[] scoreData = getScores();
         retVal += " " + scoreData[0] + "/" + scoreData[1] + "/" + scoreData[2];
         return retVal;
@@ -164,6 +175,12 @@ public abstract class Idevice {
     public int[] getScores() {
         return new int[] {0, 0, 0};
     }
+    
+    /**
+     * Must be implemented to say the type of idevice (eg. multichoice, hangman, etc)
+     * @return 
+     */
+    public abstract String getDeviceTypeName();
     
 
 

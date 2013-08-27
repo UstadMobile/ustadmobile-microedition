@@ -31,10 +31,14 @@ import com.sun.lwuit.html.HTMLComponent;
 import com.sun.lwuit.layouts.GridLayout;
 import com.sun.lwuit.plaf.Border;
 import com.sun.lwuit.table.TableLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import java.util.*;
 import com.toughra.mlearnplayer.FeedbackDialog;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
+
+
+
 
 /**
  * The MCQIdevice will render a set of Multiple Choice Questions
@@ -136,7 +140,7 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 String feedback = feedbackNode.getTextChildContent(0);
                 Answer answer = new Answer(answerText,
                         currentAnswer.getAttribute("iscorrect").equals("true"), 
-                        new Integer(i), feedback);
+                        new Integer(i), feedback, j);
                 answer.questionId = i;
                 
                 if(feedbackNode.hasAttribute("audio")) {
@@ -153,6 +157,12 @@ public class MCQIdevice extends Idevice implements ActionListener {
         }
         int done = 0;
     }
+
+    public String getDeviceTypeName() {
+        return "mcq";
+    }
+    
+    
 
     /**
      * This is an LWUIT mode idevice 
@@ -243,11 +253,29 @@ public class MCQIdevice extends Idevice implements ActionListener {
             
             FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
             Answer selectedAnswer = ansItem.answer;
+            
+            EXEStrMgr.lg(this, //idevice
+                selectedAnswer.questionId, //question id
+                0, //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                selectedAnswer.isCorrect ? 1 : 0, //score
+                1, //maxScorePossible
+                String.valueOf(selectedAnswer.answerId),//answer given 
+                Idevice.BLANK);//remarks
+        
+            
             fbDialog.showFeedback(ansItem, selectedAnswer.feedback, selectedAnswer.isCorrect);
             int qId = selectedAnswer.questionId;
             
             if(!qAttempted[qId]) {
                 qAttempted[qId] = true;
+                if(correctFirst == -1) {
+                    correctFirst = 0;
+                }
+                
                 if(selectedAnswer.isCorrect) {
                     correctFirst++;
                 }
@@ -280,6 +308,18 @@ public class MCQIdevice extends Idevice implements ActionListener {
     public void stop() {
         
         super.stop();
+        
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                MLearnUtils.countBoolValues(hadCorrect, true), //num correctly answered
+                Math.max(0, correctFirst), //num answered correct first attempt
+                MLearnUtils.countBoolValues(qAttempted, true), //num questions attempted
+                Idevice.LOGDEVCOMPLETE, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
     }
 
     /**
@@ -310,9 +350,6 @@ public class MCQIdevice extends Idevice implements ActionListener {
     }
     
 }
-
-
-
 /**
  * Utility container class to represent an MCQ Answer item.  Replaces the 
  * RadioButton based version so that it's easier to select and has fewer

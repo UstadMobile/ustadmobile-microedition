@@ -72,7 +72,8 @@ public class EXEStrMgr {
     PrintStream debugStrm;
     
     /**PrintStream used for activity logging (-activity.log)*/
-    PrintStream logStrm;
+    //PrintStream logStrm;
+    OutputStream logOut;
     
     /**The base folder (umobiledata) where we save info*/
     String baseFolder;
@@ -120,6 +121,16 @@ public class EXEStrMgr {
     
     /** A list of preferences that should not be replicated to/from the cloud*/
     public static final String[] DONOTREPKEYS = {KEY_REPLIST, KEY_CLOUDUSER, KEY_CLOUDPASS};
+    
+    /** The deliminator being used */
+    public static final char LOGDELIMINATOR = '|';
+    
+    //VERBs for logging
+    public static final String VERB_ANSWERED = "answered";
+    
+    public static final String VERB_FAILED = "failed";
+    
+    public static final String VERB_SAW = "saw";
     
     /*
      * Constructor - 
@@ -276,7 +287,7 @@ public class EXEStrMgr {
     public String getDateLogStr() {
         Calendar cal = Calendar.getInstance();
         return  cal.get(Calendar.YEAR) + "-" +
-                    pad1(cal.get(Calendar.MONTH)) + "-" + pad1(cal.get(Calendar.DAY_OF_MONTH));
+                    pad1(cal.get(Calendar.MONTH)+1) + "-" + pad1(cal.get(Calendar.DAY_OF_MONTH));
     }
     
     /**
@@ -292,9 +303,8 @@ public class EXEStrMgr {
      * @param path
      * @return 
      */
-    private PrintStream openLogStream(String logname) {
+    private OutputStream openLogStream(String logname) {
         OutputStream out = null;
-        PrintStream strm = null;
         FileConnection fileCon = null;
         try {
             String debugFileName = getDateLogStr() + "-" + logname + ".log";
@@ -315,12 +325,12 @@ public class EXEStrMgr {
             
             openLogFCs.put(debugFileName, fileCon);
             
-            strm = new PrintStream(out);
+            
         }catch (Exception e) {
             e.printStackTrace();
         }
         
-        return strm;
+        return out;
     }
     
     /**
@@ -371,7 +381,7 @@ public class EXEStrMgr {
      */
     public synchronized void p(String str, int level) {
         if(debugStrm == null && baseFolder != null) {
-            debugStrm = openLogStream("debug");
+            //debugStrm = openLogStream("debug");
         }
         
         if(debugStrm != null) {
@@ -381,20 +391,124 @@ public class EXEStrMgr {
     
     /**
      * Logs a line to the activity log
-     * @param str message to write
-     * @param device - idevice to get log info from
+     * @param device - Idevice object to log for
+     * @param questionId - questionId this applies to (if applicable) -1 otherwise
+     * @param timeOpen - ms it was open for
+     * @param numCorrect - number of questions answered correctly
+     * @param numCorrectFirst - number of questions answered correctly first attempt
+     * @param numAnswered - number of questions answered (attempted)
+     * @param verb - the verb for this action
+     * @param score - score achieved by this interaction
+     * @param maxScorePossible  - the maximum score that was possible from this...
+     * @param answer - the answer the student provided
+     * @param remarks - additional remarks from the device
      */
-    public synchronized static void lg(String str, Idevice device) {
-        getInstance().l(str, device);
+    public synchronized static void lg(Idevice device, int questionId, int timeOpen, int numCorrect, int numCorrectFirst, int numAnswered, String verb, int score, int maxScorePossible, String answer, String remarks) {
+        getInstance().l('A', null, device, questionId, timeOpen, numCorrect, numCorrectFirst, numAnswered,  verb, score, maxScorePossible, answer, remarks);
     }
     
     /**
      * Logs a line to the activity log
-     * @param str
-     * @param device 
+     * @param device - Idevice object to log for
+     * @param questionId - questionId this applies to (if applicable) -1 otherwise
+     * @param timeOpen - ms it was open for
+     * @param numCorrect - number of questions answered correctly
+     * @param numCorrectFirst - number of questions answered correctly first attempt
+     * @param numAnswered - number of questions answered (attempted)
+     * @param verb - the verb for this action
+     * @param score - score achieved by this interaction
+     * @param maxScorePossible  - the maximum score that was possible from this...
+     * @param answer - the answer the student provided
+     * @param remarks - additional remarks from the device
      */
-    public void l(String str, Idevice device) {
-        l(str, device, SWAP_NONE);
+    public void l(Idevice device, int questionId, int timeOpen, int numCorrect, int numCorrectFirst, int numAnswered, String verb, int score, int maxScorePossible, String answer, String remarks) {
+        getInstance().l('A', null, device, questionId, timeOpen, numCorrect, numCorrectFirst, numAnswered,  verb, score, maxScorePossible, answer, remarks);
+    }
+    
+    /**
+     * Swaps between running the logging to a buffer or to it's normal file
+     * 
+     * This is used before/after sending log info
+     * 
+     * @param swapOp 
+     */
+    public void swap(int swapOp) {
+        synchronized(this) {
+            if(swapOp == SWAP_TOBUF) {
+                //close the existing stream
+                if(logOut != null) { 
+                    try {
+                        logOut.flush();
+                        logOut.close();
+                    }catch(IOException e) {
+                        System.err.println("Something bad swapping to buffer");
+                        e.printStackTrace();
+                    }
+                    
+                    logOut = null;
+                }
+
+                try {
+                    String logName = getDateLogStr() + "-activity.log";
+                    FileConnection fileCon = (FileConnection)openLogFCs.get(logName);
+                    fileCon.close();
+                    openLogFCs.remove(logName);
+                }catch(Exception e) {
+                    EXEStrMgr.po("Problem closing stream for rep swap " + e.toString(), WARN);
+                }
+
+                //make logStrm as a bytearrayoutput stream for now
+                logOut = new ByteArrayOutputStream();
+                bufOut = (ByteArrayOutputStream)logOut;
+                
+                //remove this item from the files open hashtable
+                po("Switched to running on buffer", DEBUG);
+                return;
+            }else if(swapOp == SWAP_TOFILE) {
+                byte[] bufNow = null;
+                try {
+                    if(logOut != null) {
+                        logOut.flush();
+                        bufNow = bufOut.toByteArray();
+                        logOut.close();
+                    }
+                }catch(IOException e) {
+                    System.err.println("Something bad in swap back to file");
+                    e.printStackTrace();
+                }
+
+                logOut = openLogStream("activity");
+                try {
+                    logOut.write(bufNow);
+                }catch(IOException e) {
+                    EXEStrMgr.po("Error writing log buffer out... " + e.toString(), EXEStrMgr.DEBUG);
+                }
+                po("Swapped back to running on file", DEBUG);
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Removes chars that could be an issue in logs.  Replaces new line with \n
+     * @param in
+     * @return 
+     */
+    private String sanitizeLogString(String in) {
+        int charIdx = 0;
+        char[][] replaceChars = { {'\n', 'n'}, {'\r', 'r'} };
+        for(int i = 0; i < replaceChars.length; i++) {
+            while((charIdx = in.indexOf(replaceChars[i][0])) != -1) {
+                in = in.substring(0, charIdx) + "\\" + replaceChars[i][1]; 
+                if(charIdx < in.length()-1) {
+                    in += in.substring(charIdx+1);
+                }
+            }
+        }
+        
+        in = in.replace('|', '/');
+        
+        return in;
     }
     
     /**
@@ -402,81 +516,93 @@ public class EXEStrMgr {
      * using the memory buffer and writing direct to the file (e.g. when the log
      * file itself is being transmitted to the teachers phone)
      * 
-     * @param str - string to log
+     * @param logType - Type of log (A activity D debug
+     * @param debugStr - if this is a debug log - the whole string to log
      * @param device - Idevice object to log for
-     * @param swapOp - if an open log needs switched to being a buffer...
+     * @param questionId - questionId this applies to (if applicable) -1 otherwise
+     * @param timeOpen - ms it was open for
+     * @param numCorrect - number of questions answered correctly
+     * @param numCorrectFirst - number of questions answered correctly first attempt
+     * @param numAnswered - number of questions answered (attempted)
+     * @param verb - the verb for this action
+     * @param score - score achieved by this interaction
+     * @param maxScorePossible  - the maximum score that was possible from this...
+     * @param answer - the answer the student provided
+     * @param remarks - additional remarks from the device
      */
-    public synchronized void l(String str, Idevice device, int swapOp) {
-        if(swapOp == SWAP_TOBUF) {
-            //close the existing stream
-            if(logStrm != null) { 
-                logStrm.flush();
-                logStrm.close();
-                logStrm = null;
-            }
-            
-            try {
-                String logName = getDateLogStr() + "-activity.log";
-                FileConnection fileCon = (FileConnection)openLogFCs.get(logName);
-                fileCon.close();
-                openLogFCs.remove(logName);
-            }catch(Exception e) {
-                EXEStrMgr.po("Problem closing stream for rep swap " + e.toString(), WARN);
-            }
-
-            //make logStrm as a bytearrayoutput stream for now
-            bufOut = new ByteArrayOutputStream();
-            logStrm = new PrintStream(bufOut);
-            
-            //remove this item from the files open hashtable
-            po("Switched to running on buffer", DEBUG);
-            return;
-        }else if(swapOp == SWAP_TOFILE) {
-            if(logStrm != null) {
-                logStrm.flush();
-            }
-            
-            byte[] bufNow = bufOut.toByteArray();
-            logStrm.close();
-            
-            logStrm = openLogStream("activity");
-            try {
-                logStrm.write(bufNow);
-            }catch(IOException e) {
-                EXEStrMgr.po("Error writing log buffer out... " + e.toString(), EXEStrMgr.DEBUG);
-            }
-            po("Swapped back to running on file", DEBUG);
-            return;
-        }
+    public synchronized void l(char logType, String debugStr, Idevice device, int questionId, int timeOpen, int numCorrect, int numCorrectFirst, int numAnswered, String verb, int score, int maxScorePossible, String answer, String remarks) {
+        StringBuffer logLine = new StringBuffer();
+        logLine.append(logType).append(':');
         
-        long timestamp = new Date().getTime();
+        // Field 0 - PHONE TIMESTAMP (UNIXTIME)
+        long timestamp = new Date().getTime() / 1000;
+        logLine.append(timestamp).append(LOGDELIMINATOR);
         
-        if(logStrm == null && baseFolder != null) {
+        if(logOut == null && baseFolder != null) {
             EXEStrMgr.po("Opening activity log append mode ", EXEStrMgr.DEBUG);
-            logStrm = openLogStream("activity");
-            EXEStrMgr.po("Opened logstrm: " + logStrm, EXEStrMgr.DEBUG);
+            logOut = openLogStream("activity");
+            EXEStrMgr.po("Opened logstrm: " + logOut, EXEStrMgr.DEBUG);
         }
         
-        if(logStrm != null) {
-            String logLine = "" + timestamp + " " + uuid+ " ";;
-            if(device.hostMidlet.currentColId != null) {
-                logLine += device.hostMidlet.currentColId + " ";
-            }else {
-                logLine += "null ";
+        //Field 1 - COLLECTION ID
+        if(device.hostMidlet.currentColId != null) {
+            logLine.append(device.hostMidlet.currentColId);
+        }else {
+            logLine.append(" ");
+        }
+        
+        logLine.append(LOGDELIMINATOR);
+        
+        //Field 2 - PACKAGE ID
+        logLine.append(device.hostMidlet.currentPkgId).append(LOGDELIMINATOR);
+        
+        //Field 3 - PAGE NAME
+        String pageHref = device.hostMidlet.currentHref;
+        if(pageHref.endsWith(".xml")) {
+            pageHref = pageHref.substring(0, pageHref.length()-4);
+        }
+        logLine.append(pageHref).append(LOGDELIMINATOR);
+        
+        //Field 4 - Idevice ID
+        logLine.append(device.ideviceId).append(LOGDELIMINATOR);
+        
+        //Field 5 - Question ID
+        logLine.append(questionId).append(LOGDELIMINATOR);
+        
+        //Field 6 - The idevice type
+        logLine.append(device.getDeviceTypeName()).append(LOGDELIMINATOR);
+        
+        //Field 7 - Device Type (0=INFO 1=QUIZ)
+        logLine.append(device.getLogType()).append(LOGDELIMINATOR);
+        
+        //Field 8 - Time open (in ms)
+        logLine.append(timeOpen).append(LOGDELIMINATOR);
+        
+        //Field 9, 10, 11 - # correct answers, # answers correct first time, #questions attempted
+        logLine.append(numCorrect).append(LOGDELIMINATOR).append(numCorrectFirst)
+                .append(LOGDELIMINATOR).append(numAnswered).append(LOGDELIMINATOR);
+        
+        ///Field 12 - the Verb
+        logLine.append(verb).append(LOGDELIMINATOR);
+        
+        //Field 13,14 - Score and max score possible
+        logLine.append(score).append(LOGDELIMINATOR).append(maxScorePossible).append(LOGDELIMINATOR);
+  
+        //Field 15 - The answer given
+        logLine.append(sanitizeLogString(answer)).append(LOGDELIMINATOR);
+        
+        //Field 16 - the remarks
+        logLine.append(sanitizeLogString(remarks));
+            
+        if(logOut != null) {
+            String line = logLine.toString();
+            try {
+                logOut.write(line.getBytes("UTF-8"));
+                logOut.write((int)'\n');
+            }catch(IOException e) {
+                System.err.println("Error 100");
+                e.printStackTrace();
             }
-            
-            String pageHref = device.hostMidlet.currentHref;
-            if(pageHref.endsWith(".xml")) {
-                pageHref = pageHref.substring(0, pageHref.length()-4);
-            }
-            
-            logLine += device.hostMidlet.currentPkgId + " " 
-                    + pageHref + " ";
-            
-            logLine += device.getLogLine();
-            
-            logStrm.println(logLine);
-            
         }else {
             EXEStrMgr.po("Logstrm is null", EXEStrMgr.WARN);
         }
@@ -640,7 +766,11 @@ public class EXEStrMgr {
      */
     public void saveAll() {
         savePrefs();
-        if(logStrm != null) { logStrm.flush(); }
+        try {
+            if(logOut != null) { logOut.flush();}
+        }catch(IOException e) {
+            System.err.println("Error 101");
+        }
         if(debugStrm != null) { debugStrm.flush(); }
     }
     

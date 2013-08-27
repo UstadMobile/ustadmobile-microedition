@@ -45,15 +45,19 @@ public class Answer {
     /** The Question ID that this answer is tied to (optional) */
     public int questionId;
     
+    /** The answer ID (used for logging etc)*/
+    public int answerId;
+    
     /**
      * Constructor
      * 
      * @param text text of this answer
      * @param isCorrect true/false is this a correct answer
      */
-    public Answer(String text, boolean isCorrect) {
+    public Answer(String text, boolean isCorrect, int answerId) {
         this.answerText = text;
         this.isCorrect = isCorrect;
+        this.answerId = answerId;
     }
     
     /**
@@ -64,8 +68,8 @@ public class Answer {
      * @param question the question that this is an answer for
      * @param feedback feedback to show when this answer is selected
      */
-    public Answer(String text, boolean isCorrect, Object question, String feedback) {
-        this(text, isCorrect);
+    public Answer(String text, boolean isCorrect, Object question, String feedback, int answerId) {
+        this(text, isCorrect, answerId);
         this.question = question;
         this.feedback = feedback;
     }

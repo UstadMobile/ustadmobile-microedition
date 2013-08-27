@@ -384,7 +384,7 @@ public class MLObjectPusher extends Thread{
                 
                 boolean doSwap = false;
                 if(EXEStrMgr.getInstance().logFileOpen(cFname)) {
-                    EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOBUF);
+                    EXEStrMgr.getInstance().swap(EXEStrMgr.SWAP_TOBUF);
                     doSwap = true;
                 }
                 
@@ -409,7 +409,7 @@ public class MLObjectPusher extends Thread{
                 }
                 
                 if(doSwap) {
-                    EXEStrMgr.getInstance().l(null, null, EXEStrMgr.SWAP_TOFILE);
+                    EXEStrMgr.getInstance().swap(EXEStrMgr.SWAP_TOFILE);
                 }
             }
             

@@ -29,10 +29,12 @@ import com.sun.lwuit.geom.Dimension;
 import com.sun.lwuit.plaf.Style;
 import com.sun.lwuit.plaf.UIManager;
 import com.sun.lwuit.table.TableLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import java.io.InputStream;
 import java.util.Random;
 import java.util.Vector;
 import com.toughra.mlearnplayer.xml.XmlNode;
+
 
 
 
@@ -166,6 +168,12 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         completeFeedback = data.findFirstChildByTagName("completefeedback", true).getTextChildContent(0);        
     }
 
+    public String getDeviceTypeName() {
+        return "mathdrill";
+    }
+    
+    
+
     /**
      * this is a LWUIT idevice
      * @return Idevice.MODE_LWUIT_FORM
@@ -285,8 +293,26 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
             ae.consume();
             
             FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
+            boolean isCorrect = (resultBox.getNumObjects() == currentAnswer);
+            StringBuffer remarkStr = new StringBuffer("Q:").append(exprResults[0]).
+                    append(operator).append(exprResults[1]);
+            EXEStrMgr.lg(this, //idevice
+                0, //question id
+                0, //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                isCorrect ? 1 : 0, //score
+                1, //maxScorePossible
+                String.valueOf(currentAnswer),//answer given 
+                remarkStr.toString());//remarks
+            
             if(resultBox.getNumObjects() == currentAnswer) {
                 if(currentNumAttempts == 0) {
+                    if(correctFirst == -1) {
+                        correctFirst = 0;
+                    }
                     correctFirst++;
                 }
                 
@@ -334,12 +360,23 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
      * stop
      */
     public void stop() {
+        int numAttempted = numQuestionsDone + ((currentNumAttempts > 0) ? 1 : 0);
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                numQuestionsDone, //num correctly answered
+                Math.max(0, correctFirst), //num answered correct first attempt
+                numAttempted, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);
         super.stop();
     }
     
     
 }
-
 /**
  * Component that will show a given number of objects from a MathDrillIdevice
  * 

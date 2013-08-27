@@ -32,8 +32,10 @@ import com.sun.lwuit.layouts.BoxLayout;
 import com.sun.lwuit.layouts.FlowLayout;
 import com.sun.lwuit.layouts.GridLayout;
 import com.sun.lwuit.plaf.Border;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import java.util.Vector;
 import com.toughra.mlearnplayer.xml.XmlNode;
+
 
 
 /**
@@ -118,6 +120,11 @@ public class SortIdevice extends Idevice implements ActionListener {
     /** number of attempts that have been made so far*/
     int numAttempts = 0;
     
+    /** Storing the last known given order*/
+    StringBuffer givenOrder;
+    
+    boolean correctAnswerGiven = false;
+    
     /**
      * Constructor 
      * 
@@ -126,6 +133,7 @@ public class SortIdevice extends Idevice implements ActionListener {
      */
     public SortIdevice(MLearnPlayerMidlet hostMidlet, XmlNode srcData) {
         super(hostMidlet);
+        givenOrder = new StringBuffer();
         Vector sortItems = srcData.findChildrenByTagName("item", true);
         
         XmlNode optionNode = (XmlNode)srcData.findChildrenByTagName("sortoptions", true).elementAt(0);
@@ -161,7 +169,7 @@ public class SortIdevice extends Idevice implements ActionListener {
         
         for(int i = 0; i < numItems; i++) {
             XmlNode currentNode = (XmlNode)sortItems.elementAt(i);
-            items[i] = new SortableItem(this);
+            items[i] = new SortableItem(this, i);
             
             FlowLayout layout;
             
@@ -194,6 +202,12 @@ public class SortIdevice extends Idevice implements ActionListener {
         
         
     }
+
+    public String getDeviceTypeName() {
+        return "sort";
+    }
+    
+    
     
     /** 
      * Check the answer of the user
@@ -202,13 +216,21 @@ public class SortIdevice extends Idevice implements ActionListener {
      */
     boolean checkAnswer() {
         int numItems = items.length;
+        boolean result = true;
+        givenOrder = new StringBuffer();
+        
         for(int i = 0; i < numItems; i++) {
             if(!items[i].equals(correctOrder[i])) {
-                return false;
+                result = false;
+            }
+            givenOrder.append("Item ").append(items[i].correctPlace).append(" in pos ")
+                    .append(i);
+            if(i < numItems -1) {
+                givenOrder.append(',');
             }
         }
         
-        return true;
+        return result;
     }
 
     /**
@@ -221,12 +243,30 @@ public class SortIdevice extends Idevice implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
         //see if this is a request for a check
         if(ae.getCommand() != null && ae.getCommand().getCommandName() != null) {
+            if(correctAnswerGiven == true) {
+                return;//already done
+            }
             if(ae.getCommand().getCommandName().equals(checkText)) {
+                numAttempts++;
                 FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
                 boolean isCorrect = checkAnswer();
+                correctAnswerGiven = isCorrect;
+                
                 if(numAttempts == 0) {
                     correctFirst = 1;
                 }
+                EXEStrMgr.lg(this, //idevice
+                    0, //question id
+                    0, //time on device in ms
+                    0, //num correctly answered
+                    0, //num answered correct first attempt
+                    0, //num questions attempted
+                    EXEStrMgr.VERB_ANSWERED, //verb
+                    isCorrect ? 1 : 0, //score
+                    1, //maxScorePossible
+                    givenOrder.toString(),//answer given 
+                    Idevice.BLANK);//remarks
+                
                 fbDialog.showFeedback(form, isCorrect ? positiveFeedback : negativeFeedback);
             }
         }
@@ -435,6 +475,17 @@ public class SortIdevice extends Idevice implements ActionListener {
      */
     public void stop() {
         super.stop();
+        EXEStrMgr.lg(this, //idevice
+                    0, //question id
+                    getTimeOnDevice(), //time on device in ms
+                    correctAnswerGiven ? 1  : 0, //num correctly answered
+                    correctFirst, //num answered correct first attempt
+                    numAttempts, //num questions attempted
+                    Idevice.LOGDEVCOMPLETE, //verb
+                    0, //score
+                    0, //maxScorePossible
+                    givenOrder.toString(),//answer given 
+                    Idevice.BLANK);//remarks
     }
 
     /**
@@ -447,7 +498,6 @@ public class SortIdevice extends Idevice implements ActionListener {
     
     
 }
-
 /**
  * Utility container class to represent a sortable item in the list
  * 
@@ -461,14 +511,18 @@ class SortableItem extends Container implements FocusListener{
     /** our host idevice*/
     private SortIdevice idevice;
     
+    /** where we belong */
+    int correctPlace = 0;
+    
     /**
      * Constructor 
      * 
      * @param idevice our host idevice
      */
-    SortableItem(SortIdevice idevice) {
+    SortableItem(SortIdevice idevice, int correctPlace) {
         this.idevice = idevice;
         addFocusListener(this);
+        this.correctPlace = correctPlace;
     }
     
     /**

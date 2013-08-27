@@ -27,9 +27,11 @@ import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
 import com.sun.lwuit.layouts.BoxLayout;
 import com.sun.lwuit.table.TableLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
 import java.io.InputStream;
 import java.util.Vector;
 import com.toughra.mlearnplayer.xml.XmlNode;
+
 
 
 /**
@@ -69,6 +71,9 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
     /** number of attempts on this question*/
     int attemptCount = 0;
     
+    /** total number of correct answers given */
+    int numCorrectCount = 0;
+    
     /**
      * Constructor
      * 
@@ -93,6 +98,12 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
         negativeFb = data.findFirstChildByTagName("negativefeedback", true).getTextChildContent(0);
         completeFb = data.findFirstChildByTagName("completeoverlay", true).getTextChildContent(0);
     }
+
+    public String getDeviceTypeName() {
+        return "missingletter";
+    }
+    
+    
     
     
     /**
@@ -134,12 +145,31 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
         String cmdStr = ae.getCommand().getCommandName();
         FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
         boolean wasCorrect = false;
+        
+        if(numCorrectCount == levels.length) {
+            //sorry all done
+            return;
+        }
+        
+        EXEStrMgr.lg(this, //idevice
+                currentIndex, //question id
+                0, //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                wasCorrect ? 1 : 0, //score
+                1, //maxScorePossible
+                cmdStr,//answer given 
+                "Correct is " + levels[currentIndex].correctChoice);//remarks
+        
         if(cmdStr.equals(levels[currentIndex].correctChoice)) {
             fbDialog.showFeedback(mainFrm, positiveFb, true);
             wasCorrect = true;
             if(attemptCount == 0) {
                 correctFirst++;
             }
+            numCorrectCount++;
         }else {
             attemptCount++;
             fbDialog.showFeedback(mainFrm, negativeFb, false);
@@ -201,6 +231,7 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
      * Start method - show the first question
      */
     public void start() {
+        super.start();
         showLevel(0);
     }
 
@@ -208,13 +239,25 @@ public class MissingLetterIdevice extends Idevice implements ActionListener {
      * Stop
      */
     public void stop() {
+        super.stop();
+        int questionsAttempted = numCorrectCount + ((attemptCount > 0) ? 1 : 0);
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                numCorrectCount, //num correctly answered
+                correctFirst, //num answered correct first attempt
+                questionsAttempted, //num questions attempted
+                Idevice.LOGDEVCOMPLETE, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
         
     }
     
     
     
 }
-
 /**
  * Utility container representing a level in the exercise contains the image
  * url and the choices of possible answers

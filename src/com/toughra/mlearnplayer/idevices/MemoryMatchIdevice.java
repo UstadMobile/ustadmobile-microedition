@@ -27,8 +27,9 @@ import com.toughra.mlearnplayer.MLearnUtils;
 import com.sun.lwuit.*;
 import com.sun.lwuit.events.ActionEvent;
 import com.sun.lwuit.events.ActionListener;
-import com.sun.lwuit.impl.LWUITImplementation;
 import com.sun.lwuit.table.TableLayout;
+import com.toughra.mlearnplayer.EXEStrMgr;
+import java.util.Random;
 import java.util.Vector;
 
 
@@ -94,6 +95,9 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
     
     /**whether or not to split the array into questions and answers*/
     boolean splitPairs = false;
+    
+    /** Running counter of how many attempts got made*/
+    int numMatchAttempts = 0;
 
     /**
      * Constructor
@@ -136,6 +140,12 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
             splitPairs = true;
         }
     }
+
+    public String getDeviceTypeName() {
+        return "memmatch";
+    }
+    
+    
     
     
 
@@ -154,6 +164,8 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
             if(selected == null) {
                 selected = cell;
             }else {                
+                numMatchAttempts++;
+                
                 //we have a pair selected - find out if this is a match
                 boolean isMatch = selected.isMatch(cell);
                 
@@ -199,6 +211,26 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
     }
 
     /**
+     * Shuffle an array (because java.util.Collections is not in j2me)
+     * 
+     * @param array Array to shuffle
+     * @param start starting pos
+     * @param length length to shuffle through
+     */
+    public static void shuffleCells(MemoryMatchCell[] arrObj, int start, int length) {
+        
+        Random r = new Random();
+        
+        for(int i = start; i < (start + length); i++) {
+            int randomOffset = r.nextInt(length);
+            int rIndex = randomOffset + start;
+            MemoryMatchCell tmp = arrObj[rIndex];
+            arrObj[rIndex] = arrObj[i];
+            arrObj[i] = tmp;
+        }
+    }
+    
+    /**
      * Returns the main LWUIT form to use
      * 
      * @return main LWUIT Form
@@ -219,8 +251,8 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
                 Object[] cellArr = (Object[])cells;
                 
                 //shuffle each part separately
-                MLearnUtils.shuffleArray(cellArr, 0, numPairs);
-                MLearnUtils.shuffleArray(cellArr, numPairs, numPairs);
+                shuffleCells(cells, 0, numPairs);
+                shuffleCells(cells, numPairs, numPairs);
                 
             }else {
                 for(int i = 0; i < pairs.length; i++) {
@@ -257,6 +289,32 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
      */
     public void stop() {
         super.stop();
+        //for the answer verb
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                0, //time on device in ms
+                0, //num correctly answered
+                0, //num answered correct first attempt
+                0, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                numPairsMatched, //score
+                pairs.length, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
+        
+        //for the special idevicecomplete verb
+        EXEStrMgr.lg(this, //idevice
+                0, //question id
+                getTimeOnDevice(), //time on device in ms
+                numPairsMatched, //num correctly answered
+                numPairsMatched, //num answered correct first attempt
+                numPairsMatched, //num questions attempted
+                EXEStrMgr.VERB_ANSWERED, //verb
+                0, //score
+                0, //maxScorePossible
+                Idevice.BLANK,//answer given 
+                Idevice.BLANK);//remarks
+        
     }
 
     
