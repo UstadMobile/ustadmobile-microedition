@@ -129,7 +129,7 @@ public class SlideShowIdevice extends Idevice implements Runnable, ActionListene
      * @return LWUIT Form that is the next part of the slide show
      */
     public Form showNextForm() {
-        if(currentSlide < (slideNodes.length -1)) {
+        if(slideNodes != null && currentSlide < (slideNodes.length -1)) {
             if(cIdevice != null) {
                 cIdevice.stop();
                 cIdevice.dispose();
@@ -178,30 +178,32 @@ public class SlideShowIdevice extends Idevice implements Runnable, ActionListene
             running = false;
         }
         
-        //saw verb
-        EXEStrMgr.lg(this, //idevice
-                0, //question id
-                getTimeOnDevice(), //time on device in ms
-                0, //num correctly answered
-                0, //num answered correct first attempt
-                0, //num questions attempted
-                EXEStrMgr.VERB_SAW, //verb
-                0, //score
-                0, //maxScorePossible
-                Idevice.BLANK,//answer given 
-                Idevice.BLANK);//remarks
-        
-        EXEStrMgr.lg(this, //idevice
-                0, //question id
-                getTimeOnDevice(), //time on device in ms
-                0, //num correctly answered
-                0, //num answered correct first attempt
-                0, //num questions attempted
-                Idevice.LOGDEVCOMPLETE, //verb
-                0, //score
-                0, //maxScorePossible
-                Idevice.BLANK,//answer given 
-                Idevice.BLANK);//remarks
+        if(currentSlide == (slideNodes.length -1)) {
+            //saw verb
+            EXEStrMgr.lg(this, //idevice
+                    0, //question id
+                    getTimeOnDevice(), //time on device in ms
+                    0, //num correctly answered
+                    0, //num answered correct first attempt
+                    0, //num questions attempted
+                    EXEStrMgr.VERB_SAW, //verb
+                    0, //score
+                    0, //maxScorePossible
+                    Idevice.BLANK,//answer given 
+                    Idevice.BLANK);//remarks
+
+            EXEStrMgr.lg(this, //idevice
+                    0, //question id
+                    getTimeOnDevice(), //time on device in ms
+                    0, //num correctly answered
+                    0, //num answered correct first attempt
+                    0, //num questions attempted
+                    Idevice.LOGDEVCOMPLETE, //verb
+                    0, //score
+                    0, //maxScorePossible
+                    Idevice.BLANK,//answer given 
+                    Idevice.BLANK);//remarks
+        }
     }
     
     public void dispose() {
@@ -250,6 +252,7 @@ public class SlideShowIdevice extends Idevice implements Runnable, ActionListene
             try {
                 Form nextForm = host.showNextForm();
             }catch(Exception e) {
+                e.printStackTrace();
                 Dialog dlg = new Dialog("Error adv slide");
                 
                 dlg.addComponent(new Label(e.toString()));

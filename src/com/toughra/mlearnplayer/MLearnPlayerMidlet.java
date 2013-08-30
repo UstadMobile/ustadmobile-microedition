@@ -229,7 +229,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.6 (27-Aug-2013)";
+    public static final String versionInfo = "V: 0.9.6 (30-Aug-2013)";
     
     /** Set the RTL Mode on the basis of the package language */
     public static final int RTLMODE_PACKAGE = 0;
@@ -245,12 +245,20 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /** The main server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String masterServer = "intranet.paiwastoon.net:80";
+    public final static String masterServer = "192.168.96.227:80";
     //#endif
     
     //#ifdef SERVER
     //#expand public final static String masterServer = "%SERVER%";
     //#endif
+    
+    /** Controls if it is possible to navigate or not - e.g. 
+     * when System.currentTime - lastNavTime < transitionTime do nothing
+     */
+    long lastNavTime = 0;
+    
+    /** Lock to use for thread safety purposes */
+    Object navigateLock = new Object();
     
     /**
      * Not really used - using EXEStrMgr instead
@@ -780,12 +788,27 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
     
     /**
+     * Checks to see if we should accept navigation commands (avoid issues with people pushing
+     * buttons too fast)
+     * 
+     * @return true if ok to go, false otherwise
+     */
+    private final boolean canNavigateNow() {
+        return (System.currentTimeMillis() - lastNavTime) > transitionTime;
+    }
+    
+    /**
      * 
      * Goes increment devices along to show the next (or previous) idevice
      * @param increment how many idevices to move along (can be +ve/-ve)
      * 
      */
     public void showNextDevice(int increment) {
+        if(!canNavigateNow()) {
+            System.out.println("Blocking navigate because something already happening");
+            return; 
+        }
+        
         stopCurrentIdevice();
         int nextIdeviceIndex = currentIdeviceIndex + increment;
         if(nextIdeviceIndex >= 0 && nextIdeviceIndex < ideviceIdList.length) {
@@ -844,6 +867,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 showTOC();
             }
         }
+        
+        lastNavTime = System.currentTimeMillis();
+        
     }
 
     

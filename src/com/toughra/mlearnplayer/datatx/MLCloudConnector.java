@@ -87,8 +87,7 @@ public class MLCloudConnector {
     public static String CLOUD_GETPREF_PATH="/umcloud/app/getPreference.xhtml";
     
     /** The String to append to the server URL for log submission */
-    public static String CLOUD_LOGSUBMIT_PATH="/test.php";
-    //public static String CLOUD_LOGSUBMIT_PATH="/umcloud/app/uploadLog.xhtml";
+    public static String CLOUD_LOGSUBMIT_PATH="/umcloud/app/uploadLog.xhtml";
     
     /** The String to append to the server URL for callhome submission */
     public static String CLOUD_CALLHOME_PATH="/umobile/datarxdummy.php";
@@ -320,9 +319,16 @@ public class MLCloudConnector {
                     InputStream reqIn = request.getInputStream();
                     byte[] buf = new byte[1024];
                     int count = 0;
+                    /* in case of wanting to examine a request closely*/
+                    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                            
                     while((count = reqIn.read(buf)) != -1) {
                         out.write(buf, 0, count);
+                        bout.write(buf,0,count);
                     }
+                    
+                    String requestStr = new String(bout.toByteArray());
+                    
                     reqIn.close();
                     respCode = readResponse(respOut, respHeaders);
                 }
@@ -471,10 +477,13 @@ public class MLCloudConnector {
             Hashtable respHeaders = new Hashtable();
             int respCode = doRequest(request, bout, respHeaders);
             responseBytes = bout.toByteArray();
+            String respStr = new String(responseBytes);
+            int x = 0;
         }catch(Exception e) {
             System.err.println("bad whilst attempting to send file");
             e.printStackTrace();
         }
+        //DEBUG
         
         return responseBytes;
     }
@@ -684,8 +693,8 @@ class MLCloudFileRequest  implements  MLCloudRequest{
 
             //end of the message is the end of that field and then the end boundary message
             String endBoundary =  "\r\n--" + boundary + "--\r\n";
-            reqCompStr[COMP_ENDREQ] = connector.appendFormFieldEnd(new StringBuffer(), boundary).toString()
-                    + endBoundary;
+            reqCompStr[COMP_ENDREQ] = /*connector.appendFormFieldEnd(new StringBuffer(), boundary).toString()
+                    + */endBoundary;
 
             contentBytes = new byte[3][0];
             long contentByteCount = 0;

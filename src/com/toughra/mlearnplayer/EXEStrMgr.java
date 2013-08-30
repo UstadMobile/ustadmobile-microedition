@@ -495,6 +495,9 @@ public class EXEStrMgr {
      * @return 
      */
     private String sanitizeLogString(String in) {
+        if(in.length() == 0) {
+            return Idevice.BLANK;
+        }
         int charIdx = 0;
         char[][] replaceChars = { {'\n', 'n'}, {'\r', 'r'} };
         for(int i = 0; i < replaceChars.length; i++) {
