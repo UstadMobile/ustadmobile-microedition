@@ -132,6 +132,10 @@ public class EXEStrMgr {
     
     public static final String VERB_SAW = "saw";
     
+    
+    /** the log name that is going to be in use during this session */
+    public String sessionActivityLogName;
+    
     /*
      * Constructor - 
      * 
@@ -182,6 +186,7 @@ public class EXEStrMgr {
             setupBaseFolder();
         }
         baseFolder = prefs.getPref("basefolder");
+        sessionActivityLogName = getDateLogStr() + "-activity.log";
     }
     
     /**
@@ -284,7 +289,7 @@ public class EXEStrMgr {
      * 
      * @return String formatted for date log file names yyyy-mm-dd
      */ 
-    public String getDateLogStr() {
+    public static String getDateLogStr() {
         Calendar cal = Calendar.getInstance();
         return  cal.get(Calendar.YEAR) + "-" +
                     pad1(cal.get(Calendar.MONTH)+1) + "-" + pad1(cal.get(Calendar.DAY_OF_MONTH));

@@ -77,6 +77,9 @@ public class MLCloudConnector {
     /** The number of times to retry */
     public static final int RETRY_ATTEMPTS = 3;
     
+    /** The maximum amount of log content to send in one POST request (in bytes)*/
+    public static final int MAX_LOGSEND = 100000;
+    
     /** The string to append to the server URL for login*/
     public static String CLOUD_LOGIN_PATH="/umcloud/app/login.xhtml";
     
@@ -461,31 +464,30 @@ public class MLCloudConnector {
      * @param fileConURI The URI to use with the FileConnection method (source data)
      * @param skipBytes Number of bytes of the file to skip (e.g. data already sent before)
      * 
-     * @return byte array of the response sent by the server
+     * @return number of log bytes sent -1 if there was an error (e.g. non 200 HTTP response code)
      * @throws Exception 
      */
-    public byte[] sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
+    public int sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
         openConnection();
         
-        byte[] responseBytes = null;
+        int retVal = -1;
  
         try{
             params.put("userid", EXEStrMgr.getInstance().getCloudUser());
             params.put("password", EXEStrMgr.getInstance().getCloudPass());
-            MLCloudRequest request = new MLCloudFileRequest(this, url, params, fileField, fileConURI, skipBytes);
+            MLCloudFileRequest request = new MLCloudFileRequest(this, url, params, fileField, fileConURI, skipBytes);
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             Hashtable respHeaders = new Hashtable();
             int respCode = doRequest(request, bout, respHeaders);
-            responseBytes = bout.toByteArray();
-            String respStr = new String(responseBytes);
-            int x = 0;
+            if(respCode == 200) {
+                retVal = request.logBytesToSend;
+            }
         }catch(Exception e) {
             System.err.println("bad whilst attempting to send file");
             e.printStackTrace();
         }
-        //DEBUG
         
-        return responseBytes;
+        return retVal;
     }
     
     /**
@@ -669,6 +671,13 @@ class MLCloudFileRequest  implements  MLCloudRequest{
     
     byte[] wholeRequestBytes;
     
+    /** The amount of log bytes that we intend to send with this request from
+     *  the file.  It will be less than MLCloudConnector.MAX_LOGSEND and will terminate
+     *  the last new line character (inclusive) before MLCloudConnector.MAX_LOGSEND bytes
+     *  after skipping skipBytes (for those bytes already sent)
+     */
+    public int logBytesToSend = -1;
+    
     public MLCloudFileRequest(MLCloudConnector connector, String url, Hashtable params, String fileField, String fileConURI, long skipBytes) {
         //figure out this request details
         
@@ -717,15 +726,42 @@ class MLCloudFileRequest  implements  MLCloudRequest{
             }
             int count = 0;
             byte[] buf = new byte[1024];
-            while((count = fin.read(buf)) != -1) {
-                gzOut.write(buf, 0, count);
+            int pos = 0;
+            
+            ByteArrayOutputStream logContentOut = new ByteArrayOutputStream();
+            while((count = fin.read(buf)) != -1 && pos < MLCloudConnector.MAX_LOGSEND) {
+                logContentOut.write(buf, 0, count);
+                pos += count;
             }
+            
+            logContentOut.flush();
+            
+            /*
+             * Find the last newline character by working backwards through
+             * the byte array
+             */
+            byte[] logContentBytes = logContentOut.toByteArray();
+            int lastNewLinePos = -1;
+            for(int i = logContentBytes.length - 1; i > 0; i--) {
+                if((char)logContentBytes[i] == '\n') {
+                    lastNewLinePos = i;
+                    break;
+                }
+            }
+            
+            logBytesToSend = lastNewLinePos + 1;
+            
+            //gzout write here...
+            gzOut.write(logContentBytes, 0, logBytesToSend);
             
             gzOut.flush();
             gzOut.close();
+            
+            
 
             //now encode this in base64
-            String gzBase64 = Base64.encode(contentZipped.toByteArray());
+            byte[] logBytes = contentZipped.toByteArray();
+            String gzBase64 = Base64.encode(logBytes);
             byte[] gzBase64Bytes = gzBase64.getBytes();
             gzOutDest.write(gzBase64Bytes);
 

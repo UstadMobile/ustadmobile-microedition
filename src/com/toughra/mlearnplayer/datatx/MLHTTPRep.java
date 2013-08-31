@@ -201,6 +201,22 @@ public class MLHTTPRep {
         
         if(alreadySent >= fileSize) {
             EXEStrMgr.po("Already sent " + fileURI + " : " + alreadySent + " bytes", EXEStrMgr.DEBUG);
+            
+            //check and see if the log was fully sent and is not for today... delete it
+            String logBasename = fileURI.substring(fileURI.lastIndexOf('/') + 1);
+            String logNameToday = EXEStrMgr.getInstance().sessionActivityLogName;
+            if(!logBasename.equals(logNameToday)) {
+                //time to delete it 
+                FileConnection fConDel = null;
+                try {
+                    fConDel = (FileConnection)Connector.open(fileURI);
+                    fConDel.delete();
+                }catch(IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    fConDel.close();
+                }
+            }
             return STATUS_ALREADYSENT;
         }
         
@@ -216,22 +232,14 @@ public class MLHTTPRep {
             basename = EXEStrMgr.getInstance().getPref("uuid") + "-" + basename;
         }
         
-        byte[] response = MLCloudConnector.getInstance().sendLogFile(url, params, "filecontent", 
+        int logBytesSent = MLCloudConnector.getInstance().sendLogFile(url, params, "filecontent", 
                 basename, "text/plain", fileURI, alreadySent);
         
         
-        if(response != null) {
-            String responseStr = new String(response);
-            int respCode = MLCloudConnector.getInstance().getLastResponseCode();
-            EXEStrMgr.po("Cloud Server says : " + respCode + " : " + responseStr, EXEStrMgr.DEBUG);
-            
-            if(respCode == 200) {
-                //everything OK - write a log of how much we have sent
-                return fileSize;
-            }
-            
+        if(logBytesSent != -1) {
+            return (alreadySent + logBytesSent);
         }else {
-            EXEStrMgr.po("Null came back ... ", EXEStrMgr.WARN);
+            EXEStrMgr.po("Could not send logs... ", EXEStrMgr.WARN);
         }
         
         //this means that we did not get to a response - so something went wrong
