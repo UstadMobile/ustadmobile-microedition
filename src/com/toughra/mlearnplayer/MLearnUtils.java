@@ -98,7 +98,7 @@ public class MLearnUtils {
         long diff = memFreeNow - memFreeBefore;
         String msg = "Memory +/- \t" + diff + " (" + memFreeNow + ") (" + opMessage + ")";
         midlet.logMsg(msg);
-        EXEStrMgr.po(msg, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(20, msg);
     }
     
     /**

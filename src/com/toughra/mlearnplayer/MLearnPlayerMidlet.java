@@ -304,17 +304,15 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             Resources r = Resources.open("/theme2.res");
             UIManager.getInstance().setThemeProps(r.getTheme("Makeover"));
 
-            EXEStrMgr.getInstance().p("Ustad Mobile version: " + this.versionInfo, EXEStrMgr.DEBUG);
-            EXEStrMgr.getInstance().p("Loaded theme", 1);
-            if(EXEStrMgr.rootMessages != null) {
-                EXEStrMgr.po(EXEStrMgr.rootMessages, EXEStrMgr.DEBUG);
-            }
+            EXEStrMgr.lg(10, "Ustad Mobile version: " + this.versionInfo);
+            EXEStrMgr.lg(11, "Loaded theme");
+            
             //setup locale management
             EXEStrMgr.getInstance().initLocale();
             
             loadingImg = r.getImage("loadingb64");
         }catch(Exception e) {
-            EXEStrMgr.po(e, "Exception doing init loading");
+            EXEStrMgr.lg(310, e.toString());
         }
         
         menuFrm = new MLearnMenu(this);
@@ -443,7 +441,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 + currentColId);
         if(lastPos != null && returnPosDone == false) {
             //we need to go to where they last were...
-            EXEStrMgr.po("Last position attempting to open " + lastPos, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(12, "Last position attempting to open " + lastPos);
             try {
                 returnPosDone = true;
                 int slashPos = lastPos.indexOf('/');
@@ -456,7 +454,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
 
                 hostMidlet.loadPage(lastHref);
             }catch(Exception e) {
-                EXEStrMgr.po("Error attempting to load last page : " + e.toString(), EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(311, "Error attempting to load last page : " + lastPos, e);
             }
         }
         returnPosDone = true;
@@ -509,7 +507,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     public InputStream getInputStreamReaderByURL(String URL) throws IOException{
         boolean isMedia = URL.endsWith("mp3") || URL.endsWith("3gp") || URL.endsWith("wav") || URL.endsWith("mpg");
         
-        EXEStrMgr.po("Opening inputstream for " + URL, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(13, "Opening inputstream for " + URL);
         
         if(URL.startsWith("file://")) {
             if(isMedia) {
@@ -734,7 +732,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         this.prevHref = cPg.prevHref;                
 
         int index = (goLast == false) ? 0 : ideviceIdList.length -1;
-        EXEStrMgr.po("Showing idevice for page " + pageHref + " : " + index, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(14, "Showing idevice for page " + pageHref + " : " + index);
 
         
         
@@ -824,7 +822,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             loadPage(this.prevHref, true);
         }else {
             if(myTOC.collection != null) {
-                EXEStrMgr.po("Package to package nav starting ", EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(15, "Package to package nav starting ");
                 int currentColIndex = myTOC.getCollectionIndex(currentPackageURI);
                 int nextColIndex = currentColIndex;
                 
@@ -840,14 +838,14 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 
                 if(nextColIndex != currentColIndex) {
                     currentPackageURI = myTOC.getColBaseHref(nextColIndex);
+                    currentPkgId = myTOC.getColPkgId(nextColIndex);
                     if(currentPackageURI.endsWith("/")) {
                         currentPackageURI = currentPackageURI.substring(0, currentPackageURI.length() -1);
-                        EXEStrMgr.po("Set current package URI to " + currentPackageURI, EXEStrMgr.DEBUG);
+                        EXEStrMgr.lg(16, "Set current package URI to " + currentPackageURI);
                     }
                     myTOC.tocList = null;
                     
                     if(autoPageOpen) {
-                        EXEStrMgr.po("auto page loading " + currentPackageURI, EXEStrMgr.DEBUG);
                         loadTOC(true);
                         boolean goLast = false;
                         String pageURL = null;
@@ -857,7 +855,6 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                             pageURL = myTOC.getPageHref(myTOC.getNumPages()-1);
                             goLast = true;
                         }
-                        EXEStrMgr.po("page url to be " + pageURL, EXEStrMgr.DEBUG);
                         
                         loadPage(pageURL, goLast);
                     }else {
@@ -934,7 +931,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 
                 deviceForm.setTransitionOutAnimator(CommonTransitions.createSlide(
                             CommonTransitions.SLIDE_HORIZONTAL, true, transitionTime));
-                EXEStrMgr.po("Showing idevice form for " + ideviceId, EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(17, "Showing idevice form for " + ideviceId);
                 
                 //save where we are if we are using a collection
                 deviceForm.show();
@@ -955,19 +952,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             }
         }catch(Exception e) {
             e.printStackTrace();
-            Dialog errorDialog = new Dialog("Error showing idevice");
-            String errorMessage = e.toString();
-            logMsg("Exception showing idevice: " + errorMessage);
-            if(e instanceof IOException) {
-                IOException ioe = (IOException)e;
-                errorMessage += "::" + ioe.getMessage();
-            }else if(e instanceof RuntimeException) {
-                RuntimeException re = (RuntimeException)e;
-            }
-            EXEStrMgr.po("Exception show device: " + e.toString(), EXEStrMgr.WARN);
-            errorDialog.addComponent(new TextArea(errorMessage));
-            errorDialog.show();
-            
+            EXEStrMgr.lg(312, e.toString());
         }
     }
     
@@ -985,32 +970,25 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         currentHref = pageHREF;
         
         try {
-            EXEStrMgr.po("Loading idevice now for " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(18, "Loading idevice now for " + pageHREF + ":" + ideviceId);
             InputStream inStream = getInputStreamReaderByURL(currentPackageURI + "/"
                     + pageHREF);
-            EXEStrMgr.po("got inputstream " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
-            
             XmlNode cachedData =  null;
-            EXEStrMgr.po("Calling idevice factory" + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
             
             Idevice device = IdeviceFactory.makeIdevice(inStream, ideviceId, this, cachedData);
-            EXEStrMgr.po("Generated idevice object " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
             
             //Save the current location of the student
             if(currentColId != null && pageHREF != null && this.currentHref != null) {
                 String lastURLRecordVal = this.currentPkgId + "/" + pageHREF;
                 EXEStrMgr.getInstance().setPref("lastpage."
                         + currentColId, lastURLRecordVal);
-                EXEStrMgr.po("Recorindg lastpage." + currentColId + " as " + lastURLRecordVal,
-                        EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(19, "Recorindg lastpage." + currentColId + " as " + lastURLRecordVal);
             }
 
             
             showIdevice(device, ideviceId);
-            EXEStrMgr.po("Loading complete for idevice now for " + pageHREF + ":" + ideviceId, EXEStrMgr.DEBUG);
-            
         }catch(Exception e) {
-            EXEStrMgr.po(e, "exception whilst loading idevice ");
+            EXEStrMgr.lg(313, "exception whilst loading idevice " + pageHREF + ":" + ideviceId + e.toString());
         }
     }
 
@@ -1195,7 +1173,6 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 //player = Manager.createPlayer(playerInputStream, mediaType);
                 
                 
-                logMsg("Creating player for " + mediaLoc);
                 player = Manager.createPlayer(mediaLoc);
                 player.realize();
                 VolumeControl vc = (VolumeControl)player.getControl("VolumeControl");
@@ -1207,12 +1184,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                 MLearnUtils.printFreeMem(this, "Created player for " + mediaLoc);
                 return playerTime;
             }catch(Exception e) {
-                Form errorForm = new Form("Error creating player" + mediaLoc + " : " + mediaType);
-                logMsg(e.toString() + " error for player " + mediaLoc);
-                Label label = new Label(e.toString());
-                errorForm.addComponent(label);
-                errorForm.show();
-                e.printStackTrace();
+                EXEStrMgr.lg(314, "Error creating player for " + mediaLoc + 
+                        " type " + mediaType + " " + e.toString());
             }
         }else {
             System.out.println("Media disabled");
@@ -1231,32 +1204,24 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      * @param eventData info about event
      */
     public void playerUpdate(Player player, String event, Object eventData) {
-        logMsg("Player Update Event : '" + event + "'");
         if(event.equals(PlayerListener.END_OF_MEDIA)) {
-            logMsg("Found end of Media");
             if(this.player != null) {
                 if(this.player.getState() != Player.CLOSED && this.player.getState() != Player.UNREALIZED) {
-                    logMsg("Attempting to stop player");
                     try { this.player.stop(); }
                     catch(Exception e) {
-                        logMsg("exception attempting to stop player: " + e.toString());
-                        e.printStackTrace();
+                        EXEStrMgr.lg(315, "exception attempting to stop player: " + e.toString());
                     }
                     try { Thread.sleep(300); } 
                     catch(InterruptedException e) {}
                 }
                 
-                logMsg("Attempting to close and deallocate player");                
                 this.player.close();
-                
-                
-                logMsg("Attempting to deallocate now");
                 
                 try {
                     this.player.deallocate();
                 }catch(Exception e) {
                     e.printStackTrace();
-                    logMsg("Exception trying to deallocate player: " + e.toString());
+                    EXEStrMgr.lg(315, "Exception deallocating player: " + e.toString());
                 }
                 this.player = null;
                 

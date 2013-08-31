@@ -136,6 +136,20 @@ public class EXEStrMgr {
     /** the log name that is going to be in use during this session */
     public String sessionActivityLogName;
     
+    /**
+     * Minimum error level severity to trigger writing to log
+     * 0-99 - common/expected
+     * 100-199 - not nice but ok-ish
+     * 300+ - nasty stuff that should not happen
+     */
+    //#ifndef ERRORLOGTHRESHOLD
+    public static int ERROR_LOG_THRESHOLD = 0;
+    //#endif
+    
+    //#ifdef ERRORLOGTHRESHOLD
+    //#expand public static int ERROR_LOG_THRESHOLD = %ERRORLOGTHRESHOLD% ;
+    //#endif
+    
     /*
      * Constructor - 
      * 
@@ -413,6 +427,28 @@ public class EXEStrMgr {
     }
     
     /**
+     * This is used to log error messages
+     */
+    public static void lg(int errCode, String msg) {
+        lg(errCode, msg, null);
+    }
+    
+    /**
+     * This is used to log error messages
+     */
+    public static void lg(int errCode, String msg, Exception e) {
+        if(e != null) {
+            System.err.println(msg);
+            e.printStackTrace();
+            msg += "Exception: " + e.toString();
+        }
+        
+        if(errCode > ERROR_LOG_THRESHOLD) {
+            getInstance().l('D', errCode + ":" + msg, null, 0, 0, 0, 0, 0, null, 0, 0, null, null);
+        }
+    }
+    
+    /**
      * Logs a line to the activity log
      * @param device - Idevice object to log for
      * @param questionId - questionId this applies to (if applicable) -1 otherwise
@@ -552,55 +588,61 @@ public class EXEStrMgr {
             EXEStrMgr.po("Opened logstrm: " + logOut, EXEStrMgr.DEBUG);
         }
         
-        //Field 1 - COLLECTION ID
-        if(device.hostMidlet.currentColId != null) {
-            logLine.append(device.hostMidlet.currentColId);
+        if(logType == 'A') {
+
+            //Field 1 - COLLECTION ID
+            if(device.hostMidlet.currentColId != null) {
+                logLine.append(device.hostMidlet.currentColId);
+            }else {
+                logLine.append(" ");
+            }
+
+            logLine.append(LOGDELIMINATOR);
+
+            //Field 2 - PACKAGE ID
+            logLine.append(device.hostMidlet.currentPkgId).append(LOGDELIMINATOR);
+
+            //Field 3 - PAGE NAME
+            String pageHref = device.hostMidlet.currentHref;
+            if(pageHref.endsWith(".xml")) {
+                pageHref = pageHref.substring(0, pageHref.length()-4);
+            }
+            logLine.append(pageHref).append(LOGDELIMINATOR);
+
+            //Field 4 - Idevice ID
+            logLine.append(device.ideviceId).append(LOGDELIMINATOR);
+
+            //Field 5 - Question ID
+            logLine.append(questionId).append(LOGDELIMINATOR);
+
+            //Field 6 - The idevice type
+            logLine.append(device.getDeviceTypeName()).append(LOGDELIMINATOR);
+
+            //Field 7 - Device Type (0=INFO 1=QUIZ)
+            logLine.append(device.getLogType()).append(LOGDELIMINATOR);
+
+            //Field 8 - Time open (in ms)
+            logLine.append(timeOpen).append(LOGDELIMINATOR);
+
+            //Field 9, 10, 11 - # correct answers, # answers correct first time, #questions attempted
+            logLine.append(numCorrect).append(LOGDELIMINATOR).append(numCorrectFirst)
+                    .append(LOGDELIMINATOR).append(numAnswered).append(LOGDELIMINATOR);
+
+            ///Field 12 - the Verb
+            logLine.append(verb).append(LOGDELIMINATOR);
+
+            //Field 13,14 - Score and max score possible
+            logLine.append(score).append(LOGDELIMINATOR).append(maxScorePossible).append(LOGDELIMINATOR);
+
+            //Field 15 - The answer given
+            logLine.append(sanitizeLogString(answer)).append(LOGDELIMINATOR);
+
+            //Field 16 - the remarks
+            logLine.append(sanitizeLogString(remarks));
         }else {
-            logLine.append(" ");
+            //this is just a debug string
+            logLine.append(sanitizeLogString(debugStr));
         }
-        
-        logLine.append(LOGDELIMINATOR);
-        
-        //Field 2 - PACKAGE ID
-        logLine.append(device.hostMidlet.currentPkgId).append(LOGDELIMINATOR);
-        
-        //Field 3 - PAGE NAME
-        String pageHref = device.hostMidlet.currentHref;
-        if(pageHref.endsWith(".xml")) {
-            pageHref = pageHref.substring(0, pageHref.length()-4);
-        }
-        logLine.append(pageHref).append(LOGDELIMINATOR);
-        
-        //Field 4 - Idevice ID
-        logLine.append(device.ideviceId).append(LOGDELIMINATOR);
-        
-        //Field 5 - Question ID
-        logLine.append(questionId).append(LOGDELIMINATOR);
-        
-        //Field 6 - The idevice type
-        logLine.append(device.getDeviceTypeName()).append(LOGDELIMINATOR);
-        
-        //Field 7 - Device Type (0=INFO 1=QUIZ)
-        logLine.append(device.getLogType()).append(LOGDELIMINATOR);
-        
-        //Field 8 - Time open (in ms)
-        logLine.append(timeOpen).append(LOGDELIMINATOR);
-        
-        //Field 9, 10, 11 - # correct answers, # answers correct first time, #questions attempted
-        logLine.append(numCorrect).append(LOGDELIMINATOR).append(numCorrectFirst)
-                .append(LOGDELIMINATOR).append(numAnswered).append(LOGDELIMINATOR);
-        
-        ///Field 12 - the Verb
-        logLine.append(verb).append(LOGDELIMINATOR);
-        
-        //Field 13,14 - Score and max score possible
-        logLine.append(score).append(LOGDELIMINATOR).append(maxScorePossible).append(LOGDELIMINATOR);
-  
-        //Field 15 - The answer given
-        logLine.append(sanitizeLogString(answer)).append(LOGDELIMINATOR);
-        
-        //Field 16 - the remarks
-        logLine.append(sanitizeLogString(remarks));
             
         if(logOut != null) {
             String line = logLine.toString();
@@ -794,7 +836,7 @@ public class EXEStrMgr {
             out.close();
             Storage.getInstance().flushStorageCache();
         }catch(Exception e) {
-            e.printStackTrace();
+            lg(301, e.toString());
         }
     }
     

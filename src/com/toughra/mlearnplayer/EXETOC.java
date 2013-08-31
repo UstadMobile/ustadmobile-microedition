@@ -239,6 +239,13 @@ public class EXETOC implements ActionListener{
     public String getColBaseHref(int index) {
         return colBaseHREF + "/" + collection[index][COL_DIR] + "/";
     }
+    
+    /**
+     * Get the package collection dir by index
+     */
+    public String getColPkgId(int index) {
+        return collection[index][COL_DIR];
+    }
 
     /**
      * Notifies the hostMidlet when the user has selected a package from the 
