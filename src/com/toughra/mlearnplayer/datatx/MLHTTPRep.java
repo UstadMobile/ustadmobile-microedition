@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 import javax.microedition.io.Connector;
-import javax.microedition.io.HttpConnection;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
@@ -43,8 +42,6 @@ import java.io.InputStream;
  * If a file has been modified after the most recent .sent file, then only the 
  * remaining data is transferred - the number of bytes specified in (LogName).sent
  * will be skipped.
- * 
- * Uses HttpMultipartRequest to actually do the HTTP Post operation
  * 
  * @author mike
  */

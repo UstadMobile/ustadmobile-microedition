@@ -285,7 +285,7 @@ public class MLCloudConnector {
         buf.append(urlParts[MLearnUtils.URLPART_PORT]);
         buf.append('\n');
         buf.append("Accept: */*\n");
-        buf.append("Cache-control: no-transform\n");
+        buf.append("Cache-control: no-cache\n");
         buf.append("Connection: Keep-Alive\n");
         buf.append("Accept-Encoding: gzip\n");
         if(headers != null) {
@@ -535,7 +535,8 @@ public class MLCloudConnector {
      */
     private void appendCredentialsToURL(StringBuffer url, String cloudUser, String cloudPass) {
         url.append("userid=").append(Util.encodeUrl(cloudUser)).append('&');
-        url.append("password=").append(Util.encodeUrl(cloudPass));
+        url.append("password=").append(Util.encodeUrl(cloudPass)).append('&');
+        url.append("ts=").append(System.currentTimeMillis());//avoid caching issues
     }
     
     private void appendCredentialsToURL(StringBuffer url) {

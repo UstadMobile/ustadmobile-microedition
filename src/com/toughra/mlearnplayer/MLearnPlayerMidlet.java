@@ -229,7 +229,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.6 (30-Aug-2013)";
+    public static final String versionInfo = "V: 0.9.6.1 (31-Aug-2013)";
     
     /** Set the RTL Mode on the basis of the package language */
     public static final int RTLMODE_PACKAGE = 0;
@@ -297,6 +297,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         MLServerThread.getInstance().checkServer();
                 
         try {
+            ///make sure that we are doing TextFields correctly
+            ServerLoginForm.setTextFieldDefaults();
+            
             Display.getInstance().setBidiAlgorithm(true);
             Resources r = Resources.open("/theme2.res");
             UIManager.getInstance().setThemeProps(r.getTheme("Makeover"));

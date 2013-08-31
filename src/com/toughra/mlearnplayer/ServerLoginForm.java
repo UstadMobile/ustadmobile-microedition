@@ -26,6 +26,7 @@ import com.sun.lwuit.events.ActionListener;
 import com.sun.lwuit.layouts.BorderLayout;
 import com.sun.lwuit.layouts.BoxLayout;
 import com.toughra.mlearnplayer.datatx.MLCloudConnector;
+import java.util.Hashtable;
 import java.util.Vector;
 
 /**
@@ -62,15 +63,15 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         Label userIDLabel = new Label(MLearnUtils._("ID"));
         addComponent(userIDLabel);
         
-        userIDField = new TextField();
-        userIDField.setInputMode("123");
+        
+        userIDField = new MLTextField();
         userIDField.setInputModeOrder(inputModeOrder);
         addComponent(userIDField);
         
         Label passwordLabel = new Label(MLearnUtils._("PassCode"));
         addComponent(passwordLabel);
         
-        passcodeField = new TextField();
+        passcodeField = new MLTextField();
         passcodeField.setInputModeOrder(inputModeOrder);
         passcodeField.setInputMode("123");
         addComponent(passcodeField);
@@ -80,6 +81,20 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         addComponent(loginButton);
         
         actionListeners = new Vector();
+        
+        setupTextFields();
+    }
+    
+    /**
+     * This will set the correct TextField setup for Ustad Mobile
+     * We don't want to use the T9 menu (keep it simple) 
+     * We use our own setSkipKey so that the * button does not popup a 
+     * symbol dialog
+     */
+    public static void setTextFieldDefaults() {
+        TextField.setUseNativeTextInput(false);
+        TextField.setReplaceMenuDefault(false);
+        TextField.setSkipKey(42);
     }
     
     public void addActionListener(ActionListener l) {
@@ -132,6 +147,17 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         }
     }
     
+    private void setupTextFields() {
+        Hashtable numbers = new Hashtable();
+        for(int iter = 0 ; iter < 10 ; iter++) {
+            numbers.put(new Integer('0' + iter), String.valueOf(iter));
+        }
+        
+        numbers.put(new Integer(MLearnPlayerMidlet.KEY_PREV), "-");
+        
+        TextField.addInputMode("123", numbers, false);
+    }
+    
     public void run() {
         //if login is OK move to available books
         processResult(lastResult);
@@ -163,3 +189,20 @@ class LoginCheckThread extends Thread {
     
 }
 
+
+class MLTextField extends TextField {
+
+    public MLTextField() {
+        super();
+    }
+
+    protected Command installCommands(Command clear, Command t9) {
+        return null; //To change body of generated methods, choose Tools | Templates.
+    }
+
+    protected void removeCommands(Command clear, Command t9, Command originalClear) {
+        //do nothing
+    }
+    
+    
+}
