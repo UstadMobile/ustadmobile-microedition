@@ -145,8 +145,7 @@ public class MLClientManager {
             discoveryThread.start();
             return 1;
         }else {
-            EXEStrMgr.po("Already started a discovery thread - cant do another one",
-                    EXEStrMgr.WARN);
+            EXEStrMgr.lg(120, "Already started a discovery thread - cant do another one");
             return -1;
         }
     }

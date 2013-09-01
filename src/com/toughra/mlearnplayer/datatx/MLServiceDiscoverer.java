@@ -89,19 +89,19 @@ public class MLServiceDiscoverer implements DiscoveryListener {
                     RemoteDevice remoteDev = (RemoteDevice)remoteDevices.elementAt(i);
 
                     currentFriendlyName = remoteDev.getFriendlyName(true);
-                    EXEStrMgr.po("Searching services on " + remoteDev.getBluetoothAddress() 
-                            + " / "  + currentFriendlyName, EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(40, "Searching services on " + remoteDev.getBluetoothAddress() 
+                            + " / "  + currentFriendlyName);
 
 
 
                     discAgent.searchServices(attrSet, uuidSet, remoteDev, this);
-                    EXEStrMgr.po("Done searching services on " + remoteDev.getBluetoothAddress() 
-                            + " / "  +currentFriendlyName, EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(40, "Done searching services on " + remoteDev.getBluetoothAddress() 
+                            + " / "  +currentFriendlyName);
                 }catch(Exception e) {
-                    EXEStrMgr.po("Error with service discovery run " + i, EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(132, "Error with service discovery run " + i, e);
                     if(lastSearch) {
                         //we have had an error on our last run - manually call done
-                        EXEStrMgr.po("Error with last service run", EXEStrMgr.DEBUG);
+                        EXEStrMgr.lg(132, "Error with last service run");
                         searchDone();
                     }
                 }
@@ -110,8 +110,7 @@ public class MLServiceDiscoverer implements DiscoveryListener {
             try { Thread.sleep(2000); }
             catch(InterruptedException e2) {}
         }catch(Exception e) {
-            EXEStrMgr.po("Exception with service discovery part 1 " +
-                    e.toString(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(133, "Exception with service discovery part 1 ",e);
         }
     }
     
@@ -155,7 +154,7 @@ public class MLServiceDiscoverer implements DiscoveryListener {
      * @param respCode 
      */
     public void serviceSearchCompleted(int transID, int respCode) {
-        EXEStrMgr.po("service search completed", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(40, "service search completed");
             
         if(lastSearch == true) {
             searchDone();
@@ -176,17 +175,17 @@ public class MLServiceDiscoverer implements DiscoveryListener {
         for(int i = 0; i < servRecord.length; i++) {
             DataElement serviceElement = servRecord[i].getAttributeValue(0x0100);
             String serviceName = (String)serviceElement.getValue();
-            EXEStrMgr.po("Found Service on dev name " + serviceName, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(40, "Found Service on dev name " + serviceName);
             
             //see if this is really our service
             if(serviceName.equals(MLServerThread.SERVNAME)) {
-                EXEStrMgr.po("Found our service on " + i, EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(40, "Found our service on " + i);
                 try {
                     String conURL = servRecord[i].getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
                     manager.candidates.put(currentFriendlyName, conURL);
-                    EXEStrMgr.po("Put Connection URL " + conURL, EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(40, "Put Connection URL " + conURL);
                 }catch(Exception e) {
-                    EXEStrMgr.po("Error getting connection URL " + e.toString(), EXEStrMgr.WARN);
+                    EXEStrMgr.lg(134, "Error getting connection URL ", e);
                 }
             }
         }

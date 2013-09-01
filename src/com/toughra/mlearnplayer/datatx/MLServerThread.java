@@ -128,12 +128,12 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
                     con.close();
                     
                     studentNames = MLearnPreferences.fromByteArray(bout.toByteArray());
-                    EXEStrMgr.po("Loaded student names", EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(36, "Loaded student names");
                 }else {
                     studentNames = new Hashtable();
                 }
             }catch(Exception e) {
-                EXEStrMgr.po("Excception loading student names " + e.toString(), EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(318, "Excception loading student names ",e);
             }
         }
         
@@ -158,8 +158,7 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
                 fout.close();
                 fcon.close();
             }catch(Exception e) {
-                EXEStrMgr.po("Exception loading student names " + e.toString(),
-                        EXEStrMgr.WARN);
+                EXEStrMgr.lg(318, "Exception loading student names ", e);
             }
         }
     }
@@ -170,7 +169,7 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
      */
     public void checkServer() {
         String prefVal = EXEStrMgr.getInstance().getPref("server.enabled");
-        EXEStrMgr.po("Server enabled is " + prefVal, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(37, "Server enabled is " + prefVal);
         if(prefVal != null && prefVal.equals("true")) {
             enabled = true;
             if(serverThread == null) {
@@ -193,15 +192,13 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
             
         try {
             SessionNotifier sn = (SessionNotifier)Connector.open(url);
-            EXEStrMgr.getInstance().p("Opened BT session for " + url, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(41, "Opened BT session for " + url);
             while(enabled) {
                 sn.acceptAndOpen(this);
-                EXEStrMgr.getInstance().p("BT Client Connected", EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(41, "BT Client Connected");
             }
         }catch(Exception e) {
-            e.printStackTrace();
-            EXEStrMgr.getInstance().p("Error opening bt session for : " + url + " : " + e.toString(), 
-                    EXEStrMgr.WARN);
+            EXEStrMgr.lg(135, "Error opening bt session for : " + url + " : ", e);
         }
     }
 
@@ -215,10 +212,10 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
      */
     public int onConnect(HeaderSet request, HeaderSet reply) {
         if(enabled) {
-            EXEStrMgr.getInstance().p("BT Client requests session", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(41, "BT Client requests session");
             return ResponseCodes.OBEX_HTTP_OK;
         }else {
-            EXEStrMgr.getInstance().p("BT Server has been disabled since", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(41, "BT Server has been disabled since");
             return ResponseCodes.OBEX_HTTP_UNAVAILABLE;
         }
         
@@ -244,7 +241,7 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
             folderCon.close();
             logRxDir = folderName;
         }catch(IOException e) {
-            EXEStrMgr.po("Error creating log rx directory " + e.toString(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(319, "Error creating log rx directory ", e);
         }
     }
     
@@ -274,7 +271,7 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
         try {
             saveStudentNames();
         }catch(Exception e) {
-            EXEStrMgr.po("Exception saving student names " + e.toString(), EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(320, "Exception saving student names ",e);
         }
     }
     
@@ -294,12 +291,12 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
 
         String fileName = op.getReceivedHeaders().getHeader(HeaderSet.NAME).toString();
 
-        EXEStrMgr.po("Got input stream for " + fileName, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(38, "Got input stream for " + fileName);
 
         String userUUID = op.getReceivedHeaders().getHeader(HEADER_UUID).toString();
 
         Long headerSize = (Long)op.getReceivedHeaders().getHeader(HeaderSet.LENGTH);
-        EXEStrMgr.po("Header size says " + headerSize + " size " + headerSize.getClass().getName(), EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(38, "Header size says " + headerSize + " size " + headerSize.getClass().getName());
 
         String saveFname = logRxDir + "/" + userUUID + "-" + fileName;
         FileConnection fCon = (FileConnection)Connector.open(saveFname);
@@ -317,10 +314,10 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
         fout.close();
         fCon.close();
 
-        EXEStrMgr.po("Wrote bytes to " + saveFname + " ... flushing... ", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(38, "Wrote bytes to " + saveFname + " ... flushing... ");
 
         //TODO: Should we add a in.close here?
-        EXEStrMgr.po("Done receiving file - closing it all... ", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(38, "Done receiving file - closing it all... ");
     }
     
     /**
@@ -333,10 +330,10 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
     public int onPut(Operation op) {
         if(!enabled) {
             try {
-                EXEStrMgr.po("Closing session - disabled server", EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(39, "Closing session - disabled server");
                 op.close(); 
             }catch(IOException e) {
-                EXEStrMgr.po("exception closing session - disabled server", EXEStrMgr.WARN);
+                EXEStrMgr.lg(130, "exception closing session - disabled server");
             }
             
             return ResponseCodes.OBEX_HTTP_UNAVAILABLE;
@@ -344,24 +341,24 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
         pCount++;
         try {
             //check the HEADER_OPNAME header and see what the client is requesting
-            EXEStrMgr.getInstance().p("BT Client 4.1 starts onput", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(39, "BT Client 4.1 starts onput");
             String exeOpName = op.getReceivedHeaders().getHeader(HEADER_OPNAME).toString();
             
             if(exeOpName.equals("logxmit")) {
                 //wants to send a log
-                EXEStrMgr.po("Attempting to receive log data", EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(39, "Attempting to receive log data");
                 checkLogFolder();
                 receiveLog(op);
             }else if(exeOpName.equals("learnerdata")) {
                 //wants to send student data
-                EXEStrMgr.po("Attempting to save learner data", EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(39, "Attempting to save learner data");
                 updateStudentData(op);
             }
             op.close();
             //op is done now
-            EXEStrMgr.po("Closed operation", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(39, "Closed operation");
         }catch(IOException e) {
-            EXEStrMgr.getInstance().p("Error receiving file 2 : " + e.toString(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(131,"Error receiving file 2 : ",e);
         }
         //write student names to disk
         saveStudentNames();

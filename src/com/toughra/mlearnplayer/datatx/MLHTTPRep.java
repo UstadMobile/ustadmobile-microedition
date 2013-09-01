@@ -84,13 +84,13 @@ public class MLHTTPRep {
                     "/" + cFname;
 
             try {
-                EXEStrMgr.po("Attempt to send " + fileURL + " as " + cFname + " from " + alreadySent, EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(25, "Attempt to send " + fileURL + " as " + cFname + " from " + alreadySent);
                 long sizeSentTo = sendLog(fileURL, cFname, true, alreadySent);
                 if(sizeSentTo > 0) {
                     repStatusHT.put(cFname, String.valueOf(sizeSentTo));
                 }
             }catch(Exception e) {
-                EXEStrMgr.po(e, "Exception attempting to send log directly");
+                EXEStrMgr.lg(124, "Exception attempting to send log directly", e);
             }
 
             if(doSwap) {
@@ -118,11 +118,11 @@ public class MLHTTPRep {
             }
             
             //if we are set to do so - send our own logs directly to the server.
-            EXEStrMgr.po("Starting to send own files", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(25, "Starting to send own files");
             sendOwnLogs(pusher);
-            EXEStrMgr.po("Finished sending own files", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(25, "Finished sending own files");
             
-            EXEStrMgr.po("Starting to look for files from other devices to replicate", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(25, "Starting to look for files from other devices to replicate");
             String logBaseDir =EXEStrMgr.getInstance().getPref("basefolder")
                     + "/logrx";
             FileConnection dirCon = (FileConnection)Connector.open(logBaseDir);
@@ -144,15 +144,15 @@ public class MLHTTPRep {
                         //TODO: potential for trouble as we are writing an int - this should be long
                         MLearnUtils.writeIntToFile((int)fileSizeSent, sentFileURI);
 
-                        EXEStrMgr.po("Updated sent file " + sentFileURI, EXEStrMgr.DEBUG);
-                        EXEStrMgr.po("Sent " + bname, EXEStrMgr.DEBUG);
+                        EXEStrMgr.lg(25, "Updated sent file " + sentFileURI);
+                        EXEStrMgr.lg(25, "Sent " + bname);
                     }catch(IOException e) {
-                        EXEStrMgr.po(e, " Exception sending " + bname);
+                        EXEStrMgr.lg(123, " Exception sending " + bname, e);
                     }
                 }
             }
         }catch(Exception e) {
-            EXEStrMgr.po(e, "Exception sending logs ");
+            EXEStrMgr.lg(125, "Exception sending logs ", e);
         }
     }
     
@@ -197,7 +197,7 @@ public class MLHTTPRep {
         fcon.close();
         
         if(alreadySent >= fileSize) {
-            EXEStrMgr.po("Already sent " + fileURI + " : " + alreadySent + " bytes", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(26, "Already sent " + fileURI + " : " + alreadySent + " bytes");
             
             //check and see if the log was fully sent and is not for today... delete it
             String logBasename = fileURI.substring(fileURI.lastIndexOf('/') + 1);
@@ -218,7 +218,7 @@ public class MLHTTPRep {
         }
         
         if(alreadySent >= 0) {
-            EXEStrMgr.po("Already sent " + alreadySent + " bytes out of " + fileSize, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(27, "Already sent " + alreadySent + " bytes out of " + fileSize);
         }
         
         
@@ -236,7 +236,7 @@ public class MLHTTPRep {
         if(logBytesSent != -1) {
             return (alreadySent + logBytesSent);
         }else {
-            EXEStrMgr.po("Could not send logs... ", EXEStrMgr.WARN);
+            EXEStrMgr.lg(126, "Could not send logs... ");
         }
         
         //this means that we did not get to a response - so something went wrong

@@ -214,7 +214,7 @@ public class MLearnUtils {
             str = Util.readToString(bin);
             bin.close();
         }catch(IOException e) {
-            EXEStrMgr.getInstance().p("Error getting file content id for " + path, EXEStrMgr.WARN);
+            EXEStrMgr.lg(322, "Error getting file content id for " + path);
         }
         
         return str;
@@ -393,7 +393,7 @@ public class MLearnUtils {
                 bout.close();
             }
         }catch(IOException e) {
-            EXEStrMgr.po(e, " Exception loading hashtable from " + fileURL);
+            EXEStrMgr.lg(316, " Exception loading hashtable from " + fileURL, e);
         }finally {
             try { fin.close();} catch(Exception e2) {};
             try { con.close();} catch(Exception e3) {};

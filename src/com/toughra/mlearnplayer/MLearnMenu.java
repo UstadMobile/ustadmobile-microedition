@@ -403,9 +403,8 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 contMain();
             }else if(cmd.getId() == SEARCHBT) {
                 if(btActionListener == null) {
-                    EXEStrMgr.po("Setting up search...", EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(21, "Setting up search...");
                     //loadingDialog = MLearnPlayerMidlet.getInstance().makeLoadingDialog();
-                    EXEStrMgr.po("calling search...", EXEStrMgr.DEBUG);
                     
                     btActionListener = new BTActionListener(this);
                     MLClientManager.getInstance().addActionListener(btActionListener);

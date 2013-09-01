@@ -286,7 +286,7 @@ public class EXEStrMgr {
                         
         host.localeHt = host.localeRes.getL10N("localize", localeToUse);
             
-        EXEStrMgr.getInstance().p("Loaded localization res for " + localeToUse, 1);
+        System.out.println("Loaded localization res for " + localeToUse);
     }
     
     /**
@@ -371,40 +371,6 @@ public class EXEStrMgr {
             return String.valueOf(num);
         }else {
             return "0" + num;
-        }
-    }
-    
-    /**
-     * Logs an exception to the debug log
-     * @param e The exception 
-     * @param str additional string info
-     */
-    public static void po(Exception e, String str) {
-        getInstance().p(str + " : " + e.toString(), WARN);
-        e.printStackTrace();
-    }
-    
-    /**
-     * Logs a message to the debug log
-     * @param str
-     * @param level 
-     */
-    public static void po(String str, int level) {
-        getInstance().p(str, level);
-    }
-    
-    /**
-     * Logs a message to the debug log.  Checks to see if
-     * @param str
-     * @param level 
-     */
-    public synchronized void p(String str, int level) {
-        if(debugStrm == null && baseFolder != null) {
-            //debugStrm = openLogStream("debug");
-        }
-        
-        if(debugStrm != null) {
-            debugStrm.println("[" + new Date().toString() + "] " + str);
         }
     }
     
@@ -495,7 +461,8 @@ public class EXEStrMgr {
                     fileCon.close();
                     openLogFCs.remove(logName);
                 }catch(Exception e) {
-                    EXEStrMgr.po("Problem closing stream for rep swap " + e.toString(), WARN);
+                    e.printStackTrace();
+                    System.out.println("Problem closing stream for rep swap " + e.toString());
                 }
 
                 //make logStrm as a bytearrayoutput stream for now
@@ -503,7 +470,6 @@ public class EXEStrMgr {
                 bufOut = (ByteArrayOutputStream)logOut;
                 
                 //remove this item from the files open hashtable
-                po("Switched to running on buffer", DEBUG);
                 return;
             }else if(swapOp == SWAP_TOFILE) {
                 byte[] bufNow = null;
@@ -522,9 +488,9 @@ public class EXEStrMgr {
                 try {
                     logOut.write(bufNow);
                 }catch(IOException e) {
-                    EXEStrMgr.po("Error writing log buffer out... " + e.toString(), EXEStrMgr.DEBUG);
+                    System.err.println("Error writing log buffer out... " + e.toString());
                 }
-                po("Swapped back to running on file", DEBUG);
+                System.out.println("Swapped back to running on file");
                 return;
             }
         }
@@ -583,9 +549,9 @@ public class EXEStrMgr {
         logLine.append(timestamp).append(LOGDELIMINATOR);
         
         if(logOut == null && baseFolder != null) {
-            EXEStrMgr.po("Opening activity log append mode ", EXEStrMgr.DEBUG);
+            System.out.println("Opening activity log append mode ");
             logOut = openLogStream("activity");
-            EXEStrMgr.po("Opened logstrm: " + logOut, EXEStrMgr.DEBUG);
+            System.out.println("Opened logstrm: ");
         }
         
         if(logType == 'A') {
@@ -650,11 +616,11 @@ public class EXEStrMgr {
                 logOut.write(line.getBytes("UTF-8"));
                 logOut.write((int)'\n');
             }catch(IOException e) {
-                System.err.println("Error 100");
+                System.err.println("Error writing to log");
                 e.printStackTrace();
             }
         }else {
-            EXEStrMgr.po("Logstrm is null", EXEStrMgr.WARN);
+            System.err.println("Logstrm is null");
         }
     }
     

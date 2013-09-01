@@ -64,11 +64,11 @@ public class MLDeviceDiscovery implements DiscoveryListener, Runnable{
         try {
             LocalDevice localDevice = LocalDevice.getLocalDevice();
             discoveryAgent = localDevice.getDiscoveryAgent();
-            EXEStrMgr.po("Got discovery agent", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(16, "Got discovery agent");
             remoteDevices = new Vector();
             discoveryAgent.startInquiry(DiscoveryAgent.GIAC, this);
         }catch(Exception e) {
-            EXEStrMgr.po("Error with discovery agent " + e.toString(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(130, "Error with discovery agent ", e);
         }
     }
 
@@ -83,10 +83,9 @@ public class MLDeviceDiscovery implements DiscoveryListener, Runnable{
         try {
             String msg = "Found: " + btDevice.getBluetoothAddress() + " : "
                 + btDevice.getFriendlyName(true);
-            EXEStrMgr.po(msg, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(27, msg);
         }catch(IOException e) {
-            EXEStrMgr.po("Error getting friendly naem" + e.toString(), EXEStrMgr.WARN);
-            e.printStackTrace();
+            EXEStrMgr.lg(131, "Error getting friendly name", e);
         }
         
         remoteDevices.addElement(btDevice);
@@ -109,7 +108,7 @@ public class MLDeviceDiscovery implements DiscoveryListener, Runnable{
             stat = "Inquiry Error";
         }
         
-        EXEStrMgr.po("Discovery: " + stat, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(28, "Discovery: " + stat);
         
         if(discType == DiscoveryListener.INQUIRY_COMPLETED) {
             MLServiceDiscoverer servDisc = new MLServiceDiscoverer(remoteDevices, mgr);

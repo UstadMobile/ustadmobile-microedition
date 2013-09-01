@@ -133,8 +133,7 @@ public class MLCloudConnector {
             out = conn.openOutputStream();
             System.out.println("Opened up connection to cloud server");
         }catch(Exception e) {
-            e.printStackTrace();
-            EXEStrMgr.po(e, "Exception getting connection to server going");
+            EXEStrMgr.lg(124, "Exception getting connection to server going", e);
         }
     }
     
@@ -151,7 +150,7 @@ public class MLCloudConnector {
         int responseStatus = 0;
 
         // now reading the response
-        EXEStrMgr.po("Request header sent, waiting for response...", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(22, "Request header sent, waiting for response...");
 
         ByteArrayOutputStream headerStream = new ByteArrayOutputStream(800);
         long contentLength = -1;
@@ -342,8 +341,7 @@ public class MLCloudConnector {
                 
                 return respCode;
             }catch(Exception e) {
-                e.printStackTrace();
-                EXEStrMgr.po(e, "Something went wrong with request");
+                EXEStrMgr.lg(125, "Something went wrong with cloud request", e);
                 closeConnections();
             }
             
@@ -375,7 +373,7 @@ public class MLCloudConnector {
         System.gc();
 
         if(lastE != null) {
-            EXEStrMgr.po(lastE, "Error attempting to close cloud sockets etc:" + eStr);
+            EXEStrMgr.lg(126, "Error attempting to close cloud sockets etc:" + eStr, lastE);
         }
     }
     
@@ -388,7 +386,7 @@ public class MLCloudConnector {
                     MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH).append('?');
             appendCredentialsToURL(url, userID, userPass);
             MLCloudRequest loginRequest = new MLCloudSimpleRequest(this, url.toString());
-            EXEStrMgr.po("MLCloudConnect: Connection opened", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(23, "MLCloudConnect: Connection opened");
             
             result = doRequest(loginRequest, bout, new Hashtable());
             if(result == 200) {
@@ -397,9 +395,8 @@ public class MLCloudConnector {
             }
 
             String serverSays = new String(bout.toByteArray());
-            EXEStrMgr.po("Server says " + serverSays, EXEStrMgr.DEBUG);
         }catch(Exception e) {
-            EXEStrMgr.po(e, "Something bad with checklogin");
+            EXEStrMgr.lg(121, "Something bad with checklogin", e);
         }
         
         return result;
@@ -525,7 +522,7 @@ public class MLCloudConnector {
                 }
             }
         }catch(Exception e) {
-            EXEStrMgr.po("Exception attempting to set preferences from cloud", lastResponseCode);
+            EXEStrMgr.lg(122, "Exception attempting to set preferences from cloud"+  lastResponseCode, e);
         }
     }
     
@@ -584,7 +581,7 @@ public class MLCloudConnector {
                 EXEStrMgr.getInstance().delPref(EXEStrMgr.KEY_REPLIST);
             }
         }catch(Exception e) {
-            EXEStrMgr.po(e, "Exception attempting to send preferences to cloud");
+            EXEStrMgr.lg(127, "Exception attempting to send preferences to cloud",e);
         }
         
         return doneOK;
@@ -772,17 +769,16 @@ class MLCloudFileRequest  implements  MLCloudRequest{
             zippedBytes = ((ByteArrayOutputStream)gzOutDest).toByteArray();
             zippedLength = zippedBytes.length;
         }catch(IOException e) {
-            EXEStrMgr.po(e, "Exception preparing cloud file request");
-            e.printStackTrace();
+            EXEStrMgr.lg(128, "Exception preparing cloud file request", e);
         }finally {
             if(fin != null) {
                 try { fin.close(); }
-                catch(IOException e2) { EXEStrMgr.po(e2, "Exception closing fin"); }
+                catch(IOException e2) { EXEStrMgr.lg(129, "Exception closing fin", e2); }
             }
             fin = null;
             if(fCon != null) {
                 try { fCon.close(); }
-                catch(IOException e3) { EXEStrMgr.po(e3, "Exception closing fCon"); }
+                catch(IOException e3) { EXEStrMgr.lg(129, "Exception closing fCon", e3); }
             }
         }
 

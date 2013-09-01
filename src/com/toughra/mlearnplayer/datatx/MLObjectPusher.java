@@ -133,7 +133,7 @@ public class MLObjectPusher extends Thread{
                 ht = new Hashtable();
             }
         }catch(Exception e) {
-            EXEStrMgr.po("Error trying to get rep status"+ e.toString(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(316, "Error trying to get rep status", e);
         }finally {
             if(fCon != null) {
                 try { fCon.close(); }
@@ -152,7 +152,7 @@ public class MLObjectPusher extends Thread{
         FileConnection fCon = null;
         String fileName = EXEStrMgr.getInstance().getPref("basefolder")  
                 + "/repstatus.ht";
-        EXEStrMgr.po("Attempting to save rep status to " + fileName, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(28, "Attempting to save rep status to " + fileName);
         try {
             fCon = (FileConnection)Connector.open(fileName);
             if(!fCon.exists()) {
@@ -163,7 +163,7 @@ public class MLObjectPusher extends Thread{
             out.close();
             fCon.close();
         }catch(IOException e) {
-            EXEStrMgr.getInstance().po("Exception saving rep status " + e.toString(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(321, "Exception saving rep status ",e);
         }finally {
             if(fCon != null) {
                 try { fCon.close(); }
@@ -180,7 +180,7 @@ public class MLObjectPusher extends Thread{
      */
     public Vector checkRepFiles() {
         //check files to be replicated
-        EXEStrMgr.po("checkRepFiles() looking for logs to send ",EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(29, "checkRepFiles() looking for logs to send ");
         
         
         String baseDir = EXEStrMgr.getInstance().getPref("basefolder");
@@ -192,16 +192,16 @@ public class MLObjectPusher extends Thread{
             Enumeration e= dirCon.list();
             while(e.hasMoreElements()) {
                 String name = e.nextElement().toString();
-                EXEStrMgr.po("checkRepFiles() found file : " + name ,EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(30, "checkRepFiles() found file : " + name);
                 if(name.endsWith("-activity.log")) {
                     repList.addElement(name);
-                    EXEStrMgr.po("Should replicate "+ name, EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(30, "Should replicate "+ name);
                 }
             }
             
             dirCon.close();
         }catch(Exception e) {
-            EXEStrMgr.po("Exception prepping to replicate files", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(317, "Exception prepping to replicate files", e);
         }
         return repList;
     }
@@ -220,14 +220,14 @@ public class MLObjectPusher extends Thread{
 
         Operation op = cs.put(hs);
         
-        EXEStrMgr.po("Starting put process for student data", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(31, "Starting put process for student data");
         OutputStream out = op.openOutputStream();
         
-        EXEStrMgr.po("Opened output stream - sending", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(31, "Opened output stream - sending");
         out.write(htBytes);
         out.close();
         op.close();
-        EXEStrMgr.po("Sent student data hashtable", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(31, "Sent student data hashtable");
     }
     
     /**
@@ -253,7 +253,7 @@ public class MLObjectPusher extends Thread{
      * @throws IOException 
      */
     public void sendFileOverBT(String fileName, ClientSession cs, HeaderSet hs, long alreadySent) throws IOException{            
-        EXEStrMgr.po("Attempting to open for reading " + fileName, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(32, "Attempting to open for reading " + fileName);
 
         FileConnection fCon = (FileConnection)Connector.open(fileName, Connector.READ);
 
@@ -262,7 +262,7 @@ public class MLObjectPusher extends Thread{
             long fSize = fCon.fileSize();
             if(alreadySent >= fSize) {
                 //it's already there...
-                EXEStrMgr.po(fileName + " has already been sent actually", EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(33, fileName + " has already been sent actually");
                 fCon.close();
                 return;
             }
@@ -273,16 +273,15 @@ public class MLObjectPusher extends Thread{
         InputStream in = fCon.openInputStream();
         if(startPoint > 0) {
             long skipped = in.skip(startPoint);
-            EXEStrMgr.po("Skipped " + skipped + " bytes already sent", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(34, "Skipped " + skipped + " bytes already sent");
         }
 
-        EXEStrMgr.po("Read the debug log file", EXEStrMgr.DEBUG);
 
         //byte[] toSend = logBytes; //strToSend.getBytes();
         long fileLen = fCon.fileSize();
         Long lengthObj = new Long(fileLen);
 
-        EXEStrMgr.po("Sending " + lengthObj.toString() + " bytes ", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "Sending " + lengthObj.toString() + " bytes ");
 
         String fileBaseName = fileName.substring(fileName.lastIndexOf('/')+1);
 
@@ -295,26 +294,26 @@ public class MLObjectPusher extends Thread{
         hs.setHeader(MLServerThread.HEADER_UUID, EXEStrMgr.getInstance().getPref("uuid"));
 
         Operation op = cs.put(hs);
-        EXEStrMgr.po("Starting put process", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "Starting put process");
         OutputStream out = op.openOutputStream();
-        EXEStrMgr.po("Opened output stream - sending", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "Opened output stream - sending");
 
         Util.copy(in, out);
 
         in.close();
         fCon.close();
 
-        EXEStrMgr.po("File Sent 4.1 ", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "File Sent 4.1 ");
 
         out.close();
-        EXEStrMgr.po("Closed out stream", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "Closed out stream");
 
         op.close();
-        EXEStrMgr.po("Closed op", EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "Closed op");
 
         //if we get here without any exception - we have been successful (hoorah)
         repStatus.put(fileBaseName, String.valueOf(fileLen));
-        EXEStrMgr.po("Saved repstatus " + fileBaseName + "sent " + fileLen, EXEStrMgr.DEBUG);
+        EXEStrMgr.lg(35, "Saved repstatus " + fileBaseName + "sent " + fileLen);
     }
     
     /**
@@ -352,14 +351,14 @@ public class MLObjectPusher extends Thread{
         Connection con = null;
         
         try {
-            EXEStrMgr.po("Attempting to open for put: " + conURL, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Attempting to open for put: " + conURL);
             con = (Connection)Connector.open(conURL);
-            EXEStrMgr.po("Established connection to " + conURL, EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Established connection to " + conURL);
             
             
             ClientSession cs = (ClientSession)con;
             HeaderSet hs = cs.createHeaderSet();
-            EXEStrMgr.po("Created header set ", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Created header set ");
             
             cs.connect(hs);
             
@@ -367,15 +366,15 @@ public class MLObjectPusher extends Thread{
             int numFiles = repList.size();
             
             //open the rpelication status hashtable
-            EXEStrMgr.po("Attempting to get rep status ", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Attempting to get rep status ");
             repStatus = getRepStatus();
-            EXEStrMgr.po("Opened rep status ", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Opened rep status ");
             
             //send the learnername etc. over the connection
             try {
                 sendStudentInfoOverBt(cs, hs);
             }catch(IOException e) {
-                EXEStrMgr.po("Exception sending student info " + e.toString(), EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(127, "Exception sending student info ",e);
             }
             
             //go through all the files 
@@ -389,23 +388,21 @@ public class MLObjectPusher extends Thread{
                 }
                 
                 
-                EXEStrMgr.getInstance().po("Checking status for " + cFname, EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(35,"Checking status for " + cFname);
                 //check rep status
                 long alreadySent = getReplicationSent(repStatus, cFname);
                 
                 
-                EXEStrMgr.getInstance().po("Found we have sent " + alreadySent + " for " + cFname,
-                        EXEStrMgr.DEBUG);
+                EXEStrMgr.lg(35, "Found we have sent " + alreadySent + " for " + cFname);
 
                 String fileURL = EXEStrMgr.getInstance().getPref("basefolder") +
                         "/" + cFname;
     
                 try {
                     sendFileOverBT(fileURL, cs, hs, alreadySent);
-                    EXEStrMgr.po("Sent " + fileURL, EXEStrMgr.DEBUG);
+                    EXEStrMgr.lg(35, "Sent " + fileURL);
                 }catch(IOException e) {
-                    EXEStrMgr.po("Exception sending " + fileURL + " : " + e.toString(), 
-                            EXEStrMgr.WARN);
+                    EXEStrMgr.lg(128, "Exception sending " + fileURL + " : ", e);
                 }
                 
                 if(doSwap) {
@@ -414,16 +411,15 @@ public class MLObjectPusher extends Thread{
             }
             
             cs.disconnect(null);
-            EXEStrMgr.po("Disconnected and done ", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Disconnected and done ");
             
             con.close();
-            EXEStrMgr.po("BT Connection object closed", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "BT Connection object closed");
             
             saveRepStatus(repStatus);
-            EXEStrMgr.po("Saved replication status", EXEStrMgr.DEBUG);
+            EXEStrMgr.lg(35, "Saved replication status");
         }catch(IOException e) {
-            EXEStrMgr.po("Error attempting to put data " + e.toString() + " : "
-                    + e.getMessage(), EXEStrMgr.WARN);
+            EXEStrMgr.lg(129, "Error attempting to put data ", e);
         }
     }
     
