@@ -189,12 +189,14 @@ supported character set.
                     <attribute name="JAD-Version" value="1.0"/>
                     -->
                     
-                    <attribute name="MIDlet-Version" value="1.0"/>
+                    <attribute name="MIDlet-Version" value="${ustadmobileversion}"/>
                     
                     <attribute name="MicroEdition-Configuration" value="CLDC-${wtk.cldc.version}"/>
                     <attribute name="MicroEdition-Profile" value="MIDP-${wtk.midp.version}"/>
                     <attribute name="Nokia-MIDlet-Category" value="Application"/>
-                    <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.obex.client, javax.microedition.io.Connector.obex.server, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
+                    <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
+                    <attribute name="Nokia-Update" value="http://www.ustadmobile.com/jad/nokia/EXEMobile2.jad"/>
+                    <attribute name="MIDlet-Jar-URL" value="http://www.ustadmobile.com/jad/nokia/EXEMobile2.jar"/>
                     
                     <attribute name="progressive_download" value="enabled"/>
                     

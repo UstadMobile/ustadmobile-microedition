@@ -30,6 +30,7 @@ import com.sun.lwuit.plaf.Style;
 import com.sun.lwuit.plaf.UIManager;
 import com.sun.lwuit.table.TableLayout;
 import com.toughra.mlearnplayer.EXEStrMgr;
+import com.toughra.mlearnplayer.MLearnUtils;
 import java.io.InputStream;
 import java.util.Random;
 import java.util.Vector;
@@ -117,6 +118,9 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
     
     /** number of attempts so far by the user*/
     int currentNumAttempts = 0;
+    
+    /** if the exercise is complete or not*/
+    boolean exerciseComplete = false;
             
     /**
      * Constructor
@@ -253,7 +257,7 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
         this.exprResults = new int[this.questionOperators.length];
         for(int i = 0; i < this.questionOperators.length;i++) {
             Random r = new Random();
-            exprResults[i] = r.nextInt(questionOperators[i][SECTION_RAND])
+            exprResults[i] = MLearnUtils.nextRandom(r, questionOperators[i][SECTION_RAND])
                     + questionOperators[i][SECTION_ADDON];
         }
         
@@ -316,10 +320,9 @@ public class MathDrillIdevice extends Idevice implements ActionListener {
                     correctFirst++;
                 }
                 
-                fbDialog.showFeedback(mainFrm, positiveFeedback, true);
-                numQuestionsDone++;
-                
                 if(numQuestionsDone <= numQuestions) {
+                    fbDialog.showFeedback(mainFrm, positiveFeedback, true);
+                    numQuestionsDone++;
                     showQuestion();
                 }else {
                     fbDialog.showFeedback(mainFrm, completeFeedback, true);

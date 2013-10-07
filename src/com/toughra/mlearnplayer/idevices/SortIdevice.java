@@ -139,9 +139,9 @@ public class SortIdevice extends Idevice implements ActionListener {
         XmlNode optionNode = (XmlNode)srcData.findChildrenByTagName("sortoptions", true).elementAt(0);
         incMap = new int[8];
         if(optionNode.hasAttribute("dir")) {
-            if(optionNode.getAttribute("dir").equalsIgnoreCase("rtl")) {
+            if(MLearnUtils.equalsIgnoreCase(optionNode.getAttribute("dir"), "rtl")) {
                 direction = DIR_RTL;
-            }else if(optionNode.getAttribute("dir").equalsIgnoreCase("ttb")) {
+            }else if(MLearnUtils.equalsIgnoreCase(optionNode.getAttribute("dir"), "ttb")) {
                 direction = DIR_TTB;
             }
         }

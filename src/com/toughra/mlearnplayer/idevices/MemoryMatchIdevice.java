@@ -136,7 +136,7 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
         rows = Integer.parseInt(gameNd.getAttribute("rows"));
         cols = Integer.parseInt(gameNd.getAttribute("cols"));
         
-        if(gameNd.getAttribute("splitpairs").equalsIgnoreCase("true")) {
+        if(MLearnUtils.equalsIgnoreCase(gameNd.getAttribute("splitpairs"), "true")) {
             splitPairs = true;
         }
     }
@@ -222,7 +222,7 @@ public class MemoryMatchIdevice extends Idevice implements ActionListener{
         Random r = new Random();
         
         for(int i = start; i < (start + length); i++) {
-            int randomOffset = r.nextInt(length);
+            int randomOffset = MLearnUtils.nextRandom(r, length);
             int rIndex = randomOffset + start;
             MemoryMatchCell tmp = arrObj[rIndex];
             arrObj[rIndex] = arrObj[i];

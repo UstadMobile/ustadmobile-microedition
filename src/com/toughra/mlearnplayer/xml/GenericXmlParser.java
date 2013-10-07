@@ -7,6 +7,7 @@
 
 package com.toughra.mlearnplayer.xml;
 
+import com.toughra.mlearnplayer.MLearnUtils;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -44,7 +45,7 @@ public class GenericXmlParser {
                     + parser.getName() + ", " + parser.getEventType());
         } else {
             node.nodeName = parser.getName();
-            if(node.nodeName.equalsIgnoreCase(startTagName)) {
+            if(MLearnUtils.equalsIgnoreCase(node.nodeName, startTagName)) {
                 for (int i = 0; i < parser.getAttributeCount(); i++) {
                     node.setAttribute(parser.getAttributeName(i), parser.getAttributeValue(i));
                 }

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
+import com.toughra.mlearnplayer.MLearnUtils;
 
 /**
  * Implements DocumentRequestHandler and takes an HTML string as an argument.
@@ -97,7 +98,7 @@ public class EXERequestHandler implements DocumentRequestHandler{
         String url = di.getUrl();
         boolean matchesSubHandler = false;
         
-        if(url.equalsIgnoreCase("idevice://current/")) {
+        if(MLearnUtils.equalsIgnoreCase(url, "idevice://current/")) {
             String dirSubStr = "";
             if(hostMidlet.myTOC.currentIsRTL) {
                  dirSubStr = " style='direction: rtl'";

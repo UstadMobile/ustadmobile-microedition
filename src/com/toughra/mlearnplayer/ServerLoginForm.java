@@ -44,6 +44,12 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
     TextField userIDField;
     TextField passcodeField;
     Button loginButton;
+    Command loginCommand;
+    public static final int CMDID_LOGIN=0;
+    
+    Button skipLoginButton;
+    Command skipLoginCommand;
+    public static final int CMDID_SKIP=1;
     
     LoginCheckThread checkThread = null;
     int lastResult = -1;
@@ -60,25 +66,36 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         setTitle(MLearnUtils._("Login"));
         
         BoxLayout boxLayout = new BoxLayout(BoxLayout.Y_AXIS);
-        Label userIDLabel = new Label(MLearnUtils._("ID"));
+        Label userIDLabel = new Label(MLearnUtils._("id"));
         addComponent(userIDLabel);
         
         
         userIDField = new MLTextField();
         userIDField.setInputModeOrder(inputModeOrder);
+        userIDField.setT9Enabled(false);
+        //userIDField.setUseSoftkeys(true);
         addComponent(userIDField);
         
-        Label passwordLabel = new Label(MLearnUtils._("PassCode"));
+        Label passwordLabel = new Label(MLearnUtils._("passcode"));
         addComponent(passwordLabel);
         
         passcodeField = new MLTextField();
         passcodeField.setInputModeOrder(inputModeOrder);
+        passcodeField.setT9Enabled(false);
         passcodeField.setInputMode("123");
         addComponent(passcodeField);
         
-        loginButton = new Button(MLearnUtils._("Login"));
+        loginCommand = new Command(MLearnUtils._("login"), CMDID_LOGIN);
+        loginButton = new Button(loginCommand);
         loginButton.addActionListener(this);
         addComponent(loginButton);
+        
+        if(MLearnPlayerMidlet.canSkipLogin) {
+            skipLoginCommand = new Command(MLearnUtils._("Skip"), CMDID_SKIP);
+            skipLoginButton = new Button(skipLoginCommand);
+            skipLoginButton.addActionListener(this);
+            addComponent(skipLoginButton);
+        }
         
         actionListeners = new Vector();
         
@@ -95,6 +112,7 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         TextField.setUseNativeTextInput(false);
         TextField.setReplaceMenuDefault(false);
         TextField.setSkipKey(42);
+        //TextField.setReplaceMenuDefault(true);
     }
     
     public void addActionListener(ActionListener l) {
@@ -116,12 +134,16 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
     }
     
     public void actionPerformed(ActionEvent evt) {
-        if(checkThread == null) {
-            loadingDialog = hostMidlet.makeLoadingDialog();
-            checkThread = new LoginCheckThread(this, userIDField.getText(),
-                    passcodeField.getText());
-            checkThread.start();
-            loadingDialog.showPacked(BorderLayout.CENTER, true);
+        if(evt.getCommand().equals(loginCommand)) {
+            if(checkThread == null) {
+                loadingDialog = hostMidlet.makeLoadingDialog();
+                checkThread = new LoginCheckThread(this, userIDField.getText(),
+                        passcodeField.getText());
+                checkThread.start();
+                loadingDialog.showPacked(BorderLayout.CENTER, true);
+            }
+        }else if(skipLoginCommand != null && evt.getCommand().equals(skipLoginCommand)) {
+            fireActionEvent();
         }
     }
     
@@ -196,13 +218,6 @@ class MLTextField extends TextField {
         super();
     }
 
-    protected Command installCommands(Command clear, Command t9) {
-        return null; //To change body of generated methods, choose Tools | Templates.
-    }
-
-    protected void removeCommands(Command clear, Command t9, Command originalClear) {
-        //do nothing
-    }
     
     
 }

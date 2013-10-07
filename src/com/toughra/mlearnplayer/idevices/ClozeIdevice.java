@@ -287,7 +287,7 @@ public class ClozeIdevice  extends Idevice implements EXERequestSubHandler{
             
             newHTML.delete(valueStart, valueStart+8);
             String newAttribs = " value=\"" + elementId + ":" + currentAnswers[i] + "\" ";
-            boolean isCorrect = words[i].equalsIgnoreCase(currentAnswers[i]);
+            boolean isCorrect = MLearnUtils.equalsIgnoreCase(words[i], currentAnswers[i]);
             if(!currentAnswers[i].equals("")) {
                 hasAttempted[i] = true;
             }

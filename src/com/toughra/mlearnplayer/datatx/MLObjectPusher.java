@@ -32,6 +32,7 @@ import javax.obex.HeaderSet;
 import javax.obex.Operation;
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPreferences;
+import com.toughra.mlearnplayer.MLearnUtils;
 
 /**
  *
@@ -49,7 +50,7 @@ public class MLObjectPusher extends Thread{
      */
     public MLObjectPusher() {
         Random r = new Random(System.currentTimeMillis());
-        countDown = r.nextInt(REPDELAY);
+        countDown = MLearnUtils.nextRandom(r, REPDELAY);
     }
     
     /**

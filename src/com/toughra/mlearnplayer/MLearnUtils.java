@@ -163,7 +163,7 @@ public class MLearnUtils {
         Random r = new Random();
         
         for(int i = start; i < (start + length); i++) {
-            int randomOffset = r.nextInt(length);
+            int randomOffset = MLearnUtils.nextRandom(r,length);
             int rIndex = randomOffset + start;
             Object tmp = arrObj[rIndex];
             arrObj[rIndex] = arrObj[i];
@@ -171,6 +171,31 @@ public class MLearnUtils {
         }
     }
     
+    /**
+     * Drop in replacement for using Random with CLDC-1.0
+     * 
+     * @param r
+     * @param max
+     * @return 
+     */
+    public static int nextRandom(Random r, int max) {
+        return Math.abs(r.nextInt() % max);
+    }
+    
+    /**
+     * Replacement for equalsIgnoreCase
+     */
+    public static boolean equalsIgnoreCase(String str1, String str2) {
+        if(str1 == str2 ){
+            return true;
+        }
+        
+        if(str1 == null || str2 == null) {
+            return false;
+        }
+        
+        return (str1.toLowerCase().equals(str2.toLowerCase()));
+    }
     
     /**
      * Shuffle the entire array

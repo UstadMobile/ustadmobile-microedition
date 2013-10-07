@@ -49,9 +49,9 @@ import com.toughra.mlearnplayer.idevices.EXERequestHandler;
 import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
 
-//#ifdef NOKIA
-//# import com.nokia.mid.ui.*;
-//#endif 
+
+import com.nokia.mid.ui.DeviceControl;
+
 
 
 /**
@@ -229,7 +229,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "V: 0.9.6.1 (31-Aug-2013)";
+    public static final String versionInfo = "0.9.8";
     
     /** Set the RTL Mode on the basis of the package language */
     public static final int RTLMODE_PACKAGE = 0;
@@ -250,6 +250,15 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     //#ifdef SERVER
     //#expand public final static String masterServer = "%SERVER%";
+    //#endif
+    
+    //#ifndef LOGINSKIP
+    public final static boolean canSkipLogin = true;
+    //#endif
+    
+    /** If server login skip is allowed or not */
+    //#ifdef LOGINSKIP
+    //#expand public final static boolean canSkipLogin = %LOGINSKIP%;
     //#endif
     
     /** Controls if it is possible to navigate or not - e.g. 
@@ -333,13 +342,17 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         pushThread = new MLObjectPusher();
         pushThread.start(); 
         
+        
+        CompatibilityEngine.doDetection();
+        
         /*
          * This is Nokia specific code that is used to stop the lights from dimming
          */
-        //#ifdef NOKIA
-//#             DeviceControl.setLights(0, 100);
-//#     new Thread(this).start();
-        //#endif
+        if(CompatibilityEngine.nokiaUI) {
+            DeviceControl.setLights(0, 100);
+            new Thread(this).start();
+        }
+        
     }
     
     public void showLoginForm() {
@@ -381,9 +394,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         while(running) {
             try {Thread.sleep(tickTime); }
             catch(InterruptedException e) {}
-            //#ifdef NOKIA
-//#         DeviceControl.setLights(0, 100);
-            //#endif
+            if(CompatibilityEngine.isNokiaUI()) {
+                DeviceControl.setLights(0, 100);
+            }
         }
     }
     
@@ -1126,7 +1139,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         System.out.println("Play +ve");
         if(posFbURIs != null){
             Random r = new Random();
-            return playMedia(posFbURIs[r.nextInt(posFbURIs.length)]);
+            return playMedia(posFbURIs[MLearnUtils.nextRandom(r, posFbURIs.length)]);
         }
         
         return -1;
@@ -1141,11 +1154,12 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         System.out.println("Play -ve");
         if(negFbURIs != null){
             Random r = new Random();
-            return playMedia(negFbURIs[r.nextInt(negFbURIs.length)]);
+            return playMedia(negFbURIs[MLearnUtils.nextRandom(r, negFbURIs.length)]);
         }
         
         return -1;
     }
+    
     
 
     /**

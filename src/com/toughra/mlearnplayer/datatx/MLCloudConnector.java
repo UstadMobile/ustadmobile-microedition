@@ -468,6 +468,11 @@ public class MLCloudConnector {
         openConnection();
         
         int retVal = -1;
+        
+        //check and see if we have no username and password, in which case, just return
+        if(EXEStrMgr.getInstance().getCloudUser() == null) {
+            return retVal;
+        }
  
         try{
             params.put("userid", EXEStrMgr.getInstance().getCloudUser());
@@ -548,6 +553,12 @@ public class MLCloudConnector {
      */
     public boolean sendPreferences() {
         boolean doneOK = false;
+        
+        //if we are not really logged in then skip this for now...
+        if(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDUSER) == null) {
+            return false;
+        }
+        
         try {
             String[] prefNames = EXEStrMgr.getInstance().getReplicateList();
             if(prefNames.length == 0) {

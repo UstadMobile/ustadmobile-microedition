@@ -45,7 +45,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     private MLearnPlayerMidlet host;
     
     /** The keys that are used in the menu (looked up in the localization res) */
-    String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "about", "quit", "logout"};
+    String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "help", "about", "quit", "logout"};
     
     /** Continue command ID */
     private static final int CONTINUE = 0;
@@ -68,14 +68,17 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     /** Go to settings command ID*/
     private static final int SETTINGS = 6;
     
+    /** Show the help */
+    private static final int HELP = 7;
+    
     /** Go to the about form command ID*/
-    private static final int ABOUTFORM = 7;
+    private static final int ABOUTFORM = 8;
     
     /** Quit command ID*/
-    private static final int QUIT = 8;
+    private static final int QUIT = 9;
     
     /** Logout command ID*/
-    private static final int LOGOUT = 9;
+    private static final int LOGOUT = 10;
     
     private static final int SEARCHBT = 43;
     
@@ -230,12 +233,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         
         
         //The settings where you can set volume etc.
-        settingsForm = new Form("Settings");
+        settingsForm = new Form(MLearnUtils._("settings"));
         BoxLayout bLayout = new BoxLayout(BoxLayout.Y_AXIS);
         settingsForm.setLayout(bLayout);
         
         volSlider = new Slider();
-        volSlider.setText("Volume");
+        volSlider.setText(MLearnUtils._("volume"));
         volSlider.setMaxValue(100);
         volSlider.setMinValue(0);
         volSlider.setProgress(host.volume);
@@ -252,7 +255,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         if(nameSet == null) {
             nameSet = "";
         }
-        settingsForm.addComponent(new Label(MLearnUtils._("yourname:")));
+        settingsForm.addComponent(new Label(MLearnUtils._("yourname")));
         nameField = new TextField(nameSet);
         settingsForm.addComponent(nameField);
         
@@ -277,7 +280,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         
         langCombo = new ComboBox(langNameStr);
         langCombo.setSelectedIndex(langSelIndex, true);
-        Label langLabel = new Label(MLearnUtils._("Language"));
+        Label langLabel = new Label(MLearnUtils._("language"));
         settingsForm.addComponent(langLabel);
         settingsForm.addComponent(langCombo);
         
@@ -297,7 +300,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         //bluetooth is not supported for the moment
         //settingsForm.addComponent(searchButton);
         
-        sendTestCmd = new Command("Send Data Now", SENDTEST);
+        sendTestCmd = new Command(MLearnUtils._("senddatanow"), SENDTEST);
         sendTestBtn = new Button(sendTestCmd);
         sendTestBtn.addActionListener(this);
         settingsForm.addComponent(sendTestBtn);
@@ -317,10 +320,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         settingsForm.addComponent(settingOKButton);
         
                 
-        logoutForm = new Form(MLearnUtils._("Are you sure?"));
+        logoutForm = new Form(MLearnUtils._("areyousure"));
         logoutForm.setLayout(new BoxLayout(BoxLayout.Y_AXIS));
         
-        String[] cmdLabels = {"No", "Yes"};
+        String[] cmdLabels = {MLearnUtils._("no"), MLearnUtils._("yes")};
         int[] cmdIds = {LOGOUTNO, LOGOUTYES};
         for(int i = 0; i < cmdLabels.length; i++) {
             Command cmd = new Command(MLearnUtils._(cmdLabels[i]), cmdIds[i]);
@@ -364,9 +367,9 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         String newLocale = langCodeStr[langCombo.getSelectedIndex()];
         if(!newLocale.equals(localeNow)) {
             //you must restart
-            boolean changed = Dialog.show(MLearnUtils._("Change Language"), 
-                    MLearnUtils._("Are you sure?  Restart needed if yes"), 
-                    MLearnUtils._("OK"), MLearnUtils._("Cancel"));
+            boolean changed = Dialog.show(MLearnUtils._("changelang"), 
+                    MLearnUtils._("areyousurerestart"), 
+                    MLearnUtils._("ok"), MLearnUtils._("cancel"));
             if(changed) {
                 EXEStrMgr.getInstance().setPref("locale", newLocale);
             }
