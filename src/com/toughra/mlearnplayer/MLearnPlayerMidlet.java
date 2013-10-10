@@ -369,7 +369,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
          * This is Nokia specific code that is used to stop the lights from dimming
          */
         if(CompatibilityEngine.nokiaUI) {
-            //com.nokia.mid.ui.DeviceControl.setLights(0, 100);
+            com.nokia.mid.ui.DeviceControl.setLights(0, 100);
             new Thread(this).start();
         }
         

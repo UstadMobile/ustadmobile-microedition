@@ -1,7 +1,9 @@
 
-Ustad Mobil README
+Ustad Mobile README
 
-Updated 23/June/2013
+For more info see: www.ustadmobile.com
+
+Updated 09/October/2013
 
 To build:
 
@@ -13,13 +15,13 @@ There are three NetBeans projects that you will need
 1. Check out all the projects needed for the build
 
 git clone git://git.code.sf.net/p/ustadmobil/ustadmobilcode EXEMobile2
-git clone git://git.code.sf.net/p/ustadmobil/codelwuitui UI
+git clone git://git.code.sf.net/p/ustadmobil/codelwuitnokiaui UI
 git clone git://git.code.sf.net/p/ustadmobil/codelwuitmidpui MIDP_UI
 
 2. exemobile2-build.sample.properties to exemobile2-build.properties
 
 3. Set the paths in exemobile2-build.properties so that the compilation can find 
-   required libraries
+   required libraries mentioned
 
 4. Resolve any reference problems in NetBeans and make sure that you have a suitable 
    Wireless Toolkit (WTK) installed - this has been tested with 2.5.2 building in Linux
@@ -29,9 +31,5 @@ git clone git://git.code.sf.net/p/ustadmobil/codelwuitmidpui MIDP_UI
  
    microedition.encoding= *encoding*
 
-
-List of error codes:
-
-100: IOException writing to logStream in EXEStrMgr.java
-101: IOException in saveAll flushing log output to buffer/disk
+NOTE: This has been switched to using Nokia's implementation of LWUIT 
 
