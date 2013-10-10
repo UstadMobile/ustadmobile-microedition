@@ -179,10 +179,19 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         
         bLayout = new BoxLayout(BoxLayout.Y_AXIS) ;
         setLayout(bLayout);
+        
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "Set Layout");
+        //#endif
+        
         /*
          * Go through all the buttons we have in the main menu.  Expect an icon
          * in the resources /icon/menu-index.png
          */
+        
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "about to load " + labels.length + " labels");
+        //#endif
         for(int i = 0; i < labels.length; i++) {
             InputStream imgIn = getClass().getResourceAsStream("/icons/menu-" + i + ".png");
             try {
@@ -193,6 +202,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 cmds[i] = new Command(cmdL10n, 
                         Image.createImage(imgIn), i);
                 imgIn.close();
+                imgIn = null;
+                //#ifdef CRAZYDEBUG
+//#                 EXEStrMgr.lg(69, "Created command with image for label " + i);
+                //#endif
                 
                 buttons[i] = new Button(cmds[i]);
                 buttons[i].setTextPosition(RIGHT);
@@ -203,7 +216,9 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             }
             addComponent(buttons[i]);
             
-            
+            //#ifdef CRAZYDEBUG
+//#             EXEStrMgr.lg(69, "Added button " + i);
+            //#endif
         }
         
         //the meaning of life, the universe and everything
@@ -211,6 +226,9 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
 
         //The about form
         aboutForm = new Form("About");
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "Created about form");
+        //#endif
         Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
         TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
                     + "Written by Mike Dawson \n\n"
@@ -223,14 +241,23 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
 "    GNU General Public License for more details.  " +
 "\n" +
 "    You should have received a copy of the GNU General Public License" +
-"    along with this program.  If not, see <http://www.gnu.org/licenses/>.");                
+"    along with this program.  If not, see <http://www.gnu.org/licenses/>.");    
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "Created about text textarea");
+        //#endif
         aboutText.setEditable(false);
         aboutForm.addComponent(versionLabel);
         aboutForm.addComponent(aboutText);
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "Added about text");
+        //#endif
         Button aboutGoBack = new Button(setOKCmd);
         aboutGoBack.addActionListener(this);
         aboutForm.addComponent(aboutGoBack);
         
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "MLearnMenu made about form");
+        //#endif
         
         //The settings where you can set volume etc.
         settingsForm = new Form(MLearnUtils._("settings"));
@@ -331,6 +358,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             btn.addActionListener(this);
             logoutForm.addComponent(btn);
         }
+        
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "MLearnMenu constructor method done");
+        //#endif
     }
     
     public void updateFieldsFromPrefs() {
@@ -404,17 +435,6 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 host.notifyDestroyed();
             }else if(cmd.equals(setOKCmd)) {
                 contMain();
-            }else if(cmd.getId() == SEARCHBT) {
-                if(btActionListener == null) {
-                    EXEStrMgr.lg(21, "Setting up search...");
-                    //loadingDialog = MLearnPlayerMidlet.getInstance().makeLoadingDialog();
-                    
-                    btActionListener = new BTActionListener(this);
-                    MLClientManager.getInstance().addActionListener(btActionListener);
-                    MLClientManager.getInstance().doSearch();
-                    
-                    //loadingDialog.showPacked(BorderLayout.CENTER, true);
-                }
             }else if(cmd.getId() == SETTINGS) {
                 settingsForm.show();
             }else if(cmd.getId() == OPENCOURSE) {

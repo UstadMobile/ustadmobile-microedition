@@ -157,7 +157,7 @@ supported character set.
                 destdir="${src.preprocessed.NOKIA}"
                 device="Nokia"
                 version="2"
-                symbols="NOKIA,MEDIAENABLED,DEBUGLOG,SERVER=intranet.paiwastoon.net:80,ERRORLOGTHRESHOLD=300"
+                symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=intranet.paiwastoon.net:80,ERRORLOGTHRESHOLD=0"
                 printsymbols="true"/>
             </target>
             
@@ -191,12 +191,12 @@ supported character set.
                     
                     <attribute name="MIDlet-Version" value="${ustadmobileversion}"/>
                     
-                    <attribute name="MicroEdition-Configuration" value="CLDC-${wtk.cldc.version}"/>
-                    <attribute name="MicroEdition-Profile" value="MIDP-${wtk.midp.version}"/>
+                    <attribute name="MicroEdition-Configuration" value="CLDC-1.1"/>
+                    <attribute name="MicroEdition-Profile" value="MIDP-2.0"/>
                     <attribute name="Nokia-MIDlet-Category" value="Application"/>
                     <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
-                    <attribute name="Nokia-Update" value="http://www.ustadmobile.com/jad/nokia/EXEMobile2.jad"/>
-                    <attribute name="MIDlet-Jar-URL" value="http://www.ustadmobile.com/jad/nokia/EXEMobile2.jar"/>
+                    <attribute name="Nokia-Update" value="http://www.ustadmobile.com/jad/midp2/EXEMobile2.jad"/>
+                    <attribute name="MIDlet-Jar-URL" value="EXEMobile2.jar"/>
                     
                     <attribute name="progressive_download" value="enabled"/>
                     
@@ -217,7 +217,7 @@ supported character set.
                     jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
                     jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
                     config="CLDC-1.1"
-                    profile="MIDP-2.1"
+                    profile="MIDP-2.0"
                     obfuscate="true"
                     preverify="true"
                     bootclasspath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}" 

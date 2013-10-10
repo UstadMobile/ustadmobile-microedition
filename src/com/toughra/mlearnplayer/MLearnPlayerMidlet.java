@@ -50,9 +50,6 @@ import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
 
 
-import com.nokia.mid.ui.DeviceControl;
-
-
 
 /**
  * 
@@ -229,7 +226,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /**whether we have already done an auto open on return*/
     boolean returnPosDone = false;
     
-    public static final String versionInfo = "0.9.8";
+    public static final String versionInfo = "0.9.9";
     
     /** Set the RTL Mode on the basis of the package language */
     public static final int RTLMODE_PACKAGE = 0;
@@ -299,8 +296,14 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         hostMidlet = this;//uses for getInstance
                 
         com.sun.lwuit.Display.init(this);
-        navListener = new NavigationActionListener(this);
+        
         EXEStrMgr mgr = EXEStrMgr.getInstance(this);
+        
+        EXEStrMgr.lg(10, "Log file opened by Ustad Mobile ");
+        EXEStrMgr.writeDebugInfo();
+        
+        navListener = new NavigationActionListener(this);
+        
         
         //check to see about running the teacher server
         MLServerThread.getInstance().checkServer();
@@ -318,14 +321,29 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             
             //setup locale management
             EXEStrMgr.getInstance().initLocale();
+            EXEStrMgr.lg(11, "Loaded locale");
             
+            //#ifdef CRAZYDEBUG
+//#             EXEStrMgr.lg(69, "Loading base image");
+            //#endif
             loadingImg = r.getImage("loadingb64");
+            
+            //#ifdef CRAZYDEBUG
+//#             EXEStrMgr.lg(69, "Loaded base image");
+            //#endif
         }catch(Exception e) {
             EXEStrMgr.lg(310, e.toString());
         }
         
         menuFrm = new MLearnMenu(this);
+        
+        //#ifdef CRAZYDEBUG
+//#         EXEStrMgr.lg(69, "Instantiated Menu");
+        //#endif
+        
         myTOC = new EXETOC(this);
+        
+        EXEStrMgr.lg(11, "Created menu and table of contents");
         
         currentPackageURI = "/mxml1";
         
@@ -333,10 +351,12 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         //TODO: If not logged in show login form
         if(EXEStrMgr.getInstance().getCloudUser() == null) {
             showLoginForm();
+            EXEStrMgr.lg(11, "Showed login form");
         }else {
             contentBrowser = new ContentBrowseForm(this);
             contentBrowser.makeForm();
             contentBrowser.show();
+            EXEStrMgr.lg(11, "Show content browser");
         }
         
         pushThread = new MLObjectPusher();
@@ -349,7 +369,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
          * This is Nokia specific code that is used to stop the lights from dimming
          */
         if(CompatibilityEngine.nokiaUI) {
-            DeviceControl.setLights(0, 100);
+            //com.nokia.mid.ui.DeviceControl.setLights(0, 100);
             new Thread(this).start();
         }
         
@@ -395,7 +415,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             try {Thread.sleep(tickTime); }
             catch(InterruptedException e) {}
             if(CompatibilityEngine.isNokiaUI()) {
-                DeviceControl.setLights(0, 100);
+                //com.nokia.mid.ui.DeviceControl.setLights(0, 100);
             }
         }
     }
@@ -518,7 +538,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      * @throws IOException if there is an IOException dealing with the file system
      */
     public InputStream getInputStreamReaderByURL(String URL) throws IOException{
-        boolean isMedia = URL.endsWith("mp3") || URL.endsWith("3gp") || URL.endsWith("wav") || URL.endsWith("mpg");
+        boolean isMedia = URL.endsWith("mp3") || URL.endsWith("3gp") || URL.endsWith("wav") || URL.endsWith("mpg") || URL.endsWith("mp4");
         
         EXEStrMgr.lg(13, "Opening inputstream for " + URL);
         
@@ -1114,6 +1134,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             return "video/mpeg";
         }else if(fileNameLower.endsWith(".3gp")) {
             return "video/3gpp";
+        }else if(fileNameLower.endsWith(".mp4")) {
+            return "video/mp4";
         }
 
 

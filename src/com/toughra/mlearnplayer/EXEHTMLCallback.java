@@ -77,15 +77,16 @@ public class EXEHTMLCallback implements HTMLCallback{
     }
 
     public void selectionChanged(int i, int i1, HTMLComponent htmlc, List list, HTMLElement htmle) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void titleUpdated(HTMLComponent htmlc, String string) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public boolean parsingError(int i, String string, String string1, String string2, String string3) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
+        return false;
     }
     
 }

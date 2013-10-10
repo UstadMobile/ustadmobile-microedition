@@ -37,8 +37,6 @@ import com.toughra.mlearnplayer.EXEStrMgr;
  */
 public class MLClientManager {
 
-    /** deviceDiscover which can be run as a thread to find devices*/
-    MLDeviceDiscovery deviceDiscoverer;
     
     /** reference to self - should only be one instance of MLClientManager ever*/
     static MLClientManager instance;
@@ -125,30 +123,6 @@ public class MLClientManager {
         return candidates;
     }
     
-    /**
-     * Starts the search process as a new Thread - first MLDeviceDiscovery
-     * to find devices and then MLServiceDiscovery.
-     * 
-     * Note only one of these threads can run at a time.
-     * 
-     * TODO: Check this return value logic
-     * 
-     * @return int indicating status.
-     */
-    public int doSearch() {
-        if(discoveryThread == null) {
-            candidates = new Hashtable();
-            if(deviceDiscoverer == null) {
-                deviceDiscoverer = new MLDeviceDiscovery(this);
-            }
-            discoveryThread = new Thread(deviceDiscoverer);
-            discoveryThread.start();
-            return 1;
-        }else {
-            EXEStrMgr.lg(120, "Already started a discovery thread - cant do another one");
-            return -1;
-        }
-    }
     
     /**
      * Returns the last status of the discovery process

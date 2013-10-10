@@ -397,6 +397,7 @@ public class EXEStrMgr {
      */
     public static void lg(int errCode, String msg) {
         lg(errCode, msg, null);
+        
     }
     
     /**
@@ -411,6 +412,18 @@ public class EXEStrMgr {
         
         if(errCode > ERROR_LOG_THRESHOLD) {
             getInstance().l('D', errCode + ":" + msg, null, 0, 0, 0, 0, 0, null, 0, 0, null, null);
+        }
+        
+        if(ERROR_LOG_THRESHOLD == 0) {
+            //desperate debugging mode
+            Runtime rt = Runtime.getRuntime();
+            String memMsg = "Total Memory : " + rt.totalMemory() + " Free Memory " + rt.freeMemory();
+            getInstance().l('D', memMsg, null, 0, 0, 0, 0, 0, null, 0, 0, null, null);
+            
+            try {getInstance().logOut.flush(); }
+            catch(IOException e2) {
+                System.err.println("exception flushing log output");
+            }
         }
     }
     
@@ -804,6 +817,10 @@ public class EXEStrMgr {
         }catch(Exception e) {
             lg(301, e.toString());
         }
+    }
+    
+    public static void writeDebugInfo() {
+        lg(20, "Platform is: " + System.getProperty("microedition.platform"));
     }
     
 }

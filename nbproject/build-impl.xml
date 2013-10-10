@@ -312,17 +312,20 @@
     </target>
     <!--deps-jar-->
     <target name="deps-jar" depends="conditional-clean" unless="no.deps">
+        <ant target="jar" inheritall="false" antfile="${project.IO}/build.xml">
+            <property name="config.active" value=""/>
+        </ant>
+        <ant target="jar" inheritall="false" antfile="${project.IO_MIDP}/build.xml">
+            <property name="config.active" value=""/>
+        </ant>
         <ant target="jar" inheritall="false" antfile="${project.JazzJ2MEMob}/build.xml">
             <property name="config.active" value=""/>
         </ant>
-        <ant target="jar" inheritall="false" antfile="${project.MIDP_UI}/build.xml">
-            <property name="config.active" value=""/>
-        </ant>
         <ant target="jar" inheritall="false" antfile="${project.UI}/build.xml">
             <property name="config.active" value=""/>
         </ant>
-        <ant target="jar" inheritall="false" antfile="${project.UI}/build.xml">
-            <property name="config.active" value="NoLegacy"/>
+        <ant target="jar" inheritall="false" antfile="${project.UI-MIDP}/build.xml">
+            <property name="config.active" value=""/>
         </ant>
     </target>
     <!--preprocess-->

@@ -72,7 +72,10 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         
         userIDField = new MLTextField();
         userIDField.setInputModeOrder(inputModeOrder);
-        userIDField.setT9Enabled(false);
+        
+        //TODO:RE-ENABLE ME IN NOKIA
+        //userIDField.setT9Enabled(false);
+        
         //userIDField.setUseSoftkeys(true);
         addComponent(userIDField);
         
@@ -81,7 +84,9 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         
         passcodeField = new MLTextField();
         passcodeField.setInputModeOrder(inputModeOrder);
-        passcodeField.setT9Enabled(false);
+        
+        //TODO:RE-ENABLE ME IN NOKIA
+        //passcodeField.setT9Enabled(false);
         passcodeField.setInputMode("123");
         addComponent(passcodeField);
         
@@ -111,7 +116,10 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
     public static void setTextFieldDefaults() {
         TextField.setUseNativeTextInput(false);
         TextField.setReplaceMenuDefault(false);
-        TextField.setSkipKey(42);
+        
+        //TODO:RE-ENABLE ME IN NOKIA
+        //TextField.setSkipKey(42);
+        
         //TextField.setReplaceMenuDefault(true);
     }
     

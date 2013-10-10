@@ -22,8 +22,6 @@ package com.toughra.mlearnplayer.datatx;
 import com.sun.lwuit.io.util.Util;
 import java.io.*;
 import java.util.Hashtable;
-import javax.obex.*;
-import javax.bluetooth.*;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.EXEStrMgr;
@@ -40,7 +38,7 @@ import com.toughra.mlearnplayer.MLearnUtils;
  * 
  * @author mike
  */
-public class MLServerThread extends ServerRequestHandler implements Runnable {
+public class MLServerThread {
    
     /**
      * If the server enabled preference is set - this becomes true.  Set to false and 
@@ -172,54 +170,11 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
         EXEStrMgr.lg(37, "Server enabled is " + prefVal);
         if(prefVal != null && prefVal.equals("true")) {
             enabled = true;
-            if(serverThread == null) {
-                serverThread = new Thread(this);
-                serverThread.start();
-            }
         }else {
             enabled = false;
         }
     }
     
-    /**
-     * Will start the server running and then accept connections from clients.
-     * 
-     */
-    public void startServer() {
-        UUID uuid = new UUID(UUIDSTR, true);
-        String url = "btgoep://localhost:" + uuid 
-            + ";name=" + SERVNAME +";authenticate=false;master=false;encrypt=false";
-            
-        try {
-            SessionNotifier sn = (SessionNotifier)Connector.open(url);
-            EXEStrMgr.lg(41, "Opened BT session for " + url);
-            while(enabled) {
-                sn.acceptAndOpen(this);
-                EXEStrMgr.lg(41, "BT Client Connected");
-            }
-        }catch(Exception e) {
-            EXEStrMgr.lg(135, "Error opening bt session for : " + url + " : ", e);
-        }
-    }
-
-    /**
-     * onConnect listener method
-     * 
-     * @param request HeaderSet of request
-     * @param reply HeaderSet of reply
-     * 
-     * @return ResponseCodes.OBEX_HTTP_OK if we can accept requests, ResponseCodes.OBEX_HTTP_UNAVAILABLE otherwise
-     */
-    public int onConnect(HeaderSet request, HeaderSet reply) {
-        if(enabled) {
-            EXEStrMgr.lg(41, "BT Client requests session");
-            return ResponseCodes.OBEX_HTTP_OK;
-        }else {
-            EXEStrMgr.lg(41, "BT Server has been disabled since");
-            return ResponseCodes.OBEX_HTTP_UNAVAILABLE;
-        }
-        
-    }
     
     /**
      * Check that our log reception folder exists and can be written to
@@ -244,133 +199,5 @@ public class MLServerThread extends ServerRequestHandler implements Runnable {
             EXEStrMgr.lg(319, "Error creating log rx directory ", e);
         }
     }
-    
-    /**
-     * This will receive a hashtable serialized into bytes using DataInputStream
-     * /MLearnPreferences format.  Right now it will just take the key learnername
-     * and then update the studentNames hashtable.
-     * 
-     * @param op - put operation with the input stream
-     */
-    public void updateStudentData(Operation op) throws IOException{
-        long contentSize = ((Long)op.getReceivedHeaders().getHeader(HeaderSet.LENGTH)).longValue();
-        byte[] contentData = null;
-        String userUUID = op.getReceivedHeaders().getHeader(HEADER_UUID).toString();
-        InputStream in = op.openInputStream();        
-        ByteArrayOutputStream bout = new ByteArrayOutputStream((int)contentSize);        
-        Util.copy(in, bout);
         
-        contentData = bout.toByteArray();
-        
-        bout.close();
-        bout = null;
-        
-        Hashtable userHt = MLearnPreferences.fromByteArray(contentData);
-        String studentName = userHt.get("learnername").toString();;
-        studentNames.put(userUUID, studentName);
-        try {
-            saveStudentNames();
-        }catch(Exception e) {
-            EXEStrMgr.lg(320, "Exception saving student names ",e);
-        }
-    }
-    
-    /**
-     * This will receive a log from a students phone and put it in the logrx 
-     * directory.
-     * 
-     * It can receive partial transmissions (e.g. when a log file has been updated)
-     * and will open the log file already here in append mode.
-     * 
-     * @param op Operation object
-     * @throws IOException 
-     */
-    public void receiveLog(Operation op) throws IOException {
-        InputStream in = op.openInputStream();
-
-
-        String fileName = op.getReceivedHeaders().getHeader(HeaderSet.NAME).toString();
-
-        EXEStrMgr.lg(38, "Got input stream for " + fileName);
-
-        String userUUID = op.getReceivedHeaders().getHeader(HEADER_UUID).toString();
-
-        Long headerSize = (Long)op.getReceivedHeaders().getHeader(HeaderSet.LENGTH);
-        EXEStrMgr.lg(38, "Header size says " + headerSize + " size " + headerSize.getClass().getName());
-
-        String saveFname = logRxDir + "/" + userUUID + "-" + fileName;
-        FileConnection fCon = (FileConnection)Connector.open(saveFname);
-
-        long sizeHere = 0;
-        if(fCon.exists()) {
-            sizeHere = fCon.fileSize();
-        }
-
-        OutputStream fout = MLearnUtils.openFileOutputAppendMode(fCon);
-
-        Util.copy(in, fout);
-
-        fout.flush();
-        fout.close();
-        fCon.close();
-
-        EXEStrMgr.lg(38, "Wrote bytes to " + saveFname + " ... flushing... ");
-
-        //TODO: Should we add a in.close here?
-        EXEStrMgr.lg(38, "Done receiving file - closing it all... ");
-    }
-    
-    /**
-     * The main Bluetooth onPut method handler.  Assuming the server is still enabled
-     * we will get the log and put it into the logrx directory
-     * 
-     * @param op Operation object
-     * @return ResponseCodes.OBEX_HTTP_UNAVAILABLE if we cant do this now, ResponseCodes.OBEX_HTTP_OK when everything went OK
-     */
-    public int onPut(Operation op) {
-        if(!enabled) {
-            try {
-                EXEStrMgr.lg(39, "Closing session - disabled server");
-                op.close(); 
-            }catch(IOException e) {
-                EXEStrMgr.lg(130, "exception closing session - disabled server");
-            }
-            
-            return ResponseCodes.OBEX_HTTP_UNAVAILABLE;
-        }
-        pCount++;
-        try {
-            //check the HEADER_OPNAME header and see what the client is requesting
-            EXEStrMgr.lg(39, "BT Client 4.1 starts onput");
-            String exeOpName = op.getReceivedHeaders().getHeader(HEADER_OPNAME).toString();
-            
-            if(exeOpName.equals("logxmit")) {
-                //wants to send a log
-                EXEStrMgr.lg(39, "Attempting to receive log data");
-                checkLogFolder();
-                receiveLog(op);
-            }else if(exeOpName.equals("learnerdata")) {
-                //wants to send student data
-                EXEStrMgr.lg(39, "Attempting to save learner data");
-                updateStudentData(op);
-            }
-            op.close();
-            //op is done now
-            EXEStrMgr.lg(39, "Closed operation");
-        }catch(IOException e) {
-            EXEStrMgr.lg(131,"Error receiving file 2 : ",e);
-        }
-        //write student names to disk
-        saveStudentNames();
-        return ResponseCodes.OBEX_HTTP_OK;
-    }
-    
-    
-    /**
-     * run method simply calls startServer
-     */
-    public void run() {
-        startServer();
-    }
-    
 }
