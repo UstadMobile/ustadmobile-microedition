@@ -121,9 +121,12 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 while(dirContents.hasMoreElements()) {
                     type = -1;
                     String actDir = dirContents.nextElement().toString();
+                    if(!actDir.endsWith("/")) {
+                        actDir += '/';
+                    }
                     String dirFullPath = "file://localhost" + SEP_STR + curSubDir + actDir;
-                    String fullPath = dirFullPath + "/exetoc.xml";
-                    String colPath = dirFullPath + "/execollection.xml";
+                    String fullPath = dirFullPath + "exetoc.xml";
+                    String colPath = dirFullPath + "execollection.xml";
                     
                     FileConnection dirCon = (FileConnection)Connector.open(dirFullPath);
                     boolean hasEXEPkg = false;
@@ -136,8 +139,10 @@ public class ContentBrowseForm extends Form implements ActionListener{
                     }
                     dirCon.close();
                     
-                    
-                    String iconPath = dirFullPath + "/mplayicon.png";
+                    //#ifdef CRAZYDEBUG
+//#                     EXEStrMgr.lg(69, "dir " + dirFullPath + " has pkg: " + hasEXEPkg + " / has col: " + hasEXECol);
+                    //#endif
+                    String iconPath = dirFullPath + "mplayicon.png";
                     
                     if(hasEXEPkg) {                       
                         itemFullPath = dirFullPath;

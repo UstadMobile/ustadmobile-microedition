@@ -168,7 +168,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     //#ifdef MEDIAENABLED
 //#    public static final boolean mediaEnabled = true;
     //#else
-    public static final boolean mediaEnabled = false;
+    public static final boolean mediaEnabled = true;
     //#endif
     
     /** Array of sound file names that can be used for positive feedback*/
@@ -266,6 +266,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** Lock to use for thread safety purposes */
     Object navigateLock = new Object();
     
+    
     /**
      * Not really used - using EXEStrMgr instead
      * @see EXEStrMgr
@@ -296,6 +297,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         hostMidlet = this;//uses for getInstance
                 
         com.sun.lwuit.Display.init(this);
+
         
         EXEStrMgr mgr = EXEStrMgr.getInstance(this);
         
@@ -1196,10 +1198,22 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         MLearnUtils.checkFreeMem();
         System.out.println("asked to play: " + mediaURI);
         logMsg("asked to play: " + mediaURI);
+        
+        //now determine which one to use...
+        String newMediaURI = MLearnUtils.reworkMediaURI(myTOC.audioFormatToUse, 
+                MLearnUtils.AUDIOFORMAT_NAMES, mediaURI);
+        if(newMediaURI != null) {
+            mediaURI = newMediaURI;
+        }
+        System.out.println("Actually going to play " + mediaURI);
+        
         String mediaType = getContentType(mediaURI);
+        
+        
+        
         mediaURI = currentPackageURI + "/" + mediaURI;
         
-            String mediaLoc = MLearnUtils.connectorToFile(mediaURI);
+        String mediaLoc = MLearnUtils.connectorToFile(mediaURI);
         
         
         if(mediaEnabled) {
@@ -1222,6 +1236,21 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             }catch(Exception e) {
                 EXEStrMgr.lg(314, "Error creating player for " + mediaLoc + 
                         " type " + mediaType + " " + e.toString());
+                if(player != null) {
+                    try {
+                        player.deallocate();
+                    }catch(Exception e1) {
+                        EXEStrMgr.lg(314, "exception deallocating faulty player " + mediaLoc + 
+                        " type " + mediaType + " " + e1.toString());
+                    }
+                    
+                    try {
+                        player.close();
+                    }catch(Exception e2) {
+                        EXEStrMgr.lg(314, "exception closing faulty player " + mediaLoc + 
+                        " type " + mediaType + " " + e2.toString());
+                    }
+                }
             }
         }else {
             System.out.println("Media disabled");

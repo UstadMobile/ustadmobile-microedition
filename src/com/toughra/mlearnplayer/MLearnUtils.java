@@ -32,6 +32,7 @@ import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.xml.XmlNode;
+import javax.microedition.media.Manager;
 
 /**
  * Assortment of utility methods
@@ -48,6 +49,17 @@ public class MLearnUtils {
     
     public static final int  RESIZE_FILL = 3;
     
+    /**
+     * The height at the top to leave (effects videos etc)
+     */
+    public static final int TOPHEIGHT=10;
+    
+    /**
+     * The height of the menu bar at the bottom (for menu bar etc)
+     */
+    public static final int BOTTOMHEIGHT=22;
+    
+    
     static long memFree = 0;
     
     /** Position of Host in return value of getURLParts */
@@ -59,6 +71,114 @@ public class MLearnUtils {
     /** Position of Resource in return value of getURLParts */
     public static final int URLPART_RESOURCE = 2;
     
+    /** for utilities re screen size 
+     * this should match those defined in exelearning
+     */
+    public static final int[][] SCREENSIZES = new int[][]{
+        {100, 100},
+        {240, 320},
+        {320, 240},
+        {480, 640},
+        {640, 480}
+    };
+    
+    public static String[] SCREENSIZE_NAMES = new String[] {"100x100", "240x320", "320x240",
+        "480x640", "640x480"
+    };
+    
+    /*
+     * Audio format names - as we use from EXElearning
+     */
+    public static final String[] AUDIOFORMAT_NAMES = new String[] {"mp3", "wav", "ogg"};
+    
+    /**
+     * Video format names - as we use from EXElearning
+     */
+    public static final String[] VIDEOFORMAT_NAMES = new String[] {"mp4", "3gp", "mpg", "ogv"};
+    
+    /**
+     * Hard coded known mime types and the extensions that go to them
+     */
+    public static Hashtable formatNamesToMime = null;
+    
+    static {
+        formatNamesToMime = new Hashtable();
+        formatNamesToMime.put("mp3", "audio/mpeg");
+        formatNamesToMime.put("wav", "audio/x-wav");
+        formatNamesToMime.put("ogg", "audio/ogg");
+        formatNamesToMime.put("mp4", "video/mp4");
+        formatNamesToMime.put("3gp", "video/3gp");
+        formatNamesToMime.put("ogv", "video/ogg");
+        formatNamesToMime.put("mpg", "video/mpeg");
+    }
+    
+    
+    /**
+     * Will return true if this looks like an image (ends .png .jpg .jpeg
+     * .gif)
+     * 
+     * @param filename
+     * @return true if it's an image false otherwise
+     */
+    public static boolean fileNameIsImage(String filename) {
+        if(filename == null) {
+            return false;
+        }
+        
+        filename = filename.toLowerCase();
+        
+        boolean isImg = filename.endsWith(".jpg")  || filename.endsWith(".png")
+                || filename.endsWith(".jpeg") || filename.endsWith(".gif");
+        return isImg;
+    }
+    
+    /**
+     * Will figure out what should be the name for an image according to the device
+     * size index.  e.g. change imagename.jpg to imagename-100x100.jpg
+     * 
+     * 
+     * @param deviceSize the index as per SCREENSIZE
+     * @param imageBaseName e.g. imagename.jpg
+     * @return combined named - e.g. imagename-100x100.jpg
+     */
+    public static String getImageNameForSize(int deviceSize, String imageBaseName) {
+        if(deviceSize == -1) {
+            return imageBaseName;
+        }
+        
+        int extDotPos = imageBaseName.lastIndexOf('.');
+        String baseName = imageBaseName.substring(0, extDotPos);
+        String extension = imageBaseName.substring(extDotPos);
+        String newName = baseName + "-" + SCREENSIZE_NAMES[deviceSize] + extension;
+        
+        return newName;
+    }
+    
+    
+    /**
+     * Find the most suitable base size format to be using for images etc.
+     * @param deviceWidth - width of device screen
+     * @param deviceHeight - height of device screen
+     * @param availableSizes - boolean array indexed as per SCREENSIZES
+     */
+    public static int getScreenIndex(int deviceWidth, int deviceHeight, boolean[] availableSizes) {
+        float lowestDiffFound = -1;
+        int bestMatch = -1;
+        for(int i = 0; i < SCREENSIZES.length; i++) {
+            if(availableSizes[i]) {
+                float diffPercentX = Math.abs(((float)deviceWidth/(float)SCREENSIZES[i][0]) -1);
+                float diffPercentY = Math.abs(((float)deviceHeight/(float)SCREENSIZES[i][1]) -1);
+                float totalDiff = diffPercentX + diffPercentY;
+                if(lowestDiffFound == -1 || totalDiff < lowestDiffFound) {
+                    bestMatch = i;
+                    lowestDiffFound = totalDiff;
+                }
+            }
+        }
+        
+        
+        return bestMatch;
+    }
     
     public static long checkFreeMem() {
         System.gc();
@@ -553,4 +673,155 @@ public class MLearnUtils {
         lines.copyInto(linesStr);
         return linesStr;
     }
+    
+    /**
+     * Finds the start position of attribute in string, and the end of it (e.g. termination
+     * of it's quotes)
+     * 
+     * WARNING: expects attribName= NO WHITE SPACE
+     * 
+     */
+    public static int[] getAttribStartEndPos(String tagHTML, String attribName) {
+        String tagHTMLLower = tagHTML.toLowerCase();
+        int startPos = tagHTML.indexOf(attribName + "=");
+        char quoteChar = tagHTML.charAt(startPos + attribName.length() + 1);
+        String endingStr = tagHTML.substring(attribName.length()+3);
+        int endPos = tagHTMLLower.indexOf(quoteChar, startPos + attribName.length()+2);
+        return new int[] {startPos, endPos};
+    }
+    
+    /**
+     * 
+     * @param htmlStr
+     * @param tagName
+     * @param searchFrom
+     * @param isLowerCase 
+     * @return 
+     */
+    public static int[] getSingleTagStartAndEndPos(String htmlStr, String tagName, int searchFrom, boolean isLowerCase){
+        if(!isLowerCase){
+            htmlStr = htmlStr.toLowerCase();
+        }
+        int startPos = htmlStr.indexOf("<" + tagName.toLowerCase(), searchFrom);
+        if(startPos == -1) {
+            //it's not here
+            return new int[]{-1, -1};
+        }
+        int endPos = htmlStr.indexOf(">", startPos);
+        return new int[] {startPos, endPos};
+    }
+    
+    /**
+     * Go through the list of supported media on this device
+     */
+    public static String[] getSupportedMedia() {
+        String[] result = Manager.getSupportedContentTypes(null);
+        return result;
+    }
+    
+    /**
+     * Given a list of supported formats (string as exelearning makes) will make
+     * an array of booleans.
+     * 
+     * @param formatNames
+     * @param supportedList
+     * @return 
+     */
+    public static boolean[] formatListToBooleans(String[] formatNames, String supportedList) {
+        boolean[] retVal = new boolean[formatNames.length];
+        supportedList = supportedList.toLowerCase();
+        for(int i = 0; i < formatNames.length; i++) {
+            if(supportedList.indexOf(formatNames[i].toLowerCase()+",") != -1) {
+                retVal[i] = true;
+            }
+        }
+        
+        return retVal;
+    }
+    
+    /**
+     * Eliminate formats that are not supported by the device from the list of supported
+     * formats.  Results in boolean list of formats that the package has AND 
+     * are supported by the device
+     * 
+     * @param supportedMimeTypes String array of supported mime types as from getSupportedMedia
+     * @param formatNames String array of format names that we are using
+     * @param contentFormatList boolean array of content types present in this package
+     */
+    public static boolean[] cutUnsupportedFormats(String[] deviceSupportedMimeTypes, String[] formatNames, boolean[] contentFormatList) {
+        for(int i = 0; i < contentFormatList.length; i++) {
+            if(contentFormatList[i]) {//make sure this is a type present in package
+                //find out if it's on the list
+                Object mimeTypeObj = formatNamesToMime.get(formatNames[i]);
+                if(mimeTypeObj == null) {
+                    //can't find the mime type = not supported
+                    contentFormatList[i] = false;
+                }else {
+                    boolean mimeIsSupported = false;
+                    for(int j = 0; j < deviceSupportedMimeTypes.length; j++) {
+                        if(deviceSupportedMimeTypes[j].equals(mimeTypeObj)) {
+                            mimeIsSupported = true;
+                            j = deviceSupportedMimeTypes.length;//end the loop this way
+                        }
+                    }
+                    if(!mimeIsSupported) {
+                        //Sorry - looks like we have to cancel out this format
+                        contentFormatList[i] = false;
+                    }
+                }
+            }
+        }
+        
+        return contentFormatList;
+    }
+    
+    /**
+     * Returns the first supported format (eg the first index of true in the array)
+     * @param formatList list of formats supported
+     * @return first index of true in the list, -1 if nothing is supported
+     */
+    public static final int getPreferredFormat(boolean[] formatList) {
+        for(int i = 0; i < formatList.length; i++) {
+            if(formatList[i]) {
+                return i;
+            }
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * Determines which media file should actually be used
+     * 
+     * @param preferredForamt
+     * @param formatNames 
+     * @param mediaURI 
+     */
+    public static String reworkMediaURI(int preferredFormat, String[] formatNames, String mediaURI) {
+        if(preferredFormat == -1) {
+            return null;
+        }
+        
+        String formatName = formatNames[preferredFormat];
+        int dotPosMediaURI = mediaURI.lastIndexOf('.');
+        String existingExtension = mediaURI.substring(dotPosMediaURI+1);
+        if(existingExtension.equals(formatName)) {
+            //it's all good now
+            return mediaURI;
+        }else {
+            String newMediaURI = mediaURI.substring(0, dotPosMediaURI) + "."
+                    + formatName;
+            return newMediaURI;
+        }
+        
+    }
+    
+    /**
+     * Returns the utilizable screen height
+     */
+    public static final int getUsableScreenHeight() {
+        return com.sun.lwuit.Display.getInstance().getDisplayHeight() - BOTTOMHEIGHT - TOPHEIGHT;
+    }
+    
+    
 }

@@ -124,6 +124,11 @@ public class EXERequestHandler implements DocumentRequestHandler{
         if (!matchesSubHandler) {
             String resURL = url.substring(18);//chop off idevice:// etc
             try {
+                if(MLearnUtils.fileNameIsImage(resURL)) {
+                    resURL = MLearnUtils.getImageNameForSize(hostMidlet.myTOC.screenResToUse,
+                            resURL);
+                }
+                
                 InputStream stream = hostMidlet.getInputStreamReaderByURL(resURL);
                 
                 return stream;

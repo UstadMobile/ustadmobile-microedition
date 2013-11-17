@@ -231,7 +231,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         //#endif
         Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
         TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
-                    + "Written by Mike Dawson \n\n"
+                    + "Written by Mike Dawson \nCross Platform compatibility sponsored by Khalilzad Associates.\n\n"
                     + "This program is free software: you can redistribute it and/or modify " +
 "    it under the terms of the GNU General Public License as published by " +
 "    the Free Software Foundation, either version 3 of the License, or " +
