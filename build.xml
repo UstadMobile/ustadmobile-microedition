@@ -18,7 +18,7 @@ supported character set.
     <taskdef classpath="${lwuit.home.editorpath}/editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
     
     
-    <property name="MidletSuite" value="EXEMobile2"/>
+    <property name="MidletSuite" value="UstadMobile"/>
     <property name="Midlet_1_name" value="Ustad Mobile"/>
     <property name="Midlet_1_class" value="com.toughra.mlearnplayer.MLearnPlayerMidlet"/>
     
@@ -196,7 +196,7 @@ supported character set.
                     <attribute name="Nokia-MIDlet-Category" value="Application"/>
                     <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
                     <attribute name="Nokia-Update" value="http://www.ustadmobile.com/jad/midp2/EXEMobile2.jad"/>
-                    <attribute name="MIDlet-Jar-URL" value="EXEMobile2.jar"/>
+                    <attribute name="MIDlet-Jar-URL" value="${MidletSuite}.jar"/>
                     
                     <attribute name="progressive_download" value="enabled"/>
                     
