@@ -25,7 +25,10 @@ UI-MIDP from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/Ports/MIDP/UI
 IO from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/IO
 IO-MIDP from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/Ports/MIDP/IO
 
-2. Copy exemobile2-build.sample.properties to exemobile2-build.properties
+3. Build the projects (right click and select clean/build): 
+    UI, IO, IO_MIDP, UI-MIDP, JazzJ2MEMob
+
+4. Copy exemobile2-build.sample.properties to exemobile2-build.properties
 
 3. Set the paths in exemobile2-build.properties so that the compilation can find 
    required libraries mentioned

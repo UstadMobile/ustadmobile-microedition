@@ -11,9 +11,11 @@ supported character set.
 
 <project name="EXEMobile2" default="jar" basedir=".">
     <description>Builds, tests, and runs the project .</description>
-    <taskdef classpath="${antenna.home}" resource="antenna.properties"/>
     
     <property file="exemobile2-build.properties"/> 
+    
+    <taskdef classpath="${antenna.home}" resource="antenna.properties"/>
+    
         
     <taskdef classpath="${lwuit.home.editorpath}/editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
     
