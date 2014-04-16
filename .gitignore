@@ -2,3 +2,5 @@
 /dist/
 /exemobile2-build.properties
 *~
+*.class
+
