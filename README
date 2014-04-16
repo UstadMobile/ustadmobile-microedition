@@ -3,7 +3,7 @@ Ustad Mobile README
 
 For more info see: www.ustadmobile.com
 
-Updated 09/October/2013
+Updated 16/April/2014
 
 To build:
 
@@ -12,21 +12,30 @@ There are three NetBeans projects that you will need
  * UI - a modified version of LWUIT that supports bitmap arabic fonts
  * MIDP_UI - part of LWUIT required to build (unmodified from stock LWUIT)
 
-1. Check out all the projects needed for the build
+1. Check out all the projects needed for the build 
 
+cd ~/NetBeansProjects
 git clone git://git.code.sf.net/p/ustadmobil/ustadmobilcode EXEMobile2
-git clone git://git.code.sf.net/p/ustadmobil/codelwuitnokiaui UI
-git clone git://git.code.sf.net/p/ustadmobil/codelwuitmidpui MIDP_UI
+git clone git://git.code.sf.net/p/ustadmobil/codelwuitnokiaui LWUIT_for_Series_40
 
-2. exemobile2-build.sample.properties to exemobile2-build.properties
+2. Open the required projects in NetBeans:
+UstadMobile from directory ~/NetBeansProjects/EXEMobile2
+UI from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/UI
+UI-MIDP from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/Ports/MIDP/UI
+IO from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/IO
+IO-MIDP from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/Ports/MIDP/IO
+
+2. Copy exemobile2-build.sample.properties to exemobile2-build.properties
 
 3. Set the paths in exemobile2-build.properties so that the compilation can find 
    required libraries mentioned
 
-4. Resolve any reference problems in NetBeans and make sure that you have a suitable 
+4. Download MicroEmu (2.0.4) from https://code.google.com/p/microemu/ 
+
+5. Resolve any reference problems in NetBeans and make sure that you have a suitable 
    Wireless Toolkit (WTK) installed - this has been tested with 2.5.2 building in Linux
 
-5. Note: if receiving an invalid first byte 100... RuntimeException on Linux under
+6. Note: if receiving an invalid first byte 100... RuntimeException on Linux under
     emulator add this line to /opt/WTK2.5.2/wtklib/Linux/ktools.properties
  
    microedition.encoding= *encoding*

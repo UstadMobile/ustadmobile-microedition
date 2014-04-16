@@ -351,13 +351,21 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         
         
         //TODO: If not logged in show login form
-        if(EXEStrMgr.getInstance().getCloudUser() == null) {
+        String autoOpenContentItem = System.getProperty("com.ustadmobile.packagedir");
+        
+        if(EXEStrMgr.getInstance().getCloudUser() == null && autoOpenContentItem == null) {
             showLoginForm();
             EXEStrMgr.lg(11, "Showed login form");
         }else {
             contentBrowser = new ContentBrowseForm(this);
             contentBrowser.makeForm();
             contentBrowser.show();
+            
+            if(autoOpenContentItem != null) {
+                String packageDir = contentBrowser.getPathForAutoOpenItem(autoOpenContentItem);
+                openPackageDir(packageDir, true);
+            }
+            
             EXEStrMgr.lg(11, "Show content browser");
         }
         

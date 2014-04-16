@@ -211,6 +211,22 @@ public class ContentBrowseForm extends Form implements ActionListener{
             hostMidlet.openCollectionDir(browseItems[cmdId].fullpath);
         }
     }
+    
+    /**
+     * This is used purely to help find the auto open package which is used
+     * in EXELearning for preview
+     * 
+     * @return path for the first item that matches the title, null if none
+     */
+    public String getPathForAutoOpenItem(String title) {
+        for(int i = 0; i < browseItems.length; i++) {
+            if(title.equals(browseItems[i].title)) {
+                return browseItems[i].fullpath;
+            }
+        }
+        
+        return null;
+    }
 }
 
 /**
