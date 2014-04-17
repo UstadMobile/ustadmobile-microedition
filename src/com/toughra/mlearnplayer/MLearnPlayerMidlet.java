@@ -242,7 +242,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /** The main server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String masterServer = "intranet.paiwastoon.net:80";
+    public final static String masterServer = "svr2.ustadmobile.com:8001";
     //#endif
     
     //#ifdef SERVER

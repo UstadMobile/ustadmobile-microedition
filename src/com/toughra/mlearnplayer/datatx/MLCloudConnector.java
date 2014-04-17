@@ -81,7 +81,8 @@ public class MLCloudConnector {
     public static final int MAX_LOGSEND = 100000;
     
     /** The string to append to the server URL for login*/
-    public static String CLOUD_LOGIN_PATH="/umcloud/app/login.xhtml";
+    //public static String CLOUD_LOGIN_PATH="/umcloud/app/login.xhtml";
+    public static String CLOUD_LOGIN_PATH="/xAPI/statements?limit=1";
     
     /** The string to append to the server URL for sending preferences to cloud */
     public static String CLOUD_SETPREF_PATH="/umcloud/app/setPreference.xhtml";
@@ -201,12 +202,14 @@ public class MLCloudConnector {
         }
         
         
-        //TODO: check for connection: close
         int clPos = hdrText.toLowerCase().indexOf("content-length: ");
-        if (clPos == -1) {
-            // reading till the end of stream
-            throw new IllegalArgumentException("MLCloudConnector: Content-length was not specified on response.");
-        } else {
+        byte[] buf = new byte[1024];
+        
+        /*
+         * Check if there is a content-length header - if so set number bytes
+         * remaining and keep alive can work.
+         */
+        if (clPos != -1) {
             contentLength = Integer.parseInt(
                     hdrText.substring(clPos + 16,
                     hdrText.indexOf("\r\n", clPos + 17)));
@@ -219,12 +222,19 @@ public class MLCloudConnector {
         if(isGzipped) {
             outToUse = gzipBuf;
         }
-        
-        //imagine one byte
-        byte[] buf = new byte[1024];
+                
         int count = 0;
-        while(bytesToGo > 0) {
-            count = in.read(buf, 0, Math.min(bytesToGo, buf.length));
+        
+        while(bytesToGo > 0 || clPos == -1) {
+            int bytesToRead = buf.length;
+            
+            //to support keep alive - read only up to bytesToGo bytes as per
+            //content-length header
+            if(clPos != -1) {
+                bytesToRead = Math.min(bytesToGo, buf.length);
+            }
+            
+            count = in.read(buf, 0, bytesToRead);
             if(count == -1) {
                 break;//end of stream
             }
@@ -382,10 +392,27 @@ public class MLCloudConnector {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             
-            StringBuffer url = new StringBuffer(
+            /*StringBuffer url = new StringBuffer(
                     MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH).append('?');
-            appendCredentialsToURL(url, userID, userPass);
-            MLCloudRequest loginRequest = new MLCloudSimpleRequest(this, url.toString());
+            appendCredentialsToURL(url, userID, userPass);*/
+            
+            StringBuffer url = new StringBuffer(
+                    MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH);
+            
+            //Basic Authentication credential string.
+            //Format: username:password
+            String authString = userID+":"+userPass;
+            String authEncBytes = Base64.encode(authString);
+            String authStringEnc = "Basic " + authEncBytes;
+            
+            //Headers for TINCAN auth check
+            Hashtable tcAuthHeaders = new Hashtable();
+            tcAuthHeaders.put("X-Experience-API-Version", "1.0.1");
+            tcAuthHeaders.put("Authorization", authStringEnc);
+            
+            
+            MLCloudRequest loginRequest = new MLCloudSimpleRequest(this, 
+                    url.toString(), tcAuthHeaders);
             EXEStrMgr.lg(23, "MLCloudConnect: Connection opened");
             
             result = doRequest(loginRequest, bout, new Hashtable());
@@ -465,6 +492,7 @@ public class MLCloudConnector {
      * @throws Exception 
      */
     public int sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
+        /* DO NOTHING RIGHT NOW UNTIL TINCAN COMES
         openConnection();
         
         int retVal = -1;
@@ -490,6 +518,8 @@ public class MLCloudConnector {
         }
         
         return retVal;
+        */
+        return -1;
     }
     
     /**
@@ -497,6 +527,7 @@ public class MLCloudConnector {
      * form of:
      */
     public void getPreferences() {
+        /* DISABLED UNTIL TINCAN FOR PREFERENCES COMES
         try {
             StringBuffer url = new StringBuffer(MLearnPlayerMidlet.masterServer)
                     .append(CLOUD_GETPREF_PATH).append('?');
@@ -529,6 +560,7 @@ public class MLCloudConnector {
         }catch(Exception e) {
             EXEStrMgr.lg(122, "Exception attempting to set preferences from cloud"+  lastResponseCode, e);
         }
+        */
     }
     
     /**
@@ -554,6 +586,7 @@ public class MLCloudConnector {
     public boolean sendPreferences() {
         boolean doneOK = false;
         
+        /* GO AWAY UNTIL TINCAN
         //if we are not really logged in then skip this for now...
         if(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDUSER) == null) {
             return false;
@@ -596,6 +629,8 @@ public class MLCloudConnector {
         }
         
         return doneOK;
+        */
+        return false;
     }
     
     /** 
@@ -613,7 +648,7 @@ public class MLCloudConnector {
 
 
 /**
- * Simple get request wrapper
+ * Simple HTTP get request wrapper
  * 
  * @author mike
  */
@@ -622,11 +657,30 @@ class MLCloudSimpleRequest implements MLCloudRequest  {
     byte[] reqBytes;
     int pos = 0;
     int reqBytesLen = 0;
+    Hashtable customHeaders;
 
-    MLCloudSimpleRequest(MLCloudConnector connector, String url) {
-        this.reqBytes = connector.getRequestHeader(url).getBytes();
+    /**
+     * 
+     * @param connector - MLCloudConnector object
+     * @param url url to issue request
+     * @param customHeaders Hashtable of headers as key-value for HTTP
+     */
+    MLCloudSimpleRequest(MLCloudConnector connector, String url, Hashtable customHeaders) {
+        this.reqBytes = connector.getRequestHeader(url, HttpConnection.GET, customHeaders).getBytes();
         this.reqBytesLen = reqBytes.length;
+        this.customHeaders = customHeaders;
     }
+    
+    /**
+     * 
+     * @param connector - MLCloudConnector object
+     * @param url url to issue request
+     */
+    MLCloudSimpleRequest(MLCloudConnector connector, String url) {
+        this(connector, url, null);
+    }
+    
+    
 
     public void retry() {
         this.pos = 0;

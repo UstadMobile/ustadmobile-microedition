@@ -159,7 +159,7 @@ supported character set.
                 destdir="${src.preprocessed.NOKIA}"
                 device="Nokia"
                 version="2"
-                symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=intranet.paiwastoon.net:80,ERRORLOGTHRESHOLD=0"
+                symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=svr2.ustadmobile.com:8001,ERRORLOGTHRESHOLD=0"
                 printsymbols="true"/>
             </target>
             
