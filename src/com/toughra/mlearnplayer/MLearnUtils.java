@@ -606,10 +606,14 @@ public class MLearnUtils {
     }
     
     /**
-     * Utility method to extract the host and port from an HTTP(s) URL
+     * Utility method to extract the host and port from an HTTP(s) URL.
+     * 
+     * Static constants represent elements in the array: URLPART_HOST,
+     * URLPART_PORT and URLPART_RESOURCE
      * 
      * @param targetURL
-     * @return 
+     * 
+     * @return String array in the form of {URLPART_HOST, URLPART_PORT, URLPART_RESOURCE}
      */
     public static String[] getURLParts(String targetURL) {
         //see if we have http at the start
