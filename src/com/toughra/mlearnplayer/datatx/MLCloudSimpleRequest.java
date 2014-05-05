@@ -7,6 +7,7 @@ package com.toughra.mlearnplayer.datatx;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Hashtable;
 
 /**
  * Simple get request wrapper
@@ -26,7 +27,7 @@ public class MLCloudSimpleRequest implements MLCloudRequest  {
      * @param connector MLCloudConnector that controls access to the server
      * @param url HTTP URL to request: e.g. http://server[:port]/dir/file.html
      */
-    public MLCloudSimpleRequest(MLCloudConnector connector, String url) {
+    public MLCloudSimpleRequest(MLCloudConnector connector, String url, Hashtable headers) {
         this.reqBytes = connector.getRequestHeader(url).getBytes();
         this.reqBytesLen = reqBytes.length;
     }

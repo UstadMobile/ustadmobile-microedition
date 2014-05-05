@@ -75,7 +75,7 @@ public class ContentDownloadThread extends Thread{
         String indexURL = this.baseURL + "ustadpkg_me.xml";
         
         MLCloudSimpleRequest indexRequest = new MLCloudSimpleRequest(
-                cloudConnector, indexURL);
+                cloudConnector, indexURL, new Hashtable());
         
         //temp: put this in an array
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
