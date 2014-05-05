@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
 
-Slightly modified NetBeans ant build file.  This will do the theme creation
-because the Theme Editor has a limit on the number of characters in a font.
-
-See Line 120 for more on font creation / themes or to add characters to the 
-supported character set.
+Ustad Mobile J2ME Ant Build designed to run externally without relying on 
+NetBeans.  See README for instructions on building from source.
 
 -->
 
@@ -174,10 +171,17 @@ supported character set.
             <target name="post-compile" depends="pre-preprocess">
                 <mkdir dir="${classes.dir.NOKIA}"/>
                 <!--<extract dir="${classes.dir.NOKIA}" excludeManifest="true" classpath="${libs.classpath}" excludeclasspath="${extra.classpath}"/>-->
-                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/UI/src"/>
-                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/UI/src"/>
+                
+                <!-- 
+                    Note the MIDP 'ports' must be copied and overwrite the main 
+                    files because default implementations just throw an exception
+                    and rely on being after the ports in classpath
+                -->
                 <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/IO/src"/>
-                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/IO_MIDP/src"/>
+                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/UI/src"/>
+                <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/IO_MIDP/src"/>
+                <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/UI/src"/>
+                
                 <copydir dest="${src.preprocessed.NOKIA}" src="${jazz.src}/src"/>
                 
                 
