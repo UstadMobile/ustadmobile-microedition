@@ -19,6 +19,10 @@ supported character set.
     <!-- properties to make it build outside netbeans -->
     <property name="src.dir" value="./src/"/>
     <property name="lwuit.src" value="../LWUIT_for_Series_40/"/>
+    <property name="jazz.src" value="../JazzJ2MEMob/"/>
+    <property name="kxml.jar" value="/opt/kxml/kxml2-min-2.3.0.jar"/>
+    <property name="platform.home" value="/opt/WTK2.5.2"/>
+    <property name="platform.bootclasspath" value="${platform.home}/lib/jsr226.jar:${platform.home}/lib/jsr239.jar:${platform.home}/lib/jsr75.jar:${platform.home}/lib/satsa-crypto.jar:${platform.home}/lib/jsr229.jar:${platform.home}/lib/satsa-pki.jar:${platform.home}/lib/jsr179.jar:${platform.home}/lib/jsr238.jar:${platform.home}/lib/jsr211.jar:${platform.home}/lib/j2me-xmlrpc.jar:${platform.home}/lib/jsr180.jar:${platform.home}/lib/mmapi.jar:${platform.home}/lib/satsa-jcrmi.jar:${platform.home}/lib/jsr082.jar:${platform.home}/lib/satsa-apdu.jar:${platform.home}/lib/jsr184.jar:${platform.home}/lib/j2me-ws.jar:${platform.home}/lib/wma20.jar:${platform.home}/lib/jsr234.jar:${platform.home}/lib/cldcapi11.jar:${platform.home}/lib/midpapi20.jar"/>
 
     <!-- end of properties to make it build outside of netbeans -->
     
@@ -158,8 +162,8 @@ supported character set.
                     <theme file="${lwuitres.dir}/theme/Makeover" name="Makeover" />
                 </build>
                 
-                <wtkpreprocess verbose="true" 
-                srcdir="${src.dir}" 
+                <wtkpreprocess verbose="true"  
+               srcdir="${src.dir}" 
                 destdir="${src.preprocessed.NOKIA}"
                 device="Nokia"
                 version="2"
@@ -171,12 +175,19 @@ supported character set.
                 <mkdir dir="${classes.dir.NOKIA}"/>
                 <!--<extract dir="${classes.dir.NOKIA}" excludeManifest="true" classpath="${libs.classpath}" excludeclasspath="${extra.classpath}"/>-->
                 <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/UI/src"/>
+                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/UI/src"/>
+                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/IO/src"/>
+                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/IO_MIDP/src"/>
+                <copydir dest="${src.preprocessed.NOKIA}" src="${jazz.src}/src"/>
+                
+                
                 
                 <wtkbuild srcdir="${src.preprocessed.NOKIA}"
                     destdir="${classes.dir.NOKIA}"
                     preverify="false" classpath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}">
                         
                     <classpath>
+                        <path path="${kxml.jar}"/>
                         <path path="${libs.classpath}"/>
                     </classpath>
                 </wtkbuild>
@@ -225,7 +236,7 @@ supported character set.
                     jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
                     config="CLDC-1.1"
                     profile="MIDP-2.0"
-                    obfuscate="true"
+                    obfuscate="false"
                     preverify="true"
                     bootclasspath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}" 
                     includes="${javac.includes}">
