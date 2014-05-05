@@ -9,7 +9,7 @@ supported character set.
 
 -->
 
-<project name="EXEMobile2" default="jar" basedir=".">
+<project name="EXEMobile2" default="post-jar" basedir=".">
     <description>Builds, tests, and runs the project .</description>
     
     <property file="exemobile2-build.properties"/> 
@@ -236,11 +236,13 @@ supported character set.
                     jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
                     config="CLDC-1.1"
                     profile="MIDP-2.0"
-                    obfuscate="false"
+                    obfuscate="true"
                     preverify="true"
-                    bootclasspath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}" 
+                    libclasspath="${kxml.jar}"
+                    bootclasspath="${platform.bootclasspath}:${wtk.proguard.home}/lib/proguard.jar:${classpath.NOKIA}" 
                     includes="${javac.includes}">
                         <fileset dir="${classes.dir.NOKIA}"/>
+                        
                 </wtkpackage>
                 
                 <wtksign 
