@@ -337,24 +337,7 @@ public class EXETOC implements ActionListener{
     }
     
     
-    /**
-     * Looks through the list of screen sizes that are included in this package
-     * and returns a boolean array representing which ones are included and 
-     * which ones are not
-     * 
-     * @param screenSizeStr
-     * @return boolean array with true for those that are supported
-     */
-    public static boolean[] getSupportedScreenSizes(String screenSizeStr) {
-        boolean[] retVal = new boolean[MLearnUtils.SCREENSIZE_NAMES.length];
-        for(int i = 0; i < retVal.length; i++) {
-            if(screenSizeStr.indexOf(MLearnUtils.SCREENSIZE_NAMES[i]) != -1) {
-                retVal[i] = true;
-            }
-        }
-        
-        return retVal;
-    }
+    
 
     /**
      * This will read exetoc.xml and cache the list of pages and idevices
@@ -387,7 +370,7 @@ public class EXETOC implements ActionListener{
             
             String resolutions = rootNode.getAttribute("resolutions");
             if(resolutions != null) {
-                supportedResolutions = getSupportedScreenSizes(resolutions);
+                supportedResolutions = MLearnUtils.getSupportedScreenSizes(resolutions);
             }else {
                 //this is an older export... we support only the original image here
                 supportedResolutions = new boolean[MLearnUtils.SCREENSIZES.length];

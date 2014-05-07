@@ -19,6 +19,7 @@
  */
 package com.toughra.mlearnplayer;
 
+import com.sun.lwuit.Display;
 import com.sun.lwuit.Graphics;
 import com.sun.lwuit.Image;
 import com.sun.lwuit.events.ActionEvent;
@@ -112,6 +113,11 @@ public class MLearnUtils {
         formatNamesToMime.put("mpg", "video/mpeg");
     }
     
+    /** The prefix to add when using Connector to open FileConnection object - before the root*/
+    public static String FILECON_LOCALPREFIX = "file://localhost/";
+    
+    /** Cached results from querying for supported media */
+    public static String[] supportedMediaFormats = null;
     
     /**
      * Will return true if this looks like an image (ends .png .jpg .jpeg
@@ -154,6 +160,25 @@ public class MLearnUtils {
         return newName;
     }
     
+    
+    /**
+     * Find the most suitable base size format to be using for images for this screen
+     * 
+     * @param availableSizes - Boolean array of available sizes
+     */
+    public static int getScreenIndex(boolean[] availableSizes) {
+        return getScreenIndex(Display.getInstance().getDisplayWidth(), Display.getInstance().getDisplayHeight(), availableSizes);
+    }
+    
+    /**
+     * Find the most suitable base size format to be using for images for this screen
+     * 
+     * @param resolutions- Boolean array of available sizes
+     */
+    public static int getScreenIndex(String resolutions) {
+        boolean[] supportedSizes = MLearnUtils.getSupportedScreenSizes(resolutions);
+        return getScreenIndex(supportedSizes);
+    }
     
     /**
      * Find the most suitable base size format to be using for images etc.
@@ -724,6 +749,20 @@ public class MLearnUtils {
     }
     
     /**
+     * Go through list of supported media on this device
+     * cached OK
+     * 
+     * @return String array of supported media formats
+     */
+    public static String[] getSupportedMediaCached() {
+        if(MLearnUtils.supportedMediaFormats == null) {
+            MLearnUtils.supportedMediaFormats = MLearnUtils.getSupportedMedia();
+        }
+        
+        return MLearnUtils.supportedMediaFormats;
+    }
+    
+    /**
      * Given a list of supported formats (string as exelearning makes) will make
      * an array of booleans.
      * 
@@ -734,6 +773,11 @@ public class MLearnUtils {
     public static boolean[] formatListToBooleans(String[] formatNames, String supportedList) {
         boolean[] retVal = new boolean[formatNames.length];
         supportedList = supportedList.toLowerCase();
+        
+        //make sure there is a trailing , - we use it for easy searching
+        if(supportedList.charAt(supportedList.length()-1) != ',') {
+            supportedList += ",";
+        }
         for(int i = 0; i < formatNames.length; i++) {
             if(supportedList.indexOf(formatNames[i].toLowerCase()+",") != -1) {
                 retVal[i] = true;
@@ -827,5 +871,65 @@ public class MLearnUtils {
         return com.sun.lwuit.Display.getInstance().getDisplayHeight() - BOTTOMHEIGHT - TOPHEIGHT;
     }
     
+    /**
+     * Make sure the String ends with /
+     * @param str - string to add trailing slash to
+     */
+    public static final String checkTrailingSlash(String str) {
+        if(str.charAt(str.length()-1) == '/') {
+            return str;
+        }else {
+            return str + "/";
+        }
+    }
     
+    /**
+     * Safely closes a FileConnection and OutputStream
+     * @param fCon FileConnection representing the file
+     * @param fout OutputStream being used
+     * @param message String to add when logging any error that occurs
+     */
+    public static final int closeFileCon(FileConnection fCon, OutputStream fout, String message) {
+        int retStatus = 0;
+        if(fout  != null) {
+            try {
+                fout.close();
+            }catch(Exception e1) {
+                EXEStrMgr.lg(131, 
+                        "Exception closing fileoutput stream ("+message+")", e1);
+                retStatus = 1;
+            }
+        }
+        
+        if(fCon != null) {
+            try {
+                fCon.close();
+            }catch(Exception e2) {
+                EXEStrMgr.lg(131, 
+                        "Exception closing fileconnection ("+message+")", e2);
+                retStatus = 1;
+            }
+        }
+        
+        return retStatus;
+    }
+    
+    /**
+     * Looks through the list of screen sizes that are included in this package
+     * and returns a boolean array representing which ones are included and 
+     * which ones are not
+     * 
+     * @param screenSizeStr
+     * @return boolean array with true for those that are supported
+     */
+    public static boolean[] getSupportedScreenSizes(String screenSizeStr) {
+        boolean[] retVal = new boolean[MLearnUtils.SCREENSIZE_NAMES.length];
+        for(int i = 0; i < retVal.length; i++) {
+            if(screenSizeStr.indexOf(MLearnUtils.SCREENSIZE_NAMES[i]) != -1) {
+                retVal[i] = true;
+            }
+        }
+        
+        return retVal;
+    }
 }
