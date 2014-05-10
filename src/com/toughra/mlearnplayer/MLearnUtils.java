@@ -119,6 +119,9 @@ public class MLearnUtils {
     /** Cached results from querying for supported media */
     public static String[] supportedMediaFormats = null;
     
+    /** The File seperator character */
+    public static char FILE_SEP = '/';
+    
     /**
      * Will return true if this looks like an image (ends .png .jpg .jpeg
      * .gif)
@@ -931,5 +934,21 @@ public class MLearnUtils {
         }
         
         return retVal;
+    }
+    
+    /**
+     * Join two paths - make sure there is just one FILE_SEP character 
+     * between them
+     */
+    public static String joinPath(String path1, String path2) {
+        if(path1.charAt(path1.length()-1) != FILE_SEP) {
+            path1 += FILE_SEP;
+        }
+        
+        if(path2.length() > 0 && path2.charAt(0) == FILE_SEP) {
+            path2 = path2.substring(1);
+        }
+        
+        return path1 + path2;
     }
 }

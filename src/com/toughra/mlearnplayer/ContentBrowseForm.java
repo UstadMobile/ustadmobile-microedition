@@ -69,6 +69,71 @@ public class ContentBrowseForm extends Form implements ActionListener{
         this.hostMidlet = hostMidlet;
     }
     
+    /**
+     * 
+     * @param dirName The dirname that is passed to FileConnection
+     * 
+     * @return ContentBrowseItem if a package or collection, null otherwise
+     */
+    public ContentBrowseItem getContentItemFromDir(String curSubDir, String actDir, Image defaultContentIcon) throws Exception{
+        int type = -1;
+        Image icon = defaultContentIcon;
+        String title = null;
+        String itemFullPath = null;
+        
+        //String actDir = dirContents.nextElement().toString();
+        if(!actDir.endsWith("/")) {
+            actDir += '/';
+        }
+        String dirFullPath = "file://localhost" + SEP_STR + curSubDir
+                + SEP_STR + actDir;
+        String fullPath = dirFullPath + "exetoc.xml";
+        String colPath = dirFullPath + "execollection.xml";
+
+        FileConnection dirCon = (FileConnection)Connector.open(dirFullPath);
+        boolean hasEXEPkg = false;
+        boolean hasEXECol = false;
+        boolean hasIcon = false;
+        if(dirCon.isDirectory()) {
+            hasEXEPkg = dirCon.list("exetoc.xml", false).hasMoreElements();
+            hasEXECol = dirCon.list("execollection.xml", false).hasMoreElements();
+            hasIcon = dirCon.list("mplayicon.png", false).hasMoreElements();
+        }
+        dirCon.close();
+
+        //#ifdef CRAZYDEBUG
+        //#                     EXEStrMgr.lg(69, "dir " + dirFullPath + " has pkg: " + hasEXEPkg + " / has col: " + hasEXECol);
+        //#endif
+        String iconPath = dirFullPath + "mplayicon.png";
+
+        if(hasEXEPkg) {                       
+            itemFullPath = dirFullPath;
+            type = TYPE_NORM;
+            title = actDir.substring(0, actDir.length()-1);
+        }else if(hasEXECol) {
+            type = TYPE_COL;
+            String collectionId = MLearnUtils.getCollectionID(dirFullPath);
+            title = MLearnUtils.getCollectionTitle(dirFullPath);
+            itemFullPath = dirFullPath;
+        }
+
+        if(type != -1) {
+            if(hasIcon) {
+                try {
+                    FileConnection iconFileCon = (FileConnection)Connector.open(iconPath);
+                    icon = Image.createImage(iconFileCon.openInputStream());
+                    iconFileCon.close();
+                }catch(IOException e2) {
+                    e2.printStackTrace();
+                }
+            }
+
+            ContentBrowseItem thisItem = new ContentBrowseItem(dirFullPath, type, title, icon);
+            return thisItem;
+        }
+        
+        return null;
+    }
     
     /**
      * The main meat of the class is here - go through the file system roots 
@@ -88,6 +153,17 @@ public class ContentBrowseForm extends Form implements ActionListener{
             defaultContentIcon = Image.createImage(22, 22, 0xf00);
         }
         
+        //holds both the root and ustadMobileContent
+        Vector rootsAndSubs = new Vector();
+        while(e.hasMoreElements()) {
+            String thisRoot = e.nextElement().toString();
+            rootsAndSubs.addElement(thisRoot);
+            rootsAndSubs.addElement(MLearnUtils.joinPath(thisRoot, 
+                    "ustadmobileContent"));
+        }
+        
+        e = rootsAndSubs.elements();
+        
         Vector itemVector = new Vector();
         
         try {
@@ -99,8 +175,15 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 if(curSubDir.toLowerCase().indexOf("c:") != -1) {
                     continue;
                 }
-                FileConnection subCon = (FileConnection)Connector.open("file://localhost" 
-                        + SEP_STR + curSubDir);
+                
+                String fileConDir = MLearnUtils.joinPath("file://localhost", curSubDir);
+                FileConnection subCon = (FileConnection)Connector.open(fileConDir); 
+                boolean dirExists = subCon.isDirectory();
+                if(!dirExists) {
+                    subCon.close();
+                    subCon = null;
+                    continue;//nothing to do here - it does not actually exist
+                }
                 Enumeration dirContents = subCon.list();
                 
                 Vector subDirVector = new Vector();
@@ -111,66 +194,16 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 subCon.close();
                 subCon = null;
                 
-                int type = 0;
-                Image icon = defaultContentIcon;
-                String title = null;
-                String itemFullPath = null;
+                
                 
                 dirContents = subDirVector.elements();
                 
                 while(dirContents.hasMoreElements()) {
-                    type = -1;
                     String actDir = dirContents.nextElement().toString();
-                    if(!actDir.endsWith("/")) {
-                        actDir += '/';
-                    }
-                    String dirFullPath = "file://localhost" + SEP_STR + curSubDir + actDir;
-                    String fullPath = dirFullPath + "exetoc.xml";
-                    String colPath = dirFullPath + "execollection.xml";
-                    
-                    FileConnection dirCon = (FileConnection)Connector.open(dirFullPath);
-                    boolean hasEXEPkg = false;
-                    boolean hasEXECol = false;
-                    boolean hasIcon = false;
-                    if(dirCon.isDirectory()) {
-                        hasEXEPkg = dirCon.list("exetoc.xml", false).hasMoreElements();
-                        hasEXECol = dirCon.list("execollection.xml", false).hasMoreElements();
-                        hasIcon = dirCon.list("mplayicon.png", false).hasMoreElements();
-                    }
-                    dirCon.close();
-                    
-                    //#ifdef CRAZYDEBUG
-//#                     EXEStrMgr.lg(69, "dir " + dirFullPath + " has pkg: " + hasEXEPkg + " / has col: " + hasEXECol);
-                    //#endif
-                    String iconPath = dirFullPath + "mplayicon.png";
-                    
-                    if(hasEXEPkg) {                       
-                        itemFullPath = dirFullPath;
-                        type = TYPE_NORM;
-                        title = actDir.substring(0, actDir.length()-1);
-                    }else if(hasEXECol) {
-                        type = TYPE_COL;
-                        String collectionId = MLearnUtils.getCollectionID(dirFullPath);
-                        title = MLearnUtils.getCollectionTitle(dirFullPath);
-                        itemFullPath = dirFullPath;
-                    }
-                    
-                    if(type != -1) {
-                        if(hasIcon) {
-                            try {
-                                FileConnection iconFileCon = (FileConnection)Connector.open(iconPath);
-                                icon = Image.createImage(iconFileCon.openInputStream());
-                                iconFileCon.close();
-                            }catch(IOException e2) {
-                                e2.printStackTrace();
-                            }
-                        }
-                        
-                        ContentBrowseItem thisItem = new ContentBrowseItem(dirFullPath, type, title, icon);
+                    ContentBrowseItem thisItem = getContentItemFromDir(curSubDir, actDir, defaultContentIcon);
+                    if(thisItem != null) {
                         itemVector.addElement(thisItem);
                     }
-                    
-                    icon = defaultContentIcon;
                 }
                 
             }
