@@ -167,9 +167,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      * media will be ignored.
      */
     //#ifdef MEDIAENABLED
-//#    public static final boolean mediaEnabled = true;
-    //#else
     public static final boolean mediaEnabled = true;
+    //#else
+//@    public static final boolean mediaEnabled = true;
     //#endif
     
     /** Array of sound file names that can be used for positive feedback*/
@@ -243,16 +243,17 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /** The main server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String masterServer = "svr2.ustadmobile.com:8001";
+//@    public final static String masterServer = "svr2.ustadmobile.com:8001";
     //#endif
     
     /** The main Course and Cloud server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String cloudServer = "svr2.ustadmobile.com:8010";
+//@    public final static String cloudServer = "svr2.ustadmobile.com:8010";
     //#endif
     
     //#ifdef SERVER
     //#expand public final static String masterServer = "%SERVER%";
+    public final static String masterServer = "svr2.ustadmobile.com:8001";
     //#endif
     
     //#ifndef LOGINSKIP
@@ -262,6 +263,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** If server login skip is allowed or not */
     //#ifdef LOGINSKIP
     //#expand public final static boolean canSkipLogin = %LOGINSKIP%;
+//@    public final static boolean canSkipLogin = %LOGINSKIP%;
     //#endif
     
     /** Controls if it is possible to navigate or not - e.g. 
@@ -332,12 +334,12 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             EXEStrMgr.lg(11, "Loaded locale");
             
             //#ifdef CRAZYDEBUG
-//#             EXEStrMgr.lg(69, "Loading base image");
+             EXEStrMgr.lg(69, "Loading base image");
             //#endif
             loadingImg = r.getImage("loadingb64");
             
             //#ifdef CRAZYDEBUG
-//#             EXEStrMgr.lg(69, "Loaded base image");
+             EXEStrMgr.lg(69, "Loaded base image");
             //#endif
         }catch(Exception e) {
             EXEStrMgr.lg(310, e.toString());
@@ -346,7 +348,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         menuFrm = new MLearnMenu(this);
         
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Instantiated Menu");
+         EXEStrMgr.lg(69, "Instantiated Menu");
         //#endif
         
         myTOC = new EXETOC(this);

@@ -192,7 +192,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         setLayout(bLayout);
         
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Set Layout");
+         EXEStrMgr.lg(69, "Set Layout");
         //#endif
         
         /*
@@ -201,7 +201,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
          */
         
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "about to load " + labels.length + " labels");
+         EXEStrMgr.lg(69, "about to load " + labels.length + " labels");
         //#endif
         for(int i = 0; i < labels.length; i++) {
             InputStream imgIn = getClass().getResourceAsStream("/icons/menu-" + i + ".png");
@@ -215,7 +215,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 imgIn.close();
                 imgIn = null;
                 //#ifdef CRAZYDEBUG
-//#                 EXEStrMgr.lg(69, "Created command with image for label " + i);
+                 EXEStrMgr.lg(69, "Created command with image for label " + i);
                 //#endif
                 
                 buttons[i] = new Button(cmds[i]);
@@ -228,7 +228,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             addComponent(buttons[i]);
             
             //#ifdef CRAZYDEBUG
-//#             EXEStrMgr.lg(69, "Added button " + i);
+             EXEStrMgr.lg(69, "Added button " + i);
             //#endif
         }
         
@@ -238,7 +238,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         //The about form
         aboutForm = new Form("About");
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Created about form");
+         EXEStrMgr.lg(69, "Created about form");
         //#endif
         Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
         TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
@@ -254,20 +254,20 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
 "    You should have received a copy of the GNU General Public License" +
 "    along with this program.  If not, see <http://www.gnu.org/licenses/>.");    
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Created about text textarea");
+         EXEStrMgr.lg(69, "Created about text textarea");
         //#endif
         aboutText.setEditable(false);
         aboutForm.addComponent(versionLabel);
         aboutForm.addComponent(aboutText);
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Added about text");
+         EXEStrMgr.lg(69, "Added about text");
         //#endif
         Button aboutGoBack = new Button(setOKCmd);
         aboutGoBack.addActionListener(this);
         aboutForm.addComponent(aboutGoBack);
         
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "MLearnMenu made about form");
+         EXEStrMgr.lg(69, "MLearnMenu made about form");
         //#endif
         
         //The settings where you can set volume etc.
@@ -373,7 +373,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         contentDownloadForm = new ContentDownloadForm(this);
         
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "MLearnMenu constructor method done");
+         EXEStrMgr.lg(69, "MLearnMenu constructor method done");
         //#endif
     }
     
