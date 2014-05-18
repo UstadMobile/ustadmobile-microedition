@@ -451,6 +451,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             }else if(cmd.getId() == SETTINGS) {
                 settingsForm.show();
             }else if(cmd.getId() == OPENCOURSE) {
+                host.contentBrowser.makeForm();
                 host.contentBrowser.show();
             }else if(cmd.getId() ==SENDTEST) {
                 MLObjectPusher.countDown = 0;//set this to zero to force the thread to run next tick

@@ -65,8 +65,21 @@ public class ContentBrowseForm extends Form implements ActionListener{
     
     private ContentBrowseItem[] browseItems;
     
+    private String noCourse_Flag = "TRUE";
+    
+    /** Download content form */
+    Form contentDownloadForm;
+    
+    private Form backForm;
+
+    public ContentBrowseForm(Form previousForm){
+        super();
+        backForm = previousForm;
+    }
+    
     public ContentBrowseForm(MLearnPlayerMidlet hostMidlet) {
         this.hostMidlet = hostMidlet;
+        contentDownloadForm = new ContentDownloadForm(null);
     }
     
     /**
@@ -202,6 +215,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
                     String actDir = dirContents.nextElement().toString();
                     ContentBrowseItem thisItem = getContentItemFromDir(curSubDir, actDir, defaultContentIcon);
                     if(thisItem != null) {
+                        noCourse_Flag = "FALSE";
                         itemVector.addElement(thisItem);
                     }
                 }
@@ -210,6 +224,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
         }catch(Exception ex) {
             ex.printStackTrace();
         }
+        removeAll(); //Added such that we remove everything before adding all the buttons and course list again.
         
         BoxLayout layout = new BoxLayout(BoxLayout.Y_AXIS);
         setLayout(layout);
@@ -218,14 +233,31 @@ public class ContentBrowseForm extends Form implements ActionListener{
         pkgCmds = new Command[numPkgs];
         browseItems = new ContentBrowseItem[numPkgs];
         
-        for(int i = 0; i < numPkgs; i++) {
-            browseItems[i] = (ContentBrowseItem)itemVector.elementAt(i);
-            pkgCmds[i] = new Command(browseItems[i].title, 
-                    browseItems[i].icon, i);
-            Button pkgButton = new Button(pkgCmds[i]);
-            pkgButton.addActionListener(this);
-            addComponent(pkgButton);
-        }
+        if(noCourse_Flag != "TRUE"){
+            Label userIDLabel = new Label(MLearnUtils._("Courses:"));
+            addComponent(userIDLabel);
+        
+            for(int i = 0; i < numPkgs; i++) {
+                browseItems[i] = (ContentBrowseItem)itemVector.elementAt(i);
+                pkgCmds[i] = new Command(browseItems[i].title, 
+                        browseItems[i].icon, i);
+                Button pkgButton = new Button(pkgCmds[i]);
+                pkgButton.addActionListener(this);
+                addComponent(pkgButton);
+            }
+        }else if(noCourse_Flag == "TRUE"){
+            Label noCourseLabel01 = new Label(MLearnUtils._(""
+                    + "No courses found."));
+            addComponent(noCourseLabel01);
+            /**Label  noCourseLabel02 = new Label(MLearnUtils._("Menu > Download"));
+            addComponent(noCourseLabel02);
+            * */
+            
+            String[] buttonLabels = new String[] 
+                {"Download New", "Menu"};
+            MLearnUtils.addButtonsToForm(this, buttonLabels, 
+                    null, "/icons/download_menu/icon-");
+        }       
     }
     
     
@@ -237,11 +269,29 @@ public class ContentBrowseForm extends Form implements ActionListener{
      */
     public void actionPerformed(ActionEvent ae) {
         int cmdId = ae.getCommand().getId();
-        if(browseItems[cmdId].type == TYPE_NORM) {
-            hostMidlet.myTOC.clearCollection();
-            hostMidlet.openPackageDir(browseItems[cmdId].fullpath);
-        }else if(browseItems[cmdId].type == TYPE_COL){
-            hostMidlet.openCollectionDir(browseItems[cmdId].fullpath);
+        try{
+            if(noCourse_Flag == "TRUE"){
+                Command cmd = ae.getCommand();
+                if (cmd !=null){
+                    switch(cmd.getId()){
+                        case 0:
+                            contentDownloadForm.show();
+                            break;
+                        case 1:
+                            hostMidlet.showMenu();
+                            break;
+                    }
+
+                }
+                
+            }else if(browseItems[cmdId].type == TYPE_NORM) {
+                hostMidlet.myTOC.clearCollection();
+                hostMidlet.openPackageDir(browseItems[cmdId].fullpath);
+            }else if(browseItems[cmdId].type == TYPE_COL){
+                hostMidlet.openCollectionDir(browseItems[cmdId].fullpath);
+            }
+        }catch(Exception ex) {
+            ex.printStackTrace();
         }
     }
     
