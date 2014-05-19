@@ -47,29 +47,36 @@ public class ContentDownloadForm extends Form implements  ActionListener{
     public static final int GOBACK = 2;
     
     public MLearnMenu hostMenu;
-    
+     
     /** Instance of ContentDownloadByIdForm to show it.**/
     private ContentDownloadByIdForm downloadByIdForm;
     
     /** Instance of ContentDownloadByRepoForm to show it.**/
     private ContentDownloadByRepoForm downloadByRepoForm;
     
+    
+    /** For having menu button on the Form **/
+    //private boolean navListenerOnForm = false;
+    
+    //private MLearnPlayerMidlet hostMidlet;
+    
+    /** To figure what the previous form is such that when we go back, we go to the relevant form **/
+    //private String prevForm = "none";
+    
     /**
-     * 
-     * @param hostMenu 
-     */
+    *
+    * @param hostMenu
+    */
     public ContentDownloadForm(MLearnMenu hostMenu) {
         setTitle("Download Course");
         this.hostMenu = hostMenu;
-        
         BoxLayout bLayout = new BoxLayout(BoxLayout.Y_AXIS);
         setLayout(bLayout);
         MLearnUtils.addButtonsToForm(this, buttonLabels, null, "/icons/download_select/icon-");
-        
         downloadByIdForm = new ContentDownloadByIdForm(this);
         downloadByRepoForm = new ContentDownloadByRepoForm((this));
-    }
-
+    }  
+    
     /** Handle events from button
      * 
      * @param evt ActionEvent from button
@@ -88,7 +95,23 @@ public class ContentDownloadForm extends Form implements  ActionListener{
                     break;
                 case GOBACK:
                     //show the main menu again
+                    
+                    // Both work. Must find better one.
+                    //hostMidlet.contentBrowser.show();
                     hostMenu.show();
+                    /**
+                    if (prevForm == "hostMidlet"){
+                        hostMidlet.contentBrowser.makeForm();
+                        
+                        // Both work. Must find better one.
+                        //hostMidlet.contentBrowser.show();
+                        hostMidlet.showMenu();
+                    }else if (prevForm == "hostMenu"){
+                        hostMenu.show();
+                        
+                    }
+                    * **/
+                    
             }
                     
         }

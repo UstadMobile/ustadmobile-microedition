@@ -5,6 +5,7 @@
 package com.toughra.mlearnplayer;
 
 import com.sun.lwuit.Command;
+import com.sun.lwuit.Dialog;
 import com.sun.lwuit.Form;
 import com.sun.lwuit.Label;
 import com.sun.lwuit.TextField;
@@ -73,11 +74,10 @@ public class ContentDownloadByIdForm extends Form implements ActionListener{
                     //Check if Course id is filled and initiate download.
                     String courseID = idTextField.getText();
                     //Talk to the server in a seperate thread.
-                    System.out.println("Course id is: " + courseID);
+                    System.out.println("Course id is: " + courseID);                
                     courseLinkThread = new CourseLinkThread(this, courseID);
                     courseLinkThread.start();
-                    //Prompt if user wants to download it or not, or automatically initiate the download.
-                    
+                                   
                     break;
                 case GOBACK:
                     //show the course list
@@ -139,7 +139,7 @@ class CourseLinkThread extends Thread {
         
         String courseFolderLink = contentDownloaderCon.getCourseLinkByID(courseID);
         
-        if(courseFolderLink != "FAIL") {
+        if(!courseFolderLink.equals("FAIL")) {
             System.out.println("Success, return 200 and has value: " + courseFolderLink);
         }
         String courseToDownload = Split(courseFolderLink, "/")[3];
@@ -151,12 +151,14 @@ class CourseLinkThread extends Thread {
                 +courseToDownload;
         
         //Ask the user if he wants to download the course with course name as mentioned. If confirmed..
-        ContentDownloadThread courseDownloadThread = ContentDownloader.getInstance()
+        boolean userChoice = Dialog.show("Download?", 
+                            "Download course: " + courseToDownload,
+                            "OK", "Cancel");
+        if(userChoice) {
+            ContentDownloadThread courseDownloadThread = ContentDownloader.getInstance()
                 .makeDownloadThread(courseURL, destFolder);
-        courseDownloadThread.start();   //starts the download thread which is created above.
-        
-        //loginForm.lastResult = result;
-        //Display.getInstance().callSerially(loginForm);
+            courseDownloadThread.start();   //starts the download thread which is created above.
+        }
     }
     
 }

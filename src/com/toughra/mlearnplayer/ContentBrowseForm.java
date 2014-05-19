@@ -60,7 +60,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
     static final int TYPE_COL = 1;
         
     private MLearnPlayerMidlet hostMidlet;
-        
+    
     private Command[] pkgCmds;
     
     private ContentBrowseItem[] browseItems;
@@ -70,18 +70,14 @@ public class ContentBrowseForm extends Form implements ActionListener{
     /** Download content form */
     Form contentDownloadForm;
     
-    private Form backForm;
-
-    public ContentBrowseForm(Form previousForm){
-        super();
-        backForm = previousForm;
-    }
+    /** For having menu button on the Form **/
+    private boolean navListenerOnForm = false;
     
     public ContentBrowseForm(MLearnPlayerMidlet hostMidlet) {
         this.hostMidlet = hostMidlet;
-        contentDownloadForm = new ContentDownloadForm(null);
+        contentDownloadForm = new ContentDownloadForm(hostMidlet.getMenu());
     }
-    
+      
     /**
      * 
      * @param dirName The dirname that is passed to FileConnection
@@ -190,8 +186,21 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 }
                 
                 String fileConDir = MLearnUtils.joinPath("file://localhost", curSubDir);
+      
                 FileConnection subCon = (FileConnection)Connector.open(fileConDir); 
+                
                 boolean dirExists = subCon.isDirectory();
+                try {
+                    if(curSubDir.endsWith("ustadmobileContent") && !dirExists) {
+                            subCon.mkdir();
+                    }
+                }catch(Exception err) {
+                    //oh shit!
+                    EXEStrMgr.lg(666, "attempted to make - but could not " + fileConDir, err);
+                }
+                
+                dirExists = subCon.isDirectory();
+                
                 if(!dirExists) {
                     subCon.close();
                     subCon = null;
@@ -254,10 +263,19 @@ public class ContentBrowseForm extends Form implements ActionListener{
             * */
             
             String[] buttonLabels = new String[] 
-                {"Download New", "Menu"};
+                {"Download New"};
             MLearnUtils.addButtonsToForm(this, buttonLabels, 
                     null, "/icons/download_menu/icon-");
-        }       
+        }
+        
+        if(!navListenerOnForm) {
+            boolean[] specialItems = MLearnUtils.makeBooleanArray(true, 
+                    MLearnMenu.labels.length);
+            specialItems[0] = false;//disable continue
+            specialItems[1] = false;
+            hostMidlet.navListener.addMenuCommandsToForm(this, specialItems);
+            navListenerOnForm = true;
+        }
     }
     
     
@@ -276,14 +294,8 @@ public class ContentBrowseForm extends Form implements ActionListener{
                     switch(cmd.getId()){
                         case 0:
                             contentDownloadForm.show();
-                            break;
-                        case 1:
-                            hostMidlet.showMenu();
-                            break;
                     }
-
                 }
-                
             }else if(browseItems[cmdId].type == TYPE_NORM) {
                 hostMidlet.myTOC.clearCollection();
                 hostMidlet.openPackageDir(browseItems[cmdId].fullpath);

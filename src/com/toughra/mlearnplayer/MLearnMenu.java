@@ -46,7 +46,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     private MLearnPlayerMidlet host;
     
     /** The keys that are used in the menu (looked up in the localization res) */
-    String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "help", "about", "quit", "logout", "Download"};
+    public static String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "help", "about", "quit", "logout", "Download"};
     
     /** Continue command ID */
     private static final int CONTINUE = 0;
@@ -238,7 +238,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         //The about form
         aboutForm = new Form("About");
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Created about form");
+//#         EXEStrMgr.lg(69, "Createdthis about form");
         //#endif
         Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
         TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
@@ -326,6 +326,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         Label tchrLabel = new Label(MLearnUtils._("Teachers Phone"));
         //settingsForm.addComponent(tchrLabel);
         
+        
         String btServerName = EXEStrMgr.getInstance().getPref("server.bt.name");
         String btBtnStr = "[Find]";
         if(btServerName != null) {
@@ -376,6 +377,41 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
 //#         EXEStrMgr.lg(69, "MLearnMenu constructor method done");
         //#endif
     }
+    
+    /**
+     * Show the menu - but use itemsToShow to decide what items should or should
+     * not show here
+     * 
+     * @param itemsToShow 
+     */
+    public void show(boolean[] itemsToShow) {
+        
+        if (itemsToShow == null){ 
+            itemsToShow = MLearnUtils.makeBooleanArray(true, labels.length);
+        }
+        
+        //TODO: Add logic for showing/hiding buttons on basis of itemsToShow
+        for(int i = 0; i < labels.length; i++) {
+            if (!itemsToShow[i]){   
+                boolean showThisComp = true;
+                if(itemsToShow[i] == false) {
+                    if(this.contains(buttons[i])) {
+                        this.removeComponent(buttons[i]);
+                    }
+                }else {
+                    if(!this.contains(buttons[i])) {
+                        this.addComponent(i, buttons[i]);
+                    }
+                }
+            }
+        }
+        show();
+    }
+    
+    public void show() {
+        super.show();
+    }
+    
     
     public void updateFieldsFromPrefs() {
         String learnerName = EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_LEARNERNAME);
