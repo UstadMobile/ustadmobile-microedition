@@ -38,7 +38,7 @@ public class MLCloudSimpleRequest implements MLCloudRequest  {
                 "GET", headers).getBytes();
         this.reqBytesLen = reqBytes.length;
     }
-
+    
     public void retry() {
         this.pos = 0;
     }

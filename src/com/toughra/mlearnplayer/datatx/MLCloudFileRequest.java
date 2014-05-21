@@ -2,19 +2,16 @@
 package com.toughra.mlearnplayer.datatx;
 
 import com.toughra.mlearnplayer.EXEStrMgr;
-import com.toughra.mlearnplayer.datatx.Base64;
-import com.toughra.mlearnplayer.datatx.MLCloudConnector;
-import com.toughra.mlearnplayer.datatx.MLCloudRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.microedition.io.file.FileConnection;
-import net.sf.jazzlib.GZIPOutputStream;
 
 /**
  * A request containing a file upload for the cloud server.  
@@ -51,7 +48,14 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
      */
     public int logBytesToSend = -1;
     
-    public MLCloudFileRequest(MLCloudConnector connector, String url, Hashtable params, String fileField, String fileConURI, long skipBytes) {
+    /**
+     * The amount of log bytes that we have gone through, because we are removing
+     * those that we don't intend to send, this indicates how much of the original
+     * contents we filtered through
+     */
+    public int logBytesProcessed = -1;
+    
+    public MLCloudFileRequest(MLCloudConnector connector, String url, Hashtable params, String fileField, String fileConURI, long skipBytes, boolean useBoundary, Hashtable headersToAdd) {
         //figure out this request details
         
         FileConnection fCon = null;
@@ -68,30 +72,37 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
             filesize = fCon.fileSize();
             
             String[] reqCompStr = new String[3];
-            String boundary = connector.getBoundaryString();
+            if(useBoundary) {
+                String boundary = connector.getBoundaryString();
 
-            reqCompStr[COMP_BOUNDARYMESSAGE] = connector.getBoundaryMessage(boundary, params, null, null, null);
-            reqCompStr[COMP_STARTFILEFIELD] = connector.appendFormFieldStart(new StringBuffer(), fileField).toString();
+                reqCompStr[COMP_BOUNDARYMESSAGE] = connector.getBoundaryMessage(boundary, params, null, null, null);
+                reqCompStr[COMP_STARTFILEFIELD] = connector.appendFormFieldStart(new StringBuffer(), fileField).toString();
 
-            //end of the message is the end of that field and then the end boundary message
-            String endBoundary =  "\r\n--" + boundary + "--\r\n";
-            reqCompStr[COMP_ENDREQ] = /*connector.appendFormFieldEnd(new StringBuffer(), boundary).toString()
-                    + */endBoundary;
+                //end of the message is the end of that field and then the end boundary message
+                String endBoundary =  "\r\n--" + boundary + "--\r\n";
+                reqCompStr[COMP_ENDREQ] = /*connector.appendFormFieldEnd(new StringBuffer(), boundary).toString()
+                        + */endBoundary;
+            
 
-            contentBytes = new byte[3][0];
-            long contentByteCount = 0;
+                contentBytes = new byte[3][0];
+                long contentByteCount = 0;
 
-            for(int i = 0; i < reqCompStr.length; i++) {
-                contentBytes[i] = reqCompStr[i].getBytes();
-                contentByteCount += contentBytes[i].length;
+                for(int i = 0; i < reqCompStr.length; i++) {
+                    contentBytes[i] = reqCompStr[i].getBytes();
+                    contentByteCount += contentBytes[i].length;
+                }
             }
+            
             OutputStream gzOutDest = new ByteArrayOutputStream();
-            ByteArrayOutputStream contentZipped = new ByteArrayOutputStream();
+            ByteArrayOutputStream requestBodyContent = new ByteArrayOutputStream();
 
-
-            GZIPOutputStream gzOut = new GZIPOutputStream(contentZipped);
-            gzOutDest.write(contentBytes[COMP_BOUNDARYMESSAGE]);
-            gzOutDest.write(contentBytes[COMP_STARTFILEFIELD]);
+            //Disable GZIP for Now
+            //GZIPOutputStream gzOut = new GZIPOutputStream(contentZipped);
+            OutputStream outToUse = requestBodyContent;
+            if(useBoundary) {
+                outToUse.write(contentBytes[COMP_BOUNDARYMESSAGE]);
+                outToUse.write(contentBytes[COMP_STARTFILEFIELD]);
+            }
             //now the file itself
             fin = fCon.openInputStream();
             if(skipBytes > 0) {
@@ -122,26 +133,71 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
                 }
             }
             
-            logBytesToSend = lastNewLinePos + 1;
+            String unfiltered = new String(logContentBytes);
+            
+            StringBuffer sbFilterBuffer = new StringBuffer();
+            int lineStart = 0;
+            int tLineCount = 0;
+            for(int posCounter = 0; posCounter < lastNewLinePos; posCounter++) {
+                char thisByte = (char)logContentBytes[posCounter];
+                if(thisByte == '\n') {
+                    String thisLine = new String(logContentBytes,
+                            lineStart, (posCounter - lineStart));
+                    if(thisLine.startsWith("T:")) {
+                        int pipePos = thisLine.indexOf("|");
+                        //get only the tincan statement itself
+                        String filteredLine = thisLine.substring(
+                                pipePos+1);
+                        if(tLineCount > 0) {
+                            sbFilterBuffer.append(",");
+                        }
+                        if(tLineCount == 1) {
+                            //now we know - must add square bracket to start
+                            sbFilterBuffer = new StringBuffer(
+                                    '[' + sbFilterBuffer.toString());
+                        }
+                        tLineCount++;
+                        sbFilterBuffer.append(filteredLine);
+                    }
+                    lineStart = posCounter + 1;
+                    
+                }
+            }
+            
+            if(tLineCount > 1) {
+                sbFilterBuffer.append(']');
+            }
+            
+            String filteredRequest= sbFilterBuffer.toString();
+            logBytesProcessed = lastNewLinePos + 1;
+            
+            byte[] filteredLogBytes = filteredRequest.getBytes();
+            
+            logBytesToSend = filteredLogBytes.length + 1;
             
             //gzout write here...
-            gzOut.write(logContentBytes, 0, logBytesToSend);
+            outToUse.write(filteredLogBytes, 0,
+                    filteredLogBytes.length);
             
-            gzOut.flush();
-            gzOut.close();
+            outToUse.flush();
+            outToUse.close();
             
             
 
             //now encode this in base64
-            byte[] logBytes = contentZipped.toByteArray();
-            String gzBase64 = Base64.encode(logBytes);
-            byte[] gzBase64Bytes = gzBase64.getBytes();
-            gzOutDest.write(gzBase64Bytes);
+            byte[] logBytes = requestBodyContent.toByteArray();
+            //String gzBase64 = Base64.encode(logBytes);
+            //byte[] gzBase64Bytes = gzBase64.getBytes();
+            gzOutDest.write(logBytes);
 
-            gzOutDest.write(contentBytes[COMP_ENDREQ]);
+            if(useBoundary) {
+                gzOutDest.write(contentBytes[COMP_ENDREQ]);
+            }
+            
             gzOutDest.flush();
 
             zippedBytes = ((ByteArrayOutputStream)gzOutDest).toByteArray();
+            String actualRequest = new String(zippedBytes);
             zippedLength = zippedBytes.length;
         }catch(IOException e) {
             EXEStrMgr.lg(128, "Exception preparing cloud file request", e);
@@ -161,9 +217,18 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
         Hashtable requestHeaders = new Hashtable();
         
         requestHeaders.put("Content-Length", String.valueOf(zippedLength));
-        requestHeaders.put("Content-Type", "multipart/form-data; boundary=" + connector.getBoundaryString());
+        if(useBoundary) {
+            requestHeaders.put("Content-Type", "multipart/form-data; boundary=" + connector.getBoundaryString());
+        }
         
-        String requestStr = connector.getRequestHeader(url, HttpConnection.POST, requestHeaders);
+        Enumeration e = headersToAdd.keys();
+        while(e.hasMoreElements()) {
+            Object key = e.nextElement();
+            requestHeaders.put(key, headersToAdd.get(key));
+        }
+        
+        String requestStr = connector.getRequestHeader(url, HttpConnection.POST, 
+                requestHeaders);
         byte[] requestBytes = requestStr.getBytes();
         
         
@@ -171,6 +236,9 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
         this.wholeRequestBytes = new byte[requestBytes.length + zippedLength];
         System.arraycopy(requestBytes, 0, wholeRequestBytes,0, requestBytes.length);
         System.arraycopy(zippedBytes, 0, wholeRequestBytes, requestBytes.length, zippedBytes.length);
+        
+        String wholeRequestStr = new String(this.wholeRequestBytes);
+        int x = 0;
     }
     
     public InputStream getInputStream() {

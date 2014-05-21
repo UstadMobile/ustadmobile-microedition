@@ -100,7 +100,7 @@ public class MLCloudConnector {
     public static String CLOUD_GETPREF_PATH="/umcloud/app/getPreference.xhtml";
     
     /** The String to append to the server URL for log submission */
-    public static String CLOUD_LOGSUBMIT_PATH="/umcloud/app/uploadLog.xhtml";
+    public static String CLOUD_LOGSUBMIT_PATH="/xAPI/statements";
     
     /** The String to append to the server URL for callhome submission */
     public static String CLOUD_CALLHOME_PATH="/umobile/datarxdummy.php";
@@ -562,6 +562,21 @@ public class MLCloudConnector {
         }
     }
     
+    /**
+     * Make the Header value for HTTP Basic auth e.g. Base userid:pass 
+     * base64 encoded;
+     * 
+     * @param userId - http user id
+     * @param userPass - http password
+     */
+    public static String makeHttpAuthString(String userId, String userPass) {
+        String authString = userId+":"+userPass;
+        String authEncBytes = Base64.encode(authString);
+        String authStringEnc = "Basic " + authEncBytes;
+        
+        return authStringEnc;
+    }
+    
     public int checkLogin(String userID, String userPass) {
         int result = -1;
         try {
@@ -572,9 +587,7 @@ public class MLCloudConnector {
             
             //Basic Authentication credential string.
             //Format: username:password
-            String authString = userID+":"+userPass;
-            String authEncBytes = Base64.encode(authString);
-            String authStringEnc = "Basic " + authEncBytes;
+            String authStringEnc = makeHttpAuthString(userID, userPass);
             
             //Headers for TINCAN auth check
             Hashtable tcAuthHeaders = new Hashtable();
@@ -698,10 +711,8 @@ public class MLCloudConnector {
      */
     public int sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
         
-        //openConnection();
-        //MLCloudSimpleRequest 
         
-        /* DO NOTHING RIGHT NOW UNTIL TINCAN COMES
+        
         openConnection();
         
         int retVal = -1;
@@ -712,12 +723,22 @@ public class MLCloudConnector {
         }
  
         try{
-            params.put("userid", EXEStrMgr.getInstance().getCloudUser());
-            params.put("password", EXEStrMgr.getInstance().getCloudPass());
-            MLCloudFileRequest request = new MLCloudFileRequest(this, url, params, fileField, fileConURI, skipBytes);
+            //params.put("userid", EXEStrMgr.getInstance().getCloudUser());
+            //params.put("password", EXEStrMgr.getInstance().getCloudPass());
+            Hashtable headersToAdd = new Hashtable();
+            headersToAdd.put("X-Experience-API-Version", "1.0.0");
+            headersToAdd.put("Content-Type", 
+                    "application/json; charset=UTF-8");
+            headersToAdd.put("Authorization", makeHttpAuthString(
+                    EXEStrMgr.getInstance().getCloudUser(),
+                    EXEStrMgr.getInstance().getCloudPass()));
+                    
+            MLCloudFileRequest request = new MLCloudFileRequest(this, url, params, 
+                    fileField, fileConURI, skipBytes, false, headersToAdd);
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             Hashtable respHeaders = new Hashtable();
             int respCode = doRequest(request, bout, respHeaders);
+            String serverSays = new String(bout.toByteArray());
             if(respCode == 200) {
                 retVal = request.logBytesToSend;
             }
@@ -727,8 +748,7 @@ public class MLCloudConnector {
         }
         
         return retVal;
-        */
-        return -1;
+        
     }
     
     /**
