@@ -426,15 +426,7 @@ public class EXEStrMgr {
         
     }
     
-    /**
-     * Queue a TinCan statement that should be sent to the TinCan serve 
-     * 
-     * @param tinCanStatement - JSON object representing an entire tincan statement
-     */
-    public static void queueTinCanStmt(JSONObject tinCanStatement) {
-        String stmt = tinCanStatement.toString();
-        int x = 1;
-    }
+  
     
     /**
      * This is used to log error messages
@@ -568,6 +560,15 @@ public class EXEStrMgr {
         in = in.replace('|', '/');
         
         return in;
+    }
+    
+    /**
+     * Queue a TinCan statement that should be sent to the TinCan server 
+     * 
+     * @param tinCanStatement - JSON object representing an entire tincan statement
+     */
+    public void queueTinCanStmt(JSONObject stmt) {
+        l('T', stmt.toString(), null, 0, 0, 0, 0, 0, null, 0, 0, null, null);
     }
     
     /**

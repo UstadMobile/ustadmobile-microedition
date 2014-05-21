@@ -697,6 +697,10 @@ public class MLCloudConnector {
      * @throws Exception 
      */
     public int sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
+        
+        //openConnection();
+        //MLCloudSimpleRequest 
+        
         /* DO NOTHING RIGHT NOW UNTIL TINCAN COMES
         openConnection();
         

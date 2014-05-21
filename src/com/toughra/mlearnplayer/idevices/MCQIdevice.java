@@ -279,7 +279,7 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 JSONObject objectDef = new JSONObject();
                 objectDef.put("id", question.activityId);
                 objectDef.put("definition", activityDef);
-                objectDef.put("objectType", "activity");
+                objectDef.put("objectType", "Activity");
                 stmtObject.put("object", objectDef);
                 
                 JSONObject verbDef = new JSONObject();
@@ -301,6 +301,7 @@ public class MCQIdevice extends Idevice implements ActionListener {
             
             String totalStmtStr = stmtObject.toString();
             
+            /*
             EXEStrMgr.lg(this, //idevice
                 selectedAnswer.questionId, //question id
                 0, //time on device in ms
@@ -312,7 +313,8 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 1, //maxScorePossible
                 String.valueOf(selectedAnswer.answerId),//answer given 
                 Idevice.BLANK);//remarks
-        
+            */
+            EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
             
             fbDialog.showFeedback(ansItem, selectedAnswer.feedback, selectedAnswer.isCorrect);
             int qId = selectedAnswer.questionId;
