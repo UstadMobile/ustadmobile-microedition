@@ -566,11 +566,7 @@ public class MLCloudConnector {
         int result = -1;
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            
-            /*StringBuffer url = new StringBuffer(
-                    MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH).append('?');
-            appendCredentialsToURL(url, userID, userPass);*/
-            
+                        
             StringBuffer url = new StringBuffer(
                     MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH);
             

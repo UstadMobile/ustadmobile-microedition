@@ -483,7 +483,8 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 host.destroyApp(true);
                 host.notifyDestroyed();
             }else if(cmd.equals(setOKCmd)) {
-                contMain();
+                //TODO: Make sure this shows only the items that were last seen
+                this.show();
             }else if(cmd.getId() == SETTINGS) {
                 settingsForm.show();
             }else if(cmd.getId() == OPENCOURSE) {
