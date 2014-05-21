@@ -84,6 +84,12 @@ public class NavigationActionListener implements ActionListener{
             if(isSpecialId) {
                 itemsToShow = (boolean[])menuCmdsToShowById.elementAt(cmdId-ID_OFFSET);
             }
+            
+            if(itemsToShow == null) {
+                itemsToShow = MLearnUtils.makeBooleanArray(true, 
+                        MLearnMenu.labels.length);
+            }
+            
             if(isSpecialId || cmdId == MENUCMD) {
                 hostMidlet.showMenu(itemsToShow);
             }

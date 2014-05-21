@@ -273,6 +273,11 @@ public class ContentBrowseForm extends Form implements ActionListener{
                     MLearnMenu.labels.length);
             specialItems[0] = false;//disable continue
             specialItems[1] = false;
+            specialItems[2] = false; //Go back is to go back with respect
+                                    // to idevices. Disabling..
+            specialItems[3] = false;    //Contents NA in main menu
+            specialItems[4] = false;    //Collection NA in main menu
+            
             hostMidlet.navListener.addMenuCommandsToForm(this, specialItems);
             navListenerOnForm = true;
         }
