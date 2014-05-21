@@ -25,7 +25,8 @@ import java.io.*;
 import java.util.*;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
-import javax.microedition.io.file.FileSystemRegistry;
+import org.json.me.JSONException;
+import org.json.me.JSONObject;
 
 /**
  *
@@ -58,6 +59,11 @@ public class EXEStrMgr {
     
     /**The storage name used for j2me storage*/
     static String storageName = "net.paiwastoon.ustadmobile";
+    
+    /** The standard email address string to turn user into mbox
+     * 
+     */
+    static String MBOX_POSTFIX = "ustadmobile.com";
     
     /** Preferences storage that is made as a serialized hashtable*/
     public MLearnPreferences prefs;
@@ -210,6 +216,26 @@ public class EXEStrMgr {
         Random r = new Random(System.currentTimeMillis());
         String uuid = String.valueOf(Math.abs(r.nextLong()));
         return uuid;
+    }
+    
+    /**
+     * Make a JSONObject representing the TinCan actor for the user
+     * 
+     * @return Tin Can actor with mbox, name and objectType set
+     */
+    public JSONObject getTinCanActor() {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("mbox", "mailto:" + getCloudUser() + "@" + MBOX_POSTFIX);
+            obj.put("name", getCloudUser());
+            obj.put("objectType", "Agent");
+        }catch(JSONException e) {
+            EXEStrMgr.lg(170, "Exception creating tin can actor json", e);
+        }
+        
+        String jsonText = obj.toString();
+        
+        return obj;
     }
     
     public String getCloudUser() {
@@ -398,6 +424,16 @@ public class EXEStrMgr {
     public static void lg(int errCode, String msg) {
         lg(errCode, msg, null);
         
+    }
+    
+    /**
+     * Queue a TinCan statement that should be sent to the TinCan serve 
+     * 
+     * @param tinCanStatement - JSON object representing an entire tincan statement
+     */
+    public static void queueTinCanStmt(JSONObject tinCanStatement) {
+        String stmt = tinCanStatement.toString();
+        int x = 1;
     }
     
     /**
