@@ -3,4 +3,5 @@
 /exemobile2-build.properties
 *~
 *.class
+private.properties
 

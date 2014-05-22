@@ -90,7 +90,7 @@ public abstract class Idevice {
     static final String[] logTypes = new String[] {"info", "quiz"};
     
     public static final String LOGDEVCOMPLETE = "idevicecomplete";
-
+    
     /**
      * Constructor
      * 

@@ -34,7 +34,6 @@ import org.kxml2.io.KXmlParser;
 import net.sf.jazzlib.*;
 import com.toughra.mlearnplayer.datatx.MLCloudFileRequest;
 
-
 /**
  * MLCloudConnector manages maintaining a connection between the app and the
  * Ustad Mobile cloud server.  
@@ -90,6 +89,10 @@ public class MLCloudConnector {
     //public static String CLOUD_LOGIN_PATH="/umcloud/app/login.xhtml";
     public static String CLOUD_LOGIN_PATH="/xAPI/statements?limit=1";
     
+    /** The string to append to the server URL for checking course link by id*/
+    //public static String CLOUD_LOGIN_PATH="/umcloud/app/login.xhtml";
+    public static String CLOUD_GETCOURSEBYID_PATH="/getcourse/";
+    
     /** The string to append to the server URL for sending preferences to cloud */
     public static String CLOUD_SETPREF_PATH="/umcloud/app/setPreference.xhtml";
     
@@ -97,7 +100,7 @@ public class MLCloudConnector {
     public static String CLOUD_GETPREF_PATH="/umcloud/app/getPreference.xhtml";
     
     /** The String to append to the server URL for log submission */
-    public static String CLOUD_LOGSUBMIT_PATH="/umcloud/app/uploadLog.xhtml";
+    public static String CLOUD_LOGSUBMIT_PATH="/xAPI/statements";
     
     /** The String to append to the server URL for callhome submission */
     public static String CLOUD_CALLHOME_PATH="/umobile/datarxdummy.php";
@@ -159,6 +162,96 @@ public class MLCloudConnector {
         }
     }
     
+    /**
+    *   Custom split method for J2ME
+    * 
+    * */
+    public static String[] Split(String splitStr, String delimiter) {
+        StringBuffer token = new StringBuffer();
+        Vector tokens = new Vector();
+        // split
+        char[] chars = splitStr.toCharArray();
+        for (int i=0; i < chars.length; i++) {
+            if (delimiter.indexOf(chars[i]) != -1) {
+                // we bumbed into a delimiter
+                if (token.length() > 0) {
+                    tokens.addElement(token.toString());
+                    token.setLength(0);
+                }
+            } else {
+                token.append(chars[i]);
+            }
+        }
+        // don't forget the "tail"...
+        if (token.length() > 0) {
+            tokens.addElement(token.toString());
+        }
+        // convert the vector into an array
+        String[] splitArray = new String[tokens.size()];
+        for (int i=0; i < splitArray.length; i++) {
+            splitArray[i] = (String)tokens.elementAt(i);
+        }
+        return splitArray;
+ }
+    
+    
+    /**
+     * Reads the HTTP response of a server and give back the course id folder link
+     * 
+     * @param out The output stream in which to place the response
+     * @param headers Hashtable in which http headers will be placed.  Important: headers field names will be made lower case
+     * 
+     * @return the course id folder link or -1 if failure
+     * 
+     */
+    private String readCourseIDFolderLink(OutputStream out, Hashtable headers) throws Exception{
+        int responseStatus = 0;
+
+        // now reading the response
+        EXEStrMgr.lg(22, "Request header sent, waiting for response...");
+
+        ByteArrayOutputStream headerStream = new ByteArrayOutputStream(800);
+        long contentLength = -1;
+
+        //first read all of the header
+        boolean inHeader = true;
+        int b = -1;
+        byte numCRs = 0;
+        byte numLFs = 0;
+        int bytesToGo = 1;
+        do {
+            b = in.read();
+            if(b == '\n') {
+                numLFs++;
+                if(numCRs == 2 && numLFs == 2) {
+                    inHeader = false;
+                    break;//header is over
+                }
+            }else if(b == '\r') {
+                numCRs++;
+            }else {
+                numLFs = 0;
+                numCRs = 0;
+            }
+            headerStream.write(b);
+        }while(inHeader && b != -1);
+
+        String hdrText = new String(headerStream.toByteArray());
+
+        String[] courseLinkHeaders = Split(hdrText, "\n");
+        String courseLinkFolder = courseLinkHeaders[6].substring(8);
+
+        responseStatus = Integer.parseInt(hdrText.substring(9, 12));
+        lastResponseCode = responseStatus;
+        
+        if (responseStatus != 200){
+            return "FAIL";
+        }
+       
+        return courseLinkFolder;
+    }
+    
+     
     /**
      * Reads the HTTP response of a server
      * 
@@ -234,7 +327,14 @@ public class MLCloudConnector {
             contentLength = Integer.parseInt(
                     hdrText.substring(clPos + 16,
                     hdrText.indexOf("\r\n", clPos + 17)));
-            bytesToGo = (int)contentLength;
+            if(contentLength > 0) {
+                /*
+                 * some servers wrongly say content-length 0 - flag this
+                 * and mark as not really having a set content-length, 
+                 * no keepalive, as though content length was never reported
+                 */
+                clPos = -1;
+            }
         }
 
         ByteArrayOutputStream gzipBuf = null;
@@ -382,6 +482,60 @@ public class MLCloudConnector {
         return respCode;
     }
 
+    /**
+     * This will take a MLCloudRequest object, perform the request, retry if
+     * required.
+     * 
+     * @param request The request object
+     * @param respOut Output stream into which response will be sent
+     * @param respHeaders Hashtable in which response headers will be placed (not implemented)
+     * 
+     * @return the course folder link for that id HTTP response code or -1 if there's a total failure
+     */
+    public String doCourseIDRequest(MLCloudRequest request, OutputStream respOut, Hashtable respHeaders) {
+        int respCode = -1;
+        String courseIDLink="FAIL";
+        for(int tryCount = 0; tryCount < RETRY_ATTEMPTS; tryCount++) {
+            try {
+                synchronized(this) {
+                    openConnection();
+                    InputStream reqIn = request.getInputStream();
+                    byte[] buf = new byte[1024];
+                    int count = 0;
+                    /* in case of wanting to examine a request closely*/
+                    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                            
+                    while((count = reqIn.read(buf)) != -1) {
+                        out.write(buf, 0, count);
+                        bout.write(buf,0,count);
+                    }
+                    
+                    String requestStr = new String(bout.toByteArray());
+                    
+                    reqIn.close();
+                    courseIDLink = readCourseIDFolderLink(respOut, respHeaders);
+                }
+                if(courseIDLink == "FAIL") {
+                    //we did something bad - close connections
+                    closeConnections();
+                }else{
+                    courseIDLink = "/media/eXeExport/" + courseIDLink;
+                }
+                
+                return courseIDLink;
+            }catch(Exception e) {
+                EXEStrMgr.lg(125, "Something went wrong with cloud request", e);
+                closeConnections();
+            }
+            
+            try { Thread.sleep(RETRY_WAIT); }
+            catch(InterruptedException i) {}
+        }
+        return courseIDLink;
+    }
+
+    
+    
     private void closeConnections() {
         Exception lastE = null;
         String eStr = "";
@@ -408,23 +562,32 @@ public class MLCloudConnector {
         }
     }
     
+    /**
+     * Make the Header value for HTTP Basic auth e.g. Base userid:pass 
+     * base64 encoded;
+     * 
+     * @param userId - http user id
+     * @param userPass - http password
+     */
+    public static String makeHttpAuthString(String userId, String userPass) {
+        String authString = userId+":"+userPass;
+        String authEncBytes = Base64.encode(authString);
+        String authStringEnc = "Basic " + authEncBytes;
+        
+        return authStringEnc;
+    }
+    
     public int checkLogin(String userID, String userPass) {
         int result = -1;
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            
-            /*StringBuffer url = new StringBuffer(
-                    MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH).append('?');
-            appendCredentialsToURL(url, userID, userPass);*/
-            
+                        
             StringBuffer url = new StringBuffer(
                     MLearnPlayerMidlet.masterServer + CLOUD_LOGIN_PATH);
             
             //Basic Authentication credential string.
             //Format: username:password
-            String authString = userID+":"+userPass;
-            String authEncBytes = Base64.encode(authString);
-            String authStringEnc = "Basic " + authEncBytes;
+            String authStringEnc = makeHttpAuthString(userID, userPass);
             
             //Headers for TINCAN auth check
             Hashtable tcAuthHeaders = new Hashtable();
@@ -448,6 +611,40 @@ public class MLCloudConnector {
         }
         
         return result;
+    }
+    
+   public String getCourseLinkByID(String courseID) {
+        int result = -1;
+        String courseFolderLink = "FAIL";
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            
+           String cloudServer = "svr2.ustadmobile.com:8010";
+            StringBuffer url = new StringBuffer(
+                    cloudServer + CLOUD_GETCOURSEBYID_PATH)
+                    .append("?id=").append(courseID);
+                    
+            System.out.println(url.toString());
+            
+            MLCloudRequest getCourseLinkByIDRequest = new MLCloudSimpleRequest(this, 
+                    url.toString(),null);
+            EXEStrMgr.lg(23, "MLCloudConnect: Connection opened");
+            
+            //result = doRequest(getCourseLinkByIDRequest, bout, new Hashtable());
+            courseFolderLink = doCourseIDRequest(getCourseLinkByIDRequest, bout, new Hashtable());
+            
+            if(courseFolderLink != "FAIL") {
+                System.out.println("Success!");
+                System.out.println("The folder to download is: "+ courseFolderLink);
+            }
+
+            //String serverSays = new String(bout.toByteArray());
+            
+        }catch(Exception e) {
+            EXEStrMgr.lg(121, "Something bad with getCourseLinkByID", e);
+        }
+        
+        return courseFolderLink;
     }
     
     public String getBoundaryString() {
@@ -513,7 +710,9 @@ public class MLCloudConnector {
      * @throws Exception 
      */
     public int sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
-        /* DO NOTHING RIGHT NOW UNTIL TINCAN COMES
+        
+        
+        
         openConnection();
         
         int retVal = -1;
@@ -524,12 +723,22 @@ public class MLCloudConnector {
         }
  
         try{
-            params.put("userid", EXEStrMgr.getInstance().getCloudUser());
-            params.put("password", EXEStrMgr.getInstance().getCloudPass());
-            MLCloudFileRequest request = new MLCloudFileRequest(this, url, params, fileField, fileConURI, skipBytes);
+            //params.put("userid", EXEStrMgr.getInstance().getCloudUser());
+            //params.put("password", EXEStrMgr.getInstance().getCloudPass());
+            Hashtable headersToAdd = new Hashtable();
+            headersToAdd.put("X-Experience-API-Version", "1.0.0");
+            headersToAdd.put("Content-Type", 
+                    "application/json; charset=UTF-8");
+            headersToAdd.put("Authorization", makeHttpAuthString(
+                    EXEStrMgr.getInstance().getCloudUser(),
+                    EXEStrMgr.getInstance().getCloudPass()));
+                    
+            MLCloudFileRequest request = new MLCloudFileRequest(this, url, params, 
+                    fileField, fileConURI, skipBytes, false, headersToAdd);
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             Hashtable respHeaders = new Hashtable();
             int respCode = doRequest(request, bout, respHeaders);
+            String serverSays = new String(bout.toByteArray());
             if(respCode == 200) {
                 retVal = request.logBytesToSend;
             }
@@ -539,8 +748,7 @@ public class MLCloudConnector {
         }
         
         return retVal;
-        */
-        return -1;
+        
     }
     
     /**

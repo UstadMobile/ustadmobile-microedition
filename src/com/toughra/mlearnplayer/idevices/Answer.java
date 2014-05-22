@@ -48,16 +48,39 @@ public class Answer {
     /** The answer ID (used for logging etc)*/
     public int answerId;
     
+    /** ResponseID that is used in connection with TinCan */
+    public String responseId;
+    
     /**
      * Constructor
      * 
      * @param text text of this answer
      * @param isCorrect true/false is this a correct answer
      */
-    public Answer(String text, boolean isCorrect, int answerId) {
+    public Answer(String text, boolean isCorrect, int answerId, String responseId) {
         this.answerText = text;
         this.isCorrect = isCorrect;
         this.answerId = answerId;
+        this.responseId = responseId;
+    }
+    
+    public Answer(String text, boolean isCorrect, int answerId) {
+        this(text, isCorrect, answerId, null);
+    }
+    
+    /**
+     * Constructor
+     * 
+     * @param text text of this answer
+     * @param isCorrect true/false is this a correct answer
+     * @param question the question that this is an answer for
+     * @param feedback feedback to show when this answer is selected
+     * @param responseId responseId used in TinCan reporting
+     */
+    public Answer(String text, boolean isCorrect, Object question, String feedback, int answerId, String responseId) {
+        this(text, isCorrect, answerId, responseId);
+        this.question = question;
+        this.feedback = feedback;
     }
     
     /**

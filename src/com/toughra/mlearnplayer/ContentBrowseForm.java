@@ -60,15 +60,24 @@ public class ContentBrowseForm extends Form implements ActionListener{
     static final int TYPE_COL = 1;
         
     private MLearnPlayerMidlet hostMidlet;
-        
+    
     private Command[] pkgCmds;
     
     private ContentBrowseItem[] browseItems;
     
+    private String noCourse_Flag = "TRUE";
+    
+    /** Download content form */
+    Form contentDownloadForm;
+    
+    /** For having menu button on the Form **/
+    private boolean navListenerOnForm = false;
+    
     public ContentBrowseForm(MLearnPlayerMidlet hostMidlet) {
         this.hostMidlet = hostMidlet;
+        contentDownloadForm = new ContentDownloadForm(hostMidlet.getMenu());
     }
-    
+      
     /**
      * 
      * @param dirName The dirname that is passed to FileConnection
@@ -182,8 +191,21 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 }
                 
                 String fileConDir = MLearnUtils.joinPath("file://localhost", curSubDir);
+      
                 FileConnection subCon = (FileConnection)Connector.open(fileConDir); 
+                
                 boolean dirExists = subCon.isDirectory();
+                try {
+                    if(curSubDir.endsWith("ustadmobileContent") && !dirExists) {
+                            subCon.mkdir();
+                    }
+                }catch(Exception err) {
+                    //oh shit!
+                    EXEStrMgr.lg(666, "attempted to make - but could not " + fileConDir, err);
+                }
+                
+                dirExists = subCon.isDirectory();
+                
                 if(!dirExists) {
                     subCon.close();
                     subCon = null;
@@ -208,6 +230,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
                     EXEStrMgr.lg(5, "Scanning for content in: " + actDir);
                     ContentBrowseItem thisItem = getContentItemFromDir(curSubDir, actDir, defaultContentIcon);
                     if(thisItem != null) {
+                        noCourse_Flag = "FALSE";
                         itemVector.addElement(thisItem);
                         EXEStrMgr.lg(5, "Discovered content item in " + actDir);
                     }
@@ -218,6 +241,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
             ex.printStackTrace();
             EXEStrMgr.lg(6, "Exception scanning directories...");
         }
+        removeAll(); //Added such that we remove everything before adding all the buttons and course list again.
         
         BoxLayout layout = new BoxLayout(BoxLayout.Y_AXIS);
         setLayout(layout);
@@ -226,13 +250,44 @@ public class ContentBrowseForm extends Form implements ActionListener{
         pkgCmds = new Command[numPkgs];
         browseItems = new ContentBrowseItem[numPkgs];
         
-        for(int i = 0; i < numPkgs; i++) {
-            browseItems[i] = (ContentBrowseItem)itemVector.elementAt(i);
-            pkgCmds[i] = new Command(browseItems[i].title, 
-                    browseItems[i].icon, i);
-            Button pkgButton = new Button(pkgCmds[i]);
-            pkgButton.addActionListener(this);
-            addComponent(pkgButton);
+        if(noCourse_Flag != "TRUE"){
+            Label userIDLabel = new Label(MLearnUtils._("Courses:"));
+            addComponent(userIDLabel);
+        
+            for(int i = 0; i < numPkgs; i++) {
+                browseItems[i] = (ContentBrowseItem)itemVector.elementAt(i);
+                pkgCmds[i] = new Command(browseItems[i].title, 
+                        browseItems[i].icon, i);
+                Button pkgButton = new Button(pkgCmds[i]);
+                pkgButton.addActionListener(this);
+                addComponent(pkgButton);
+            }
+        }else if(noCourse_Flag == "TRUE"){
+            Label noCourseLabel01 = new Label(MLearnUtils._(""
+                    + "No courses found."));
+            addComponent(noCourseLabel01);
+            /**Label  noCourseLabel02 = new Label(MLearnUtils._("Menu > Download"));
+            addComponent(noCourseLabel02);
+            * */
+            
+            String[] buttonLabels = new String[] 
+                {"Download New"};
+            MLearnUtils.addButtonsToForm(this, buttonLabels, 
+                    null, "/icons/download_menu/icon-");
+        }
+        
+        if(!navListenerOnForm) {
+            boolean[] specialItems = MLearnUtils.makeBooleanArray(true, 
+                    MLearnMenu.labels.length);
+            specialItems[0] = false;//disable continue
+            specialItems[1] = false;
+            specialItems[2] = false; //Go back is to go back with respect
+                                    // to idevices. Disabling..
+            specialItems[3] = false;    //Contents NA in main menu
+            specialItems[4] = false;    //Collection NA in main menu
+            
+            hostMidlet.navListener.addMenuCommandsToForm(this, specialItems);
+            navListenerOnForm = true;
         }
     }
     
@@ -245,11 +300,23 @@ public class ContentBrowseForm extends Form implements ActionListener{
      */
     public void actionPerformed(ActionEvent ae) {
         int cmdId = ae.getCommand().getId();
-        if(browseItems[cmdId].type == TYPE_NORM) {
-            hostMidlet.myTOC.clearCollection();
-            hostMidlet.openPackageDir(browseItems[cmdId].fullpath);
-        }else if(browseItems[cmdId].type == TYPE_COL){
-            hostMidlet.openCollectionDir(browseItems[cmdId].fullpath);
+        try{
+            if(noCourse_Flag == "TRUE"){
+                Command cmd = ae.getCommand();
+                if (cmd !=null){
+                    switch(cmd.getId()){
+                        case 0:
+                            contentDownloadForm.show();
+                    }
+                }
+            }else if(browseItems[cmdId].type == TYPE_NORM) {
+                hostMidlet.myTOC.clearCollection();
+                hostMidlet.openPackageDir(browseItems[cmdId].fullpath);
+            }else if(browseItems[cmdId].type == TYPE_COL){
+                hostMidlet.openCollectionDir(browseItems[cmdId].fullpath);
+            }
+        }catch(Exception ex) {
+            ex.printStackTrace();
         }
     }
     

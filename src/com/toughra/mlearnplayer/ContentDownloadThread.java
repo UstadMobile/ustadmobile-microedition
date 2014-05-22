@@ -63,9 +63,10 @@ public class ContentDownloadThread extends Thread{
     
     public void run() {
         try {
+            runDownload(); //runs the runDownload in the thread.
             
         }catch(Exception e) {
-            //should do or say something
+            EXEStrMgr.lg(50, "Error whilst running download thread", e);
         }
         
     }
@@ -104,6 +105,8 @@ public class ContentDownloadThread extends Thread{
                 MLCloudSimpleRequest.downloadURLToFile(cloudConnector, fileURL, 
                         destDirBase + filename, 5);
             }
+            //Checking if all files of the course has been downloaded.
+            //checkAllFilesDownloaded()..
         }catch(Exception e) {
             //we try and do soemthing...
             e.printStackTrace();

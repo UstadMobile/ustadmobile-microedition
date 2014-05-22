@@ -48,6 +48,7 @@ import com.toughra.mlearnplayer.datatx.MLServerThread;
 import com.toughra.mlearnplayer.idevices.EXERequestHandler;
 import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
+import com.toughra.mlearnplayer.datatx.ContentDownloader;
 
 
 
@@ -243,6 +244,11 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** The main server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
     public final static String masterServer = "svr2.ustadmobile.com:8001";
+    //#endif
+    
+    /** The main Course and Cloud server that we talk to for all operations - _MUST_ include port hostname:port only*/
+    //#ifndef SERVER
+    public final static String cloudServer = "svr2.ustadmobile.com:8010";
     //#endif
     
     //#ifdef SERVER
@@ -619,6 +625,22 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /**
      * Shows the main options menu (continue, repeat, about, settings, etc)
+     * @param boolean array representing which items to show
+     */
+    public void showMenu(boolean[] menuItemsToShow) {
+        menuFrm.updateFieldsFromPrefs();
+        menuFrm.show(menuItemsToShow);
+    }
+    
+    /**
+     * Returns Menu
+     */
+    public MLearnMenu getMenu(){
+        return menuFrm;
+    }
+    
+    /*
+     * Show the main options menu
      */
     public void showMenu() {
         menuFrm.updateFieldsFromPrefs();
@@ -747,7 +769,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         loadThread.start();
         
     }
-
+        
     /**
      * Load the specified page - show the first idevice in the list
      * 

@@ -25,7 +25,8 @@ import java.io.*;
 import java.util.*;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
-import javax.microedition.io.file.FileSystemRegistry;
+import org.json.me.JSONException;
+import org.json.me.JSONObject;
 
 /**
  *
@@ -58,6 +59,11 @@ public class EXEStrMgr {
     
     /**The storage name used for j2me storage*/
     static String storageName = "net.paiwastoon.ustadmobile";
+    
+    /** The standard email address string to turn user into mbox
+     * 
+     */
+    static String MBOX_POSTFIX = "ustadmobile.com";
     
     /** Preferences storage that is made as a serialized hashtable*/
     public MLearnPreferences prefs;
@@ -210,6 +216,26 @@ public class EXEStrMgr {
         Random r = new Random(System.currentTimeMillis());
         String uuid = String.valueOf(Math.abs(r.nextLong()));
         return uuid;
+    }
+    
+    /**
+     * Make a JSONObject representing the TinCan actor for the user
+     * 
+     * @return Tin Can actor with mbox, name and objectType set
+     */
+    public JSONObject getTinCanActor() {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("mbox", "mailto:" + getCloudUser() + "@" + MBOX_POSTFIX);
+            obj.put("name", getCloudUser());
+            obj.put("objectType", "Agent");
+        }catch(JSONException e) {
+            EXEStrMgr.lg(170, "Exception creating tin can actor json", e);
+        }
+        
+        String jsonText = obj.toString();
+        
+        return obj;
     }
     
     public String getCloudUser() {
@@ -400,6 +426,8 @@ public class EXEStrMgr {
         
     }
     
+  
+    
     /**
      * This is used to log error messages
      */
@@ -532,6 +560,15 @@ public class EXEStrMgr {
         in = in.replace('|', '/');
         
         return in;
+    }
+    
+    /**
+     * Queue a TinCan statement that should be sent to the TinCan server 
+     * 
+     * @param tinCanStatement - JSON object representing an entire tincan statement
+     */
+    public void queueTinCanStmt(JSONObject stmt) {
+        l('T', stmt.toString(), null, 0, 0, 0, 0, 0, null, 0, 0, null, null);
     }
     
     /**

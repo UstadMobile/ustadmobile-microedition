@@ -36,6 +36,8 @@ import java.util.*;
 import com.toughra.mlearnplayer.FeedbackDialog;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
+import org.json.me.JSONException;
+import org.json.me.JSONObject;
 
 
 
@@ -98,7 +100,7 @@ public class MCQIdevice extends Idevice implements ActionListener {
     
     /** color of border when hilighted to be moved */
     static int activeColor = 0xff0000;
-    
+
 
     /** 
      * Constructor - setup the for, dig through the questions and answers
@@ -128,7 +130,17 @@ public class MCQIdevice extends Idevice implements ActionListener {
             
             //CDATA text section will always be the first child after question
             String questionTextHTML = currentNode.getTextChildContent(0);
-            questions.addElement(questionTextHTML);
+            XmlNode tinCanNode = currentNode.findFirstChildByTagName("tincan", true);
+            String tinCanId = null;
+            String tinCanDef = null;
+            if(tinCanNode != null) {
+                tinCanDef = currentNode.findFirstChildByTagName("activitydef", 
+                        true).getTextChildContent(0);
+                tinCanId = tinCanNode.getAttribute("id");
+            }
+            QuestionItem thisItem = new QuestionItem(questionTextHTML, tinCanId, 
+                    tinCanDef);
+            questions.addElement(thisItem);
 
             Vector questionAnswers = currentNode.findChildrenByTagName("answer", true);
             Vector answerObjVector = new Vector();
@@ -138,9 +150,10 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 XmlNode feedbackNode = (XmlNode)currentAnswer.findChildrenByTagName("feedback", 
                         true).elementAt(0);
                 String feedback = feedbackNode.getTextChildContent(0);
+                String responseId = currentAnswer.getAttribute("id");
                 Answer answer = new Answer(answerText,
                         currentAnswer.getAttribute("iscorrect").equals("true"), 
-                        new Integer(i), feedback, j);
+                        new Integer(i), feedback, j, responseId);
                 answer.questionId = i;
                 
                 if(feedbackNode.hasAttribute("audio")) {
@@ -254,6 +267,41 @@ public class MCQIdevice extends Idevice implements ActionListener {
             FeedbackDialog fbDialog = new FeedbackDialog(hostMidlet);
             Answer selectedAnswer = ansItem.answer;
             
+            JSONObject stmtObject= new JSONObject();
+            JSONObject actorObj = EXEStrMgr.getInstance().getTinCanActor();
+            QuestionItem question = (QuestionItem)questions.elementAt(
+                    selectedAnswer.questionId);
+            
+            
+            try {
+                stmtObject.put("actor", actorObj);
+                JSONObject activityDef = new JSONObject(question.tinCanDefinition);
+                JSONObject objectDef = new JSONObject();
+                objectDef.put("id", question.activityId);
+                objectDef.put("definition", activityDef);
+                objectDef.put("objectType", "Activity");
+                stmtObject.put("object", objectDef);
+                
+                JSONObject verbDef = new JSONObject();
+                verbDef.put("id", "http://adlnet.gov/expapi/verbs/answered");
+                JSONObject verbDisplay = new JSONObject();
+                verbDisplay.put("en-US", "answered");
+                verbDef.put("display", verbDisplay);
+                stmtObject.put("verb", verbDef);
+                
+                JSONObject resultDef = new JSONObject();
+                resultDef.put("success", selectedAnswer.isCorrect);
+                resultDef.put("response", selectedAnswer.responseId);
+                stmtObject.put("result", resultDef);
+            }catch(JSONException je) {
+                EXEStrMgr.lg(180, "Exception creating json tincan statement", 
+                        je);
+            }
+            
+            
+            String totalStmtStr = stmtObject.toString();
+            
+            /*
             EXEStrMgr.lg(this, //idevice
                 selectedAnswer.questionId, //question id
                 0, //time on device in ms
@@ -265,7 +313,8 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 1, //maxScorePossible
                 String.valueOf(selectedAnswer.answerId),//answer given 
                 Idevice.BLANK);//remarks
-        
+            */
+            EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
             
             fbDialog.showFeedback(ansItem, selectedAnswer.feedback, selectedAnswer.isCorrect);
             int qId = selectedAnswer.questionId;
@@ -350,6 +399,35 @@ public class MCQIdevice extends Idevice implements ActionListener {
     }
     
 }
+
+/**
+ * Utility container class representing a question and its tincanid and
+ * tincan activity definition
+ */
+class QuestionItem {
+    
+    /** Activity TinCan Id - might be null*/
+    String activityId;
+    
+    /** Activity TinCan Definition (JSON string)  - might be null*/
+    String tinCanDefinition;
+    
+    /** HTML text of question */
+    String questionHTML;
+    
+    QuestionItem(String questionHTML, String activityId, String tinCanDefinition) {
+        this.questionHTML = questionHTML;
+        this.activityId = activityId;
+        this.tinCanDefinition = tinCanDefinition;
+    }
+    
+    public String toString() {
+        return this.questionHTML;
+    }
+    
+}
+
+
 /**
  * Utility container class to represent an MCQ Answer item.  Replaces the 
  * RadioButton based version so that it's easier to select and has fewer

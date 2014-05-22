@@ -34,10 +34,11 @@ public class MLCloudSimpleRequest implements MLCloudRequest  {
      * @param headers - Hashtable where response headers are stored - null for none
      */
     public MLCloudSimpleRequest(MLCloudConnector connector, String url, Hashtable headers) {
-        this.reqBytes = connector.getRequestHeader(url).getBytes();
+        this.reqBytes = connector.getRequestHeader(url, 
+                "GET", headers).getBytes();
         this.reqBytesLen = reqBytes.length;
     }
-
+    
     public void retry() {
         this.pos = 0;
     }

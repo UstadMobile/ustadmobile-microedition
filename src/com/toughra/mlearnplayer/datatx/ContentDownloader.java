@@ -9,7 +9,9 @@ import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
 import com.toughra.mlearnplayer.xml.XmlNode;
+import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
@@ -33,23 +35,74 @@ public class ContentDownloader {
      * Returns instance of ContentDownloader
      */
     public static ContentDownloader getInstance() {
+        if(mainInstance == null) {
+            mainInstance = new ContentDownloader();
+        }
         return mainInstance;
     }
+    
+    public MLCloudConnector getConnector() {
+        if(connector == null) {
+            if(connector == null) {
+                String hostname = "svr2.ustadmobile.com";
+                String port = "8010";
+                String serverString = hostname+":"+port;
+                try {
+                    connector = new MLCloudConnector(serverString);
+                }catch(Exception e) {
+                    EXEStrMgr.lg(121, "Something bad with opening connection to cloud server", e);
+                }
+            }
+        
+        }
+        return connector;
+    }
+    
+    public int getCourseLinkByID(String courseID) {
+        int result = -1;
+        try {
+            
+            /**
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            
+           String cloudServer = "svr2.ustadmobile.com:8010";
+            StringBuffer url = new StringBuffer(
+                    cloudServer + CLOUD_GETCOURSEBYID_PATH)
+                    .append("?id=").append(courseID);
+                    
+            System.out.println(url.toString());
+            
+            MLCloudRequest getCourseLinkByIDRequest = new MLCloudSimpleRequest(this, 
+                    url.toString(),null);
+            EXEStrMgr.lg(23, "MLCloudConnect: Connection opened");
+            
+            result = doRequest(getCourseLinkByIDRequest, bout, new Hashtable());
+            if(result == 200) {
+                System.out.println("Success!");
+            }
+
+            String serverSays = new String(bout.toByteArray());
+            **/
+            
+        }catch(Exception e) {
+            EXEStrMgr.lg(121, "Something bad with getCourseLinkByID", e);
+        }
+        
+        return result;
+    }
+    
+    
     
     /**
      * Will start the download of a piece of content from a given URL
      * 
      * @param baseURL - base http url eg. http://servername[:port]/some/dir/ (can be with or without trailing / )
-     * @param destDir - destination directory in a format that can be understood by FileConnection
+     * @param destDir - destination directory in a format that can be understood by FileConnection (eg: file://localhost/root1/ustadmobileContent/courseFolder)
      */
     public ContentDownloadThread makeDownloadThread(String baseURL, String destDir) {
         String[] urlParts = MLearnUtils.getURLParts(baseURL);
-        if(connector == null) {
-            connector = new MLCloudConnector(urlParts[MLearnUtils.URLPART_HOST]
-                    + ":" + urlParts[MLearnUtils.URLPART_PORT]);
-        }
-        
-        return new ContentDownloadThread(connector, baseURL, destDir);
+
+        return new ContentDownloadThread(getConnector(), baseURL, destDir);
     }
     
     /**

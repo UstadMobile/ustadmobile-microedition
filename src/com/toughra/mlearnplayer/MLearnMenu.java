@@ -32,6 +32,7 @@ import java.util.Hashtable;
 import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
+import com.toughra.mlearnplayer.datatx.ContentDownloader;
 
 /**
  * This class is used to run the application menu where the user can choose
@@ -45,7 +46,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     private MLearnPlayerMidlet host;
     
     /** The keys that are used in the menu (looked up in the localization res) */
-    String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "help", "about", "quit", "logout"};
+    public static String[] labels = {"continue", "repeat", "back", "contents",  "collection", "opencourse", "settings", "help", "about", "quit", "logout", "Download"};
     
     /** Continue command ID */
     private static final int CONTINUE = 0;
@@ -79,6 +80,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     
     /** Logout command ID*/
     private static final int LOGOUT = 10;
+    
+    /** Download course ID*/
+    private static final int DOWNLOADCOURSE = 11;
+    
+    /** Download test course ID*/
+    private static final int TESTDOWNLOADCOURSE = 12;
     
     private static final int SEARCHBT = 43;
     
@@ -129,6 +136,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     
     /** Form that contains bluetooth servers that have been found*/
     Form btDevicesForm;
+    
+    /** Download content form */
+    Form contentDownloadForm;
+    
     
     /**Client Manager object that handles doing the bluetooth search? */
     MLClientManager clientMgr;
@@ -227,7 +238,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         //The about form
         aboutForm = new Form("About");
         //#ifdef CRAZYDEBUG
-//#         EXEStrMgr.lg(69, "Created about form");
+//#         EXEStrMgr.lg(69, "Createdthis about form");
         //#endif
         Label versionLabel = new Label(MLearnPlayerMidlet.versionInfo);
         TextArea aboutText = new TextArea("Ustad Mobile.  Copyright 2012-2013 Toughra Technologies FZ LLC.\n"
@@ -315,6 +326,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         Label tchrLabel = new Label(MLearnUtils._("Teachers Phone"));
         //settingsForm.addComponent(tchrLabel);
         
+        
         String btServerName = EXEStrMgr.getInstance().getPref("server.bt.name");
         String btBtnStr = "[Find]";
         if(btServerName != null) {
@@ -359,10 +371,47 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             logoutForm.addComponent(btn);
         }
         
+        contentDownloadForm = new ContentDownloadForm(this);
+        
         //#ifdef CRAZYDEBUG
 //#         EXEStrMgr.lg(69, "MLearnMenu constructor method done");
         //#endif
     }
+    
+    /**
+     * Show the menu - but use itemsToShow to decide what items should or should
+     * not show here
+     * 
+     * @param itemsToShow 
+     */
+    public void show(boolean[] itemsToShow) {
+        
+        if (itemsToShow == null){ 
+            itemsToShow = MLearnUtils.makeBooleanArray(true, labels.length);
+        }
+        
+        //TODO: Add logic for showing/hiding buttons on basis of itemsToShow
+        for(int i = 0; i < labels.length; i++) {
+            if (!itemsToShow[i]){   
+                boolean showThisComp = true;
+                if(itemsToShow[i] == false) {
+                    if(this.contains(buttons[i])) {
+                        this.removeComponent(buttons[i]);
+                    }
+                }else {
+                    if(!this.contains(buttons[i])) {
+                        this.addComponent(i, buttons[i]);
+                    }
+                }
+            }
+        }
+        show();
+    }
+    
+    public void show() {
+        super.show();
+    }
+    
     
     public void updateFieldsFromPrefs() {
         String learnerName = EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_LEARNERNAME);
@@ -434,10 +483,12 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 host.destroyApp(true);
                 host.notifyDestroyed();
             }else if(cmd.equals(setOKCmd)) {
-                contMain();
+                //TODO: Make sure this shows only the items that were last seen
+                this.show();
             }else if(cmd.getId() == SETTINGS) {
                 settingsForm.show();
             }else if(cmd.getId() == OPENCOURSE) {
+                host.contentBrowser.makeForm();
                 host.contentBrowser.show();
             }else if(cmd.getId() ==SENDTEST) {
                 MLObjectPusher.countDown = 0;//set this to zero to force the thread to run next tick
@@ -445,6 +496,8 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 aboutForm.show();
             }else if(cmd.getId() == LOGOUT) {
                 logoutForm.show();
+            }else if(cmd.getId() == DOWNLOADCOURSE) {
+                contentDownloadForm.show();
             }else if(cmd.getId() == LOGOUTNO) {
                 show();
             }else if(cmd.getId() == LOGOUTYES) {

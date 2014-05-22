@@ -19,7 +19,10 @@
  */
 package com.toughra.mlearnplayer;
 
+import com.sun.lwuit.Button;
+import com.sun.lwuit.Command;
 import com.sun.lwuit.Display;
+import com.sun.lwuit.Form;
 import com.sun.lwuit.Graphics;
 import com.sun.lwuit.Image;
 import com.sun.lwuit.events.ActionEvent;
@@ -950,5 +953,57 @@ public class MLearnUtils {
         }
         
         return path1 + path2;
+    }
+    
+    /**
+     * For each string in an array of strings, make a button, set action listener
+     * 
+     * Each button will be assigned a command - id will be the integer of its
+     * index in the label array
+     * 
+     * @param form : Form to add to (should implement actionListener)
+     * @param iconPaths : paths to icon as would be used with Class.getResourceAsStream 
+     * - if null follow a pattern to look for iconPathPrefix<index>.png
+     * @param iconPathPrefix : Prefix to index of the path to most icons for this menu
+     * @param buttonLabels : Array of strings to use for button text
+     */
+    public static void addButtonsToForm(Form form, String[] buttonLabels, String[] iconPaths, String iconPathPrefix) {
+        ActionListener listener = (ActionListener)form;
+        for(int i = 0; i < buttonLabels.length; i++) {
+            Image iconImg = null;
+            InputStream imgIn = null;
+            if(iconPaths != null || iconPathPrefix != null) {
+                String thisPath = null;
+                try {
+                    if(iconPaths != null && iconPaths.length > i && iconPaths[i] != null) {
+                        thisPath = iconPaths[i];
+                    }else {
+                        thisPath = iconPathPrefix + i + ".png";
+                    }
+                    imgIn = form.getClass().getResourceAsStream(thisPath);
+                    if(imgIn != null) {
+                        iconImg = Image.createImage(imgIn);
+                    }
+                }catch(Exception e) {
+                    EXEStrMgr.lg(160, "Error attempting to load icon path: " 
+                            + thisPath, e);
+                }finally {
+                    if(imgIn != null) {
+                        try { imgIn.close(); }
+                        catch(IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+            
+            Command thisCmd = (iconImg == null) ? 
+                    new Command(buttonLabels[i], i) :
+                    new Command(buttonLabels[i], iconImg, i);
+            
+            Button thisButton = new Button(thisCmd);
+            thisButton.addActionListener(listener);
+            form.addComponent(thisButton);
+        }
     }
 }
