@@ -89,59 +89,90 @@ public class ContentBrowseForm extends Form implements ActionListener{
         Image icon = defaultContentIcon;
         String title = null;
         String itemFullPath = null;
+        FileConnection dirCon = null;
+        ContentBrowseItem thisItem = null;
+        String lastDirFullPath = "";
+        Exception eCaused = null;
         
-        //String actDir = dirContents.nextElement().toString();
-        if(!actDir.endsWith("/")) {
-            actDir += '/';
-        }
-        String dirFullPath = "file://localhost" + SEP_STR + curSubDir
-                + SEP_STR + actDir;
-        String fullPath = dirFullPath + "exetoc.xml";
-        String colPath = dirFullPath + "execollection.xml";
-
-        FileConnection dirCon = (FileConnection)Connector.open(dirFullPath);
-        boolean hasEXEPkg = false;
-        boolean hasEXECol = false;
-        boolean hasIcon = false;
-        if(dirCon.isDirectory()) {
-            hasEXEPkg = dirCon.list("exetoc.xml", false).hasMoreElements();
-            hasEXECol = dirCon.list("execollection.xml", false).hasMoreElements();
-            hasIcon = dirCon.list("mplayicon.png", false).hasMoreElements();
-        }
-        dirCon.close();
-
-        //#ifdef CRAZYDEBUG
-        //#                     EXEStrMgr.lg(69, "dir " + dirFullPath + " has pkg: " + hasEXEPkg + " / has col: " + hasEXECol);
-        //#endif
-        String iconPath = dirFullPath + "mplayicon.png";
-
-        if(hasEXEPkg) {                       
-            itemFullPath = dirFullPath;
-            type = TYPE_NORM;
-            title = actDir.substring(0, actDir.length()-1);
-        }else if(hasEXECol) {
-            type = TYPE_COL;
-            String collectionId = MLearnUtils.getCollectionID(dirFullPath);
-            title = MLearnUtils.getCollectionTitle(dirFullPath);
-            itemFullPath = dirFullPath;
-        }
-
-        if(type != -1) {
-            if(hasIcon) {
-                try {
-                    FileConnection iconFileCon = (FileConnection)Connector.open(iconPath);
-                    icon = Image.createImage(iconFileCon.openInputStream());
-                    iconFileCon.close();
-                }catch(IOException e2) {
-                    e2.printStackTrace();
-                }
+        try {
+        
+            //Active directory should be ending with a / - J2ME wants dirs to end with /
+            if(!actDir.endsWith("/")) {
+                actDir += '/';
             }
 
-            ContentBrowseItem thisItem = new ContentBrowseItem(dirFullPath, type, title, icon);
-            return thisItem;
+            String dirFullPath = MLearnUtils.joinPaths(new String[] {
+                "file://localhost/", curSubDir, actDir
+            });
+
+            String fullPath = dirFullPath + "exetoc.xml";
+            String colPath = dirFullPath + "execollection.xml";
+            
+            lastDirFullPath = dirFullPath;
+
+            dirCon = (FileConnection)Connector.open(dirFullPath);
+            boolean isDir = dirCon.isDirectory();
+
+
+            boolean hasEXEPkg = false;
+            boolean hasEXECol = false;
+            boolean hasIcon = false;
+            //#ifdef CRAZYDEBUG
+            //#  EXEStrMgr.lg(70, "Check is Directory: " + dirFullPath + " : "
+            //#        + isDir);
+            //#endif
+            dirCon.close();
+            dirCon = null;
+
+            if(isDir) {
+                hasEXEPkg = MLearnUtils.fileExists(
+                        MLearnUtils.joinPath(dirFullPath, "exetoc.xml"));
+                hasEXECol = MLearnUtils.fileExists(
+                        MLearnUtils.joinPath(dirFullPath, "execollection.xml"));
+                hasIcon = MLearnUtils.fileExists(
+                        MLearnUtils.joinPath(dirFullPath, "mplayicon.png"));
+            }
+
+
+
+            //#ifdef CRAZYDEBUG
+            //#                     EXEStrMgr.lg(69, "dir " + dirFullPath + " has pkg: " + hasEXEPkg + " / has col: " + hasEXECol);
+            //#endif
+            String iconPath = dirFullPath + "mplayicon.png";
+
+            if(hasEXEPkg) {                       
+                itemFullPath = dirFullPath;
+                type = TYPE_NORM;
+                title = actDir.substring(0, actDir.length()-1);
+            }else if(hasEXECol) {
+                type = TYPE_COL;
+                String collectionId = MLearnUtils.getCollectionID(dirFullPath);
+                title = MLearnUtils.getCollectionTitle(dirFullPath);
+                itemFullPath = dirFullPath;
+            }
+
+            if(type != -1) {
+                if(hasIcon) {
+                    try {
+                        FileConnection iconFileCon = (FileConnection)Connector.open(iconPath);
+                        icon = Image.createImage(iconFileCon.openInputStream());
+                        iconFileCon.close();
+                    }catch(IOException e2) {
+                        e2.printStackTrace();
+                    }
+                }
+
+                thisItem = new ContentBrowseItem(dirFullPath, type, title, icon);
+                
+            }
+        }catch(Exception e) {
+            EXEStrMgr.lg(72, "Exception examining " + lastDirFullPath, e);
+        }finally {
+            MLearnUtils.closeConnector(dirCon, 
+                    "Exception closing " + lastDirFullPath);
         }
         
-        return null;
+        return thisItem;
     }
     
     /**
@@ -169,7 +200,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
             rootsAndSubs.addElement(thisRoot);
             EXEStrMgr.lg(5, "Discovered directory : " + thisRoot);
             String umobileSubDir = MLearnUtils.joinPath(thisRoot, 
-                    "ustadmobileContent");
+                    "ustadmobileContent/");
             EXEStrMgr.lg(5, "Adding for scanning " + umobileSubDir);
             rootsAndSubs.addElement(umobileSubDir);
             
@@ -196,7 +227,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 
                 boolean dirExists = subCon.isDirectory();
                 try {
-                    if(curSubDir.endsWith("ustadmobileContent") && !dirExists) {
+                    if(curSubDir.endsWith("ustadmobileContent/") && !dirExists) {
                             subCon.mkdir();
                     }
                 }catch(Exception err) {
@@ -239,7 +270,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
             }
         }catch(Exception ex) {
             ex.printStackTrace();
-            EXEStrMgr.lg(6, "Exception scanning directories...");
+            EXEStrMgr.lg(6, "Exception scanning directories...", ex);
         }
         removeAll(); //Added such that we remove everything before adding all the buttons and course list again.
         

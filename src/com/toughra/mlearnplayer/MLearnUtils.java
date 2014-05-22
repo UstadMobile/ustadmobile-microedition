@@ -940,6 +940,30 @@ public class MLearnUtils {
     }
     
     /**
+     * Join multiple paths together - do not allow multiple file separators
+     * together - this could lead to malformed uri exceptions
+     * 
+     * @param paths
+     * @return 
+     */
+    public static String joinPaths(String[] paths) {
+        String retVal = new String(paths[0]);
+        for(int i = 1; i < paths.length; i++) {
+            if(retVal.charAt(retVal.length()-1) != FILE_SEP) {
+                retVal += FILE_SEP;
+            }
+            
+            String nextPath = paths[i];
+            if(paths[i].length() > 0 && paths[i].charAt(0) == FILE_SEP) {
+                nextPath = nextPath.substring(1);
+            }
+            retVal += nextPath;
+        }
+        return retVal;
+    }
+    
+    
+    /**
      * Join two paths - make sure there is just one FILE_SEP character 
      * between them
      */
@@ -954,6 +978,41 @@ public class MLearnUtils {
         
         return path1 + path2;
     }
+    
+    /**
+     * Check if a file actually exists
+     * 
+     * @param fileConURI - URI to pass to Connector
+     */
+    public static boolean fileExists(String fileConURI) {
+        boolean result = false;
+        FileConnection fCon = null;
+        try {
+            fCon = (FileConnection)Connector.open(fileConURI, Connector.READ);
+            result = fCon.exists();
+        }catch(Exception e) {
+            EXEStrMgr.lg(70, "Error checking if " + fileConURI + "exists", e);
+        }finally {
+            closeConnector(fCon, "Exception closing " + fileConURI);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Safely close a file connector object - do not throw exception - this is 
+     * used in finally clauses
+     */
+    public static void closeConnector(FileConnection con, String logMsg) {
+        if(con != null) {
+            try {
+                con.close();
+            }catch(Exception e) {
+                EXEStrMgr.lg(71, logMsg, e);
+            }
+        }
+    }
+    
     
     /**
      * For each string in an array of strings, make a button, set action listener
