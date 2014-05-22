@@ -158,8 +158,12 @@ public class ContentBrowseForm extends Form implements ActionListener{
         while(e.hasMoreElements()) {
             String thisRoot = e.nextElement().toString();
             rootsAndSubs.addElement(thisRoot);
-            rootsAndSubs.addElement(MLearnUtils.joinPath(thisRoot, 
-                    "ustadmobileContent"));
+            EXEStrMgr.lg(5, "Discovered directory : " + thisRoot);
+            String umobileSubDir = MLearnUtils.joinPath(thisRoot, 
+                    "ustadmobileContent");
+            EXEStrMgr.lg(5, "Adding for scanning " + umobileSubDir);
+            rootsAndSubs.addElement(umobileSubDir);
+            
         }
         
         e = rootsAndSubs.elements();
@@ -173,6 +177,7 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 
                 //TODO: Fix ugly hack to avoid nokia bug?
                 if(curSubDir.toLowerCase().indexOf("c:") != -1) {
+                    EXEStrMgr.lg(5, "Skipping: has c: " + curSubDir);
                     continue;
                 }
                 
@@ -200,15 +205,18 @@ public class ContentBrowseForm extends Form implements ActionListener{
                 
                 while(dirContents.hasMoreElements()) {
                     String actDir = dirContents.nextElement().toString();
+                    EXEStrMgr.lg(5, "Scanning for content in: " + actDir);
                     ContentBrowseItem thisItem = getContentItemFromDir(curSubDir, actDir, defaultContentIcon);
                     if(thisItem != null) {
                         itemVector.addElement(thisItem);
+                        EXEStrMgr.lg(5, "Discovered content item in " + actDir);
                     }
                 }
                 
             }
         }catch(Exception ex) {
             ex.printStackTrace();
+            EXEStrMgr.lg(6, "Exception scanning directories...");
         }
         
         BoxLayout layout = new BoxLayout(BoxLayout.Y_AXIS);
