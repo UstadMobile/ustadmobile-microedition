@@ -425,7 +425,21 @@ public class EXETOC implements ActionListener{
                 cache.pages[i].href = currentPageNode.getAttribute("href");
                 cache.pages[i].title = currentPageNode.getAttribute("title");
                 
-                Vector pageDevices = currentPageNode.findChildrenByTagName("idevice", true);
+                //check and see if there is a tincan node
+                Vector tinCanObjs = currentPageNode.findChildrenByTagName("tincan", 
+                        false);
+                if(tinCanObjs.size() > 0) {
+                    XmlNode tinCanNode = (XmlNode)tinCanObjs.elementAt(0);
+                    cache.pages[i].tinCanID = tinCanNode.getAttribute("id");
+                    XmlNode activityDefNode = 
+                        (XmlNode)tinCanNode.findChildrenByTagName("activitydef", 
+                        false).elementAt(0);
+                    cache.pages[i].tinCanActivityDef = 
+                        activityDefNode.getTextChildContent(0);
+                }
+                
+                Vector pageDevices = currentPageNode.findChildrenByTagName(
+                        "idevice", true);
                 int numDevices = pageDevices.size();
                 cache.pages[i].idevices = new String[numDevices][3];
                 for(int j = 0; j< numDevices; j++) {

@@ -48,6 +48,12 @@ public class TOCCachePage {
     /** the title of this page*/
     public String title;
     
+    /** The tincan id of this page (if present) */
+    public String tinCanID;
+    
+    /** The tincan activity definition of page (if present) */
+    public String tinCanActivityDef;
+    
     /**
      * Array in the form of
      * idevice[index] = [DEV_ID, DEV_HREF, DEV_TITLE]

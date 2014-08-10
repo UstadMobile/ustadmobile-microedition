@@ -272,49 +272,35 @@ public class MCQIdevice extends Idevice implements ActionListener {
             QuestionItem question = (QuestionItem)questions.elementAt(
                     selectedAnswer.questionId);
             
-            
-            try {
-                stmtObject.put("actor", actorObj);
-                JSONObject activityDef = new JSONObject(question.tinCanDefinition);
-                JSONObject objectDef = new JSONObject();
-                objectDef.put("id", question.activityId);
-                objectDef.put("definition", activityDef);
-                objectDef.put("objectType", "Activity");
-                stmtObject.put("object", objectDef);
+            if(actorObj != null && question.activityId != null) {
+                try {
+                    stmtObject.put("actor", actorObj);
+                    JSONObject activityDef = new JSONObject(question.tinCanDefinition);
+                    JSONObject objectDef = new JSONObject();
+                    objectDef.put("id", question.activityId);
+                    objectDef.put("definition", activityDef);
+                    objectDef.put("objectType", "Activity");
+                    stmtObject.put("object", objectDef);
+
+                    JSONObject verbDef = new JSONObject();
+                    verbDef.put("id", "http://adlnet.gov/expapi/verbs/answered");
+                    JSONObject verbDisplay = new JSONObject();
+                    verbDisplay.put("en-US", "answered");
+                    verbDef.put("display", verbDisplay);
+                    stmtObject.put("verb", verbDef);
+
+                    JSONObject resultDef = new JSONObject();
+                    resultDef.put("success", selectedAnswer.isCorrect);
+                    resultDef.put("response", selectedAnswer.responseId);
+                    stmtObject.put("result", resultDef);
+                }catch(JSONException je) {
+                    EXEStrMgr.lg(180, "Exception creating json tincan statement", 
+                            je);
+                }
                 
-                JSONObject verbDef = new JSONObject();
-                verbDef.put("id", "http://adlnet.gov/expapi/verbs/answered");
-                JSONObject verbDisplay = new JSONObject();
-                verbDisplay.put("en-US", "answered");
-                verbDef.put("display", verbDisplay);
-                stmtObject.put("verb", verbDef);
-                
-                JSONObject resultDef = new JSONObject();
-                resultDef.put("success", selectedAnswer.isCorrect);
-                resultDef.put("response", selectedAnswer.responseId);
-                stmtObject.put("result", resultDef);
-            }catch(JSONException je) {
-                EXEStrMgr.lg(180, "Exception creating json tincan statement", 
-                        je);
+                String totalStmtStr = stmtObject.toString();
+                EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
             }
-            
-            
-            String totalStmtStr = stmtObject.toString();
-            
-            /*
-            EXEStrMgr.lg(this, //idevice
-                selectedAnswer.questionId, //question id
-                0, //time on device in ms
-                0, //num correctly answered
-                0, //num answered correct first attempt
-                0, //num questions attempted
-                EXEStrMgr.VERB_ANSWERED, //verb
-                selectedAnswer.isCorrect ? 1 : 0, //score
-                1, //maxScorePossible
-                String.valueOf(selectedAnswer.answerId),//answer given 
-                Idevice.BLANK);//remarks
-            */
-            EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
             
             fbDialog.showFeedback(ansItem, selectedAnswer.feedback, selectedAnswer.isCorrect);
             int qId = selectedAnswer.questionId;

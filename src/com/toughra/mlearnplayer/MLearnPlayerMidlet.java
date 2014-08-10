@@ -1,7 +1,7 @@
 /*
- * Ustad Mobil.  
- * Copyright 2011-2013 Toughra Technologies FZ LLC.
- * www.toughra.com
+ * Ustad Mobile Micro Edition 
+ * Copyright 2011-2014 UstadMobile Inc
+ * www.ustadmobile.com
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,8 @@ import com.toughra.mlearnplayer.datatx.MLServerThread;
 import com.toughra.mlearnplayer.idevices.EXERequestHandler;
 import com.toughra.mlearnplayer.idevices.HTMLIdevice;
 import com.toughra.mlearnplayer.xml.XmlNode;
-import com.toughra.mlearnplayer.datatx.ContentDownloader;
+import org.json.me.JSONException;
+import org.json.me.JSONObject;
 
 
 
@@ -87,6 +88,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** Href of the currently loaded page */
     public String currentHref;
     
+    /** The system clock time when activity on the current page started */
+    public long currentPageStartTime = 0;
+            
     /**next page href to show*/
     public String nextHref;
     
@@ -780,6 +784,63 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     }
     
     /**
+     * 
+     * @param duration
+     * @return 
+     */
+    public static String formatTinCanDuration(long duration) {
+        
+        return "";
+    }
+    
+    public void recordPageTinCan(String nextPageHref) {
+        //if going to a new page and we have a time record on the last page
+        if(currentHref != null && !currentHref.equals(nextPageHref)) {
+            long duration = System.currentTimeMillis() - currentPageStartTime;
+            TOCCachePage cPg = myTOC.cache.getPageByHref(currentHref);
+            JSONObject actorObj = EXEStrMgr.getInstance().getTinCanActor();
+            
+            
+            JSONObject stmtObject = null;
+            if(cPg.tinCanID != null && actorObj != null) {
+                try {
+                    stmtObject = new JSONObject();
+                    stmtObject.put("actor", actorObj);
+                    JSONObject activityDef = new JSONObject(
+                            cPg.tinCanActivityDef);
+                    
+                    JSONObject objectDef = new JSONObject();
+                    objectDef.put("id", cPg.tinCanID);
+                    objectDef.put("definition", activityDef);
+                    objectDef.put("objectType", "Activity");
+                    stmtObject.put("object", objectDef);
+                    
+                    JSONObject verbDef = new JSONObject();
+                    verbDef.put("id", "http://adlnet.gov/expapi/verbs/experienced");
+                    JSONObject verbDisplay = new JSONObject();
+                    verbDisplay.put("en-US", "experienced");
+                    verbDef.put("display", verbDisplay);
+                    stmtObject.put("verb", verbDef);
+                    
+                    //JSONObject resultDef = new JSONObject();     
+                    //stmtObject.put("result", resultDef);
+                    String totalStmtStr = stmtObject.toString();
+                    EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
+                }catch(JSONException e) {
+                    EXEStrMgr.lg(181, "Exception creating json tincan page statement", 
+                            e);
+                }
+                
+            }
+        }
+        
+        //page change is taking place or first page is being viewed
+        if(currentHref == null || !currentHref.equals(nextPageHref)) {
+            currentPageStartTime = System.currentTimeMillis();
+        }
+    }
+    
+    /**
      * Loads a given page.  If goLast is true, show the last idevice (e.g. reversing)
      * Otherwise - show the first idevice
      * 
@@ -788,6 +849,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
      */
     public void loadPage(String pageHref, boolean goLast) {
         String myHref = (pageHref != null ? pageHref : this.currentHref);
+        recordPageTinCan(myHref);
+        
         Object[] pageIdeviceInfo = myTOC.getPageIdeviceList(currentPackageURI + "/exetoc.xml",
                 myHref);
         ideviceIdList = (String[])pageIdeviceInfo[EXETOC.PAGELIST_IDEVICEIDS];
