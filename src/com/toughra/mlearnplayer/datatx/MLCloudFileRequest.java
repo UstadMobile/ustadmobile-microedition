@@ -55,6 +55,8 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
      */
     public int logBytesProcessed = -1;
     
+    
+    
     public MLCloudFileRequest(MLCloudConnector connector, String url, Hashtable params, String fileField, String fileConURI, long skipBytes, boolean useBoundary, Hashtable headersToAdd) {
         //figure out this request details
         
@@ -65,11 +67,8 @@ public class MLCloudFileRequest  implements  MLCloudRequest{
         
         byte[] zippedBytes = null;
         
-        long filesize = 0;
-        
         try {
             fCon = (FileConnection)Connector.open(fileConURI);
-            filesize = fCon.fileSize();
             
             String[] reqCompStr = new String[3];
             if(useBoundary) {

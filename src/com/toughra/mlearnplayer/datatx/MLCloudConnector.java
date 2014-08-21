@@ -337,6 +337,8 @@ public class MLCloudConnector {
             }
         }
 
+        EXEStrMgr.lg(127, "Response: Is GZIPPED: " + isGzipped + 
+                " / Content length: " + contentLength);
         ByteArrayOutputStream gzipBuf = null;
         OutputStream outToUse = out;
         gzipBuf = new ByteArrayOutputStream();
@@ -710,9 +712,6 @@ public class MLCloudConnector {
      * @throws Exception 
      */
     public int sendLogFile(String url, Hashtable params, String fileField, String fileName, String fileType, String fileConURI, long skipBytes) throws Exception{
-        
-        
-        
         openConnection();
         
         int retVal = -1;
@@ -723,8 +722,6 @@ public class MLCloudConnector {
         }
  
         try{
-            //params.put("userid", EXEStrMgr.getInstance().getCloudUser());
-            //params.put("password", EXEStrMgr.getInstance().getCloudPass());
             Hashtable headersToAdd = new Hashtable();
             headersToAdd.put("X-Experience-API-Version", "1.0.0");
             headersToAdd.put("Content-Type", 
@@ -735,12 +732,17 @@ public class MLCloudConnector {
                     
             MLCloudFileRequest request = new MLCloudFileRequest(this, url, params, 
                     fileField, fileConURI, skipBytes, false, headersToAdd);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            Hashtable respHeaders = new Hashtable();
-            int respCode = doRequest(request, bout, respHeaders);
-            String serverSays = new String(bout.toByteArray());
-            if(respCode == 200) {
-                retVal = request.logBytesToSend;
+            if(request.logBytesToSend > 1) {
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                Hashtable respHeaders = new Hashtable();
+                int respCode = doRequest(request, bout, respHeaders);
+                String serverSays = new String(bout.toByteArray());
+                if(respCode == 200) {
+                    retVal = request.logBytesProcessed;
+                }
+            }else {
+                //there are no actual TINCAN statements in it
+                retVal = request.logBytesProcessed;
             }
         }catch(Exception e) {
             System.err.println("bad whilst attempting to send file");
@@ -754,112 +756,24 @@ public class MLCloudConnector {
     /**
      * Gets preferences from the cloud.  They are returned by the server in the 
      * form of:
+     * 
+     * OUT OF USE UNTIL IMPLEMENTATION OF TINCAN STATE API
+     * 
      */
     public void getPreferences() {
-        /* DISABLED UNTIL TINCAN FOR PREFERENCES COMES
-        try {
-            StringBuffer url = new StringBuffer(MLearnPlayerMidlet.masterServer)
-                    .append(CLOUD_GETPREF_PATH).append('?');
-            appendCredentialsToURL(url);
-            String urlStr = url.toString();
-            MLCloudRequest request = new MLCloudSimpleRequest(this, urlStr);
-            url = null;
-            
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            int responseCode = doRequest(request, bout, new Hashtable());
-            //TODO: add the userid and password to this
-            
-            //String responseStr = new String(bout.toByteArray());
-            if(responseCode == 200) {
-                byte[] xmlDocByte = bout.toByteArray();
-                GenericXmlParser gParser = new GenericXmlParser();
-                KXmlParser parser = new KXmlParser();
-                InputStreamReader reader = new InputStreamReader(
-                        new ByteArrayInputStream(xmlDocByte), "UTF-8");
-                parser.setInput(reader);
-                XmlNode node = gParser.parseXML(parser, true);
-                Vector prefVector = node.findChildrenByTagName("pref", true);
-                for(int i = 0; i < prefVector.size(); i++) { 
-                    XmlNode currentPref = (XmlNode)prefVector.elementAt(i);
-                    String prefKey = currentPref.getAttribute("key");
-                    String prefVal = currentPref.getAttribute("value");
-                    EXEStrMgr.getInstance().setPrefDirect(prefKey, prefVal);
-                }
-            }
-        }catch(Exception e) {
-            EXEStrMgr.lg(122, "Exception attempting to set preferences from cloud"+  lastResponseCode, e);
-        }
-        */
-    }
-    
-    /**
-     * Simply append userid=..&password= to the url
-     * @param url 
-     */
-    private void appendCredentialsToURL(StringBuffer url, String cloudUser, String cloudPass) {
-        url.append("userid=").append(Util.encodeUrl(cloudUser)).append('&');
-        url.append("password=").append(Util.encodeUrl(cloudPass)).append('&');
-        url.append("ts=").append(System.currentTimeMillis());//avoid caching issues
-    }
-    
-    private void appendCredentialsToURL(StringBuffer url) {
-        appendCredentialsToURL(url, EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDUSER),
-                EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDPASS));
+        
     }
     
     /**
      * Sends the preferences that have been changed to the cloud
      * 
+     * OUT OF USE UNTIL IMPLEMENTATION OF TINCAN STATE API
+     * 
      * @return true if everything was OK, false if any error happened
      */
     public boolean sendPreferences() {
         boolean doneOK = false;
-        
-        /* GO AWAY UNTIL TINCAN
-        //if we are not really logged in then skip this for now...
-        if(EXEStrMgr.getInstance().getPref(EXEStrMgr.KEY_CLOUDUSER) == null) {
-            return false;
-        }
-        
-        try {
-            String[] prefNames = EXEStrMgr.getInstance().getReplicateList();
-            if(prefNames.length == 0) {
-                return true;//nothing to do
-            }
-            
-            openConnection();
-            
-            StringBuffer url = new StringBuffer(MLearnPlayerMidlet.masterServer)
-                .append(MLCloudConnector.CLOUD_SETPREF_PATH).append('?');
-            appendCredentialsToURL(url);
-            url.append('&');
-            
-            for(int i = 0; i < prefNames.length; i++) {
-                url.append("param_");
-                url.append(prefNames[i]).append('=');
-                url.append(Util.encodeUrl(EXEStrMgr.getInstance().getPref(prefNames[i])));
-                if(i < prefNames.length - 1) {
-                    url.append('&');
-                }
-            }
-            String urlStr = url.toString();
-            
-            //now send the request
-            MLCloudRequest request = new MLCloudSimpleRequest(this, urlStr);
-            Hashtable headers = new Hashtable();
-            ByteArrayOutputStream respBytes = new ByteArrayOutputStream();
-            int respCode = doRequest(request, respBytes, headers);
-            if(respCode == 200) {
-                doneOK = true;
-                EXEStrMgr.getInstance().delPref(EXEStrMgr.KEY_REPLIST);
-            }
-        }catch(Exception e) {
-            EXEStrMgr.lg(127, "Exception attempting to send preferences to cloud",e);
-        }
-        
         return doneOK;
-        */
-        return false;
     }
     
     /** 

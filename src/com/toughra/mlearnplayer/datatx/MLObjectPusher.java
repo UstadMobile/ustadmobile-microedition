@@ -76,25 +76,10 @@ public class MLObjectPusher extends Thread{
         while(enabled) {
             countDown -= TICK;
             if(countDown <= 0) {
-                //String logSendMethod = EXEStrMgr.getInstance().getPref("logsend.method");
-                
-                //see if we need to send logs over bluetooth...
-                
-                /* This is no longer really supported for the moment
-                if(logSendMethod == null && logSendMethod.equals("bluetooth")) {
-                   String conURL = EXEStrMgr.getInstance().getPref("server.bt.url");
-                    if(conURL != null) {
-                        checkRepFiles();
-                        sendData(conURL);
-                    }
-                }*/
-                
                 //check and see if we need to send updated preferences
                 if(EXEStrMgr.getInstance().getCloudUser() != null) {
-                    MLCloudConnector.getInstance().sendPreferences();
-
                     //also - send the logs through if that has been set
-                    new MLHTTPRep().sendLogs(this);
+                    new MLHTTPRep().sendOwnLogs(this);
                 }
                 
                 

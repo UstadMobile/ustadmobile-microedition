@@ -20,7 +20,6 @@
 
 package com.toughra.mlearnplayer.datatx;
 
-import com.sun.lwuit.io.util.Util;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -28,9 +27,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
-import com.toughra.mlearnplayer.MLearnUtils;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+
 
 /**
  * This class takes care of sending student logs collected from other devices
@@ -61,6 +58,7 @@ public class MLHTTPRep {
      * over the http connection (e.g. instead of using the bluetooth replication
      * functionality)
      * 
+     * @param pusher MLObjectPusher object that is used to figure out which files need sent up
      */
     public void sendOwnLogs(MLObjectPusher pusher) {
         String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
@@ -85,7 +83,7 @@ public class MLHTTPRep {
 
             try {
                 EXEStrMgr.lg(25, "Attempt to send " + fileURL + " as " + cFname + " from " + alreadySent);
-                long sizeSentTo = sendLog(fileURL, cFname, true, alreadySent);
+                long sizeSentTo = sendLog(fileURL, cFname, alreadySent);
                 if(sizeSentTo > 0) {
                     repStatusHT.put(cFname, String.valueOf(sizeSentTo));
                 }
@@ -104,60 +102,6 @@ public class MLHTTPRep {
     }
     
     /**
-     * the main logic of the class - will pick up settings from the preferences
-     * and look for any logs that need sent (e.g. modified since .sent file was
-     * last modified)
-     */
-    public void sendLogs(MLObjectPusher pusher) {
-        try {
-            String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
-            
-            //if the url is null it means no data transmission
-            if(url == null) {
-                return;
-            }
-            
-            //if we are set to do so - send our own logs directly to the server.
-            EXEStrMgr.lg(25, "Starting to send own files");
-            sendOwnLogs(pusher);
-            EXEStrMgr.lg(25, "Finished sending own files");
-            
-            EXEStrMgr.lg(25, "Starting to look for files from other devices to replicate");
-            String logBaseDir =EXEStrMgr.getInstance().getPref("basefolder")
-                    + "/logrx";
-            FileConnection dirCon = (FileConnection)Connector.open(logBaseDir);
-            
-            if(dirCon.isDirectory()) {
-                Vector fileList = MLearnUtils.enumToVector(dirCon.list("*activity.log", true));
-                dirCon.close();
-
-                //go through all the files in the list
-                for(int i = 0; i < fileList.size(); i++) {
-                    String bname = fileList.elementAt(i).toString();
-                    try {
-                        String fileURI = logBaseDir + "/" + bname;
-                        String sentFileURI = fileURI + ".sent";
-                        long alreadySent = MLearnUtils.getIntFromFile(sentFileURI);
-
-                        long fileSizeSent = sendLog(fileURI, bname, false, alreadySent);
-
-                        //TODO: potential for trouble as we are writing an int - this should be long
-                        MLearnUtils.writeIntToFile((int)fileSizeSent, sentFileURI);
-
-                        EXEStrMgr.lg(25, "Updated sent file " + sentFileURI);
-                        EXEStrMgr.lg(25, "Sent " + bname);
-                    }catch(IOException e) {
-                        EXEStrMgr.lg(123, " Exception sending " + bname, e);
-                    }
-                }
-            }
-        }catch(Exception e) {
-            EXEStrMgr.lg(125, "Exception sending logs ", e);
-        }
-    }
-    
-    
-    /**
      * Sends a log file to the server.  It will look up the student information
      * that is known about this user and set student_uuid and student_learnername
      * with the http request as post form parameters.  It will then use 
@@ -167,31 +111,13 @@ public class MLHTTPRep {
      * @param basename The basename of the file which is used to set the filename in the HTTP request
      * @param alreadySent - the number of bytes already sent
      * @throws Exception if something goes wrong
+     * @return 
      */
-    public long sendLog(String fileURI, String basename, boolean isOwnLog, long alreadySent) throws Exception{
+    public long sendLog(String fileURI, String basename, long alreadySent) throws Exception{
         FileConnection fcon = (FileConnection)Connector.open(fileURI, Connector.READ, true);
-        
-        
         
         Hashtable params = new Hashtable();
         
-        String studentUUID = null;
-        if(isOwnLog) {
-            studentUUID = EXEStrMgr.getInstance().getPref("uuid");
-        }else {
-            studentUUID = basename.substring(0, basename.indexOf('-'));
-        }
-        
-        if(isOwnLog) {
-            params.put("student_uuid", EXEStrMgr.getInstance().getPref("uuid"));
-            params.put("student_learnername", EXEStrMgr.getInstance().getPref("learnername"));
-        }else {
-            Hashtable stdNames = MLServerThread.getInstance().getStudentNames();
-            String studentName = stdNames.get(studentUUID) != null ? 
-                    stdNames.get(studentUUID).toString() : "unknown";
-            params.put("student_uuid", studentUUID);
-            params.put("student_learnername", studentName);
-        }
         
         long fileSize = fcon.fileSize();
         fcon.close();
@@ -223,12 +149,6 @@ public class MLHTTPRep {
         
         
         String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
-        
-        //if we are sending our own logs - rename this as the server expects it
-        if(isOwnLog) {
-            basename = EXEStrMgr.getInstance().getPref("uuid") + "-" + basename;
-        }
-        
         
         int logBytesSent = MLCloudConnector.getInstance().sendLogFile(url, params, "filecontent", 
                 basename, "text/plain", fileURI, alreadySent);

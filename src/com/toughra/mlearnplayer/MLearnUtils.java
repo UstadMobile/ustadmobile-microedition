@@ -1065,4 +1065,26 @@ public class MLearnUtils {
             form.addComponent(thisButton);
         }
     }
+    
+    /**
+     * Format an ISO 8601 Duration from the number of milliseconds
+     * 
+     * @param duration Duration time in MS
+     * @return A string formatted according to ISO8601 Duration e.g. P2H1M15S
+     */
+    public static String format8601Duration(long duration) {
+        int msPerHour = (1000*60*60);
+        int hours = (int)Math.floor(duration/msPerHour);
+        long durationRemaining = duration % msPerHour;
+        
+        int msPerMin = (60*1000);
+        int mins = (int)Math.floor(durationRemaining/msPerMin);
+        durationRemaining = durationRemaining % msPerMin;
+        
+        int msPerS = 1000;
+        int secs = (int)Math.floor(durationRemaining / msPerS);
+        
+        String retVal = "PT" + hours +"H" + mins + "M" + secs + "S";
+        return retVal;
+    }
 }

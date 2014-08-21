@@ -245,14 +245,14 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     /** If an idevice needs some to be focused after a form is shown - set me here*/
     public Component focusMeAfterFormShows;
     
-    /** The main server that we talk to for all operations - _MUST_ include port hostname:port only*/
+    /** The main xAPI server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
     public final static String masterServer = "svr2.ustadmobile.com:8001";
     //#endif
     
     /** The main Course and Cloud server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String cloudServer = "svr2.ustadmobile.com:8010";
+    public final static String cloudServer = "umcloud1.ustadmobile.com:8010";
     //#endif
     
     //#ifdef SERVER
@@ -328,7 +328,8 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             Resources r = Resources.open("/theme2.res");
             UIManager.getInstance().setThemeProps(r.getTheme("Makeover"));
 
-            EXEStrMgr.lg(10, "Ustad Mobile version: " + this.versionInfo);
+            EXEStrMgr.lg(10, "Ustad Mobile version: " 
+                    + MLearnPlayerMidlet.versionInfo);
             EXEStrMgr.lg(11, "Loaded theme");
             
             //setup locale management
@@ -421,7 +422,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         this.volume = vol;
         if(this.player != null) {
             int state = player.getState();
-            if(state != player.UNREALIZED && state != player.CLOSED) {
+            if(state != Player.UNREALIZED && state != Player.CLOSED) {
                 ((VolumeControl)player.getControl("VolumeControl")).setLevel(vol);
             }
         }
@@ -629,7 +630,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /**
      * Shows the main options menu (continue, repeat, about, settings, etc)
-     * @param boolean array representing which items to show
+     * @param menuItemsToShow array representing which items to show
      */
     public void showMenu(boolean[] menuItemsToShow) {
         menuFrm.updateFieldsFromPrefs();
@@ -638,6 +639,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /**
      * Returns Menu
+     * @return MLearnMenu in use
      */
     public MLearnMenu getMenu(){
         return menuFrm;
@@ -783,16 +785,10 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         loadPage(pageHref, false);
     }
     
-    /**
-     * 
-     * @param duration
-     * @return 
-     */
-    public static String formatTinCanDuration(long duration) {
-        
-        return "";
-    }
     
+    /**
+     * Record the TinCan 
+     */
     public void recordPageTinCan(String nextPageHref) {
         //if going to a new page and we have a time record on the last page
         if(currentHref != null && !currentHref.equals(nextPageHref)) {
@@ -800,11 +796,9 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             TOCCachePage cPg = myTOC.cache.getPageByHref(currentHref);
             JSONObject actorObj = EXEStrMgr.getInstance().getTinCanActor();
             
-            
-            JSONObject stmtObject = null;
             if(cPg.tinCanID != null && actorObj != null) {
                 try {
-                    stmtObject = new JSONObject();
+                    JSONObject stmtObject = new JSONObject();
                     stmtObject.put("actor", actorObj);
                     JSONObject activityDef = new JSONObject(
                             cPg.tinCanActivityDef);
@@ -822,8 +816,11 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
                     verbDef.put("display", verbDisplay);
                     stmtObject.put("verb", verbDef);
                     
-                    //JSONObject resultDef = new JSONObject();     
-                    //stmtObject.put("result", resultDef);
+                    String stmtDuration = MLearnUtils.format8601Duration(duration);
+                    JSONObject resultDef = new JSONObject();
+                    resultDef.put("duration", stmtDuration);
+                    stmtObject.put("result", resultDef);
+                    
                     String totalStmtStr = stmtObject.toString();
                     EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
                 }catch(JSONException e) {
@@ -835,7 +832,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         }
         
         //page change is taking place or first page is being viewed
-        if(currentHref == null || !currentHref.equals(nextPageHref)) {
+        if(currentPageStartTime == 0 || !currentHref.equals(nextPageHref)) {
             currentPageStartTime = System.currentTimeMillis();
         }
     }
