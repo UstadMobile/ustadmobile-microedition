@@ -33,240 +33,165 @@ NetBeans.  See README for instructions on building from source.
     <property name="wtk.cldc.version" value="1.1"/>
     <property name="wtk.midp.version" value="2.1"/>
     
-    <!--
+    <!-- do per version pre-processing -->
+    <target name="pre-preprocess">
 
-            There exist several targets which are by default empty and which can be
-            used for execution of your tasks. These targets are usually executed
-            before and after some main targets. They are:
+        <!-- Make the localization properties -->
+        <native2ascii src="${src.dir}/../l10n-src" dest="${src.dir}/../l10n-ascii"
+            includes="*.properties"/>
 
-            pre-init:                 called before initialization of project properties
-            post-init:                called after initialization of project properties
-            pre-preprocess:           called before text preprocessing of sources
-            post-preprocess:          called after text preprocessing of sources
-            pre-compile:              called before source compilation
-            post-compile:             called after source compilation
-            pre-obfuscate:            called before obfuscation 
-            post-obfuscate:           called after obfuscation
-            pre-preverify:            called before preverification
-            post-preverify:           called after preverification
-            pre-jar:                  called before jar building
-            post-jar:                 called after jar building
-            pre-build:                called before final distribution building
-            post-build:               called after final distribution building
-            pre-clean:                called before cleaning build products
-            post-clean:               called after cleaning build products
+        <build dest="${src.dir}/localization.res">
+            <l10n name="localize">
+                <locale name="en" file="${src.dir}/../l10n-ascii/localize.properties" />
+                <locale name="fa" file="${src.dir}/../l10n-ascii/localize_fa_AF.properties" />
+                <locale name="ps" file="${src.dir}/../l10n-ascii/localize_ps_AF.properties" />
+            </l10n>
+        </build>
 
-            Example of pluging a my-special-task after the compilation could look like
+        <build dest="${src.dir}/theme2.res">
+            <font name="titleFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ۰۱۲۳۴۵۶۷۸۹"  src="${title.font.ttf}" createBitmap="True"/>
+            <font name="bodyFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！۰۱۲۳۴۵۶۷۸۹ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ"  src="${body.font.ttf}" createBitmap="True"/>
 
-            <target name="post-compile">
-            <my-special-task>
-            <fileset dir="${build.classes.dir}"/>
-            </my-special-task>
-            </target>
+            <image file="${lwuitres.dir}/image/loading6.gif frame:4" name="loading6.gif frame:4" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderRight:1" name="SliderFull.borderRight:1" />
+            <image file="${lwuitres.dir}/image/loading6.gif frame:3" name="loading6.gif frame:3" />
+            <image file="${lwuitres.dir}/image/loading6.gif frame:2" name="loading6.gif frame:2" />
+            <image file="${lwuitres.dir}/image/loading6.gif frame:1" name="loading6.gif frame:1" />
+            <image file="${lwuitres.dir}/image/rugbdr.png" name="rugbdr.png" />
+            <image file="${lwuitres.dir}/image/loading6.gif frame:0" name="loading6.gif frame:0" />
+            <image file="${lwuitres.dir}/image/rugtiledk.png" name="rugtiledk.png" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderTopR:1" name="SliderFull.borderTopR:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderBottomR:1" name="SliderFull.borderBottomR:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderBottomL:1" name="Slider.sel#borderBottomL:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderRight:1" name="Slider.sel#borderRight:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderBottom:1" name="SliderFull.borderBottom:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderLeft:1" name="SliderFull.borderLeft:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderTopL:1" name="Slider.sel#borderTopL:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderCenter:1" name="SliderFull.borderCenter:1" />
+            <image file="${lwuitres.dir}/image/loadingb64" name="loadingb64" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderBottomR:1" name="Slider.sel#borderBottomR:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderTop:1" name="SliderFull.borderTop:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderTop:1" name="Slider.sel#borderTop:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderBottom:1" name="Slider.sel#borderBottom:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderTopR:1" name="Slider.sel#borderTopR:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderLeft:1" name="Slider.sel#borderLeft:1" />
+            <image file="${lwuitres.dir}/image/Slider.sel#borderCenter:1" name="Slider.sel#borderCenter:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderTopL:1" name="SliderFull.borderTopL:1" />
+            <image file="${lwuitres.dir}/image/SliderFull.borderBottomL:1" name="SliderFull.borderBottomL:1" />
+            <image file="${lwuitres.dir}/image/rugtile.png" name="rugtile.png" />
 
-            For list of available properties check the imported
-            nbproject/build-impl.xml file.
+            <theme file="${lwuitres.dir}/theme/Makeover" name="Makeover" />
+        </build>
 
-            Other way how to customize the build is by overriding existing main targets.
-            The target of interest are:
+        <wtkpreprocess verbose="true"  
+           srcdir="${src.dir}" 
+            destdir="${src.preprocessed.NOKIA}"
+            device="Nokia"
+            version="2"
+            symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=svr2.ustadmobile.com:8001,ERRORLOGTHRESHOLD=0"
+            printsymbols="true"
+        />
+    </target>
+            
+    <target name="post-compile" depends="pre-preprocess">
+        <mkdir dir="${classes.dir.NOKIA}"/>
+        <!--<extract dir="${classes.dir.NOKIA}" excludeManifest="true" classpath="${libs.classpath}" excludeclasspath="${extra.classpath}"/>-->
 
-            preprocess:               preprocessing
-            extract-libs:             extraction of libraries and resources
-            compile:                  compilation
-            create-jad:               construction of jad and jar manifest source
-            obfuscate:                obfuscation
-            preverify:                preverification
-            jar:                      jar archive building
-            run:                      execution
-            debug:                    execution in debug mode
-            build:                    building of the final distribution
-            javadoc:                  javadoc generation
+        <!-- 
+            Note the MIDP 'ports' must be copied and overwrite the main 
+            files because default implementations just throw an exception
+            and rely on being after the ports in classpath
+        -->
+        <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/IO/src"/>
+        <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/UI/src"/>
+        <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/IO_MIDP/src"/>
+        <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/UI/src"/>
 
-            Example of overriding the target for project execution could look like
+        <copydir dest="${src.preprocessed.NOKIA}" src="${jazz.src}/src"/>
 
-            <target name="run" depends="init,jar">
-            <my-special-exec jadfile="${dist.dir}/${dist.jad}"/>
-            </target>
 
-            Be careful about correct dependencies when overriding original target. 
-            Again, for list of available properties which you can use check the target 
-            you are overriding in nbproject/build-impl.xml file.
 
-            A special target for-all-configs can be used to run some specific targets for
-            all project configurations in a sequence. File nbproject/build-impl.xml 
-            already contains some "for-all" targets:
-    
-            jar-all
-            javadoc-all
-            clean-all
-      
-            Example of definition of target iterating over all project configurations:
-    
-            <target name="jar-all">
-            <property name="target.to.call" value="jar"/>
-            <antcall target="for-all-configs"/>
-            </target>
+        <wtkbuild srcdir="${src.preprocessed.NOKIA}"
+            destdir="${classes.dir.NOKIA}"
+            preverify="false" classpath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}">
 
+            <classpath>
+                <path path="${kxml.jar}"/>
+                <path path="${libs.classpath}"/>
+            </classpath>
+        </wtkbuild>
+    </target>
+            
+    <target name="post-jar" depends="post-compile">
+        <mkdir dir="${dist.dir.NOKIA}"/>
+
+        <wtkjad jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" 
+            jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
+            name="Ustad Mobile"
+            vendor="Toughra Technologies FZ LLC">
+
+
+            <midlet icon="exemobicon.png" name="${Midlet_1_name}" class="${Midlet_1_class}"></midlet>
+            <!--
+            <attribute name="JAD-Version" value="1.0"/>
             -->
-            
-            <!-- do per version pre-processing -->
-            <target name="pre-preprocess">
-                
-                <!-- Make the localization properties -->
-                <native2ascii src="${src.dir}/../l10n-src" dest="${src.dir}/../l10n-ascii"
-                    includes="*.properties"/>
-                    
-                <build dest="${src.dir}/localization.res">
-                    <l10n name="localize">
-                        <locale name="en" file="${src.dir}/../l10n-ascii/localize.properties" />
-                        <locale name="fa" file="${src.dir}/../l10n-ascii/localize_fa_AF.properties" />
-                        <locale name="ps" file="${src.dir}/../l10n-ascii/localize_ps_AF.properties" />
-                    </l10n>
-                </build>
-                
-                <build dest="${src.dir}/theme2.res">
-                    <font name="titleFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ۰۱۲۳۴۵۶۷۸۹"  src="${title.font.ttf}" createBitmap="True"/>
-                    <font name="bodyFont" logicalName="DejaVu Sans PSMod3" charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!@/\*()[]{}|#$%^&amp;&lt;&gt;?'&quot;+- أﺃﺄآﺁﺂاﺍﺎئﺇﺈبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﺳظﻅﻆﻈﺷعﻉﻊﻌﺻغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰکﮎﮏﮑﮐپﭖﭗﭙﭘچﭺﭻﭽﭼژﮊﮋگﮒﮓﮕﮔټټ＀＂！۰۱۲۳۴۵۶۷۸۹ځځ＃％＄ډډ６ړړ７ږږ８ښښ）＋＊ګګ，／－ڼڼ０２１ېې３５４ییﯽﯿﯾۍۍ９ئئﺊﺌﺋ"  src="${body.font.ttf}" createBitmap="True"/>
-            
-                    <image file="${lwuitres.dir}/image/loading6.gif frame:4" name="loading6.gif frame:4" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderRight:1" name="SliderFull.borderRight:1" />
-                    <image file="${lwuitres.dir}/image/loading6.gif frame:3" name="loading6.gif frame:3" />
-                    <image file="${lwuitres.dir}/image/loading6.gif frame:2" name="loading6.gif frame:2" />
-                    <image file="${lwuitres.dir}/image/loading6.gif frame:1" name="loading6.gif frame:1" />
-                    <image file="${lwuitres.dir}/image/rugbdr.png" name="rugbdr.png" />
-                    <image file="${lwuitres.dir}/image/loading6.gif frame:0" name="loading6.gif frame:0" />
-                    <image file="${lwuitres.dir}/image/rugtiledk.png" name="rugtiledk.png" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderTopR:1" name="SliderFull.borderTopR:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderBottomR:1" name="SliderFull.borderBottomR:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderBottomL:1" name="Slider.sel#borderBottomL:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderRight:1" name="Slider.sel#borderRight:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderBottom:1" name="SliderFull.borderBottom:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderLeft:1" name="SliderFull.borderLeft:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderTopL:1" name="Slider.sel#borderTopL:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderCenter:1" name="SliderFull.borderCenter:1" />
-                    <image file="${lwuitres.dir}/image/loadingb64" name="loadingb64" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderBottomR:1" name="Slider.sel#borderBottomR:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderTop:1" name="SliderFull.borderTop:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderTop:1" name="Slider.sel#borderTop:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderBottom:1" name="Slider.sel#borderBottom:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderTopR:1" name="Slider.sel#borderTopR:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderLeft:1" name="Slider.sel#borderLeft:1" />
-                    <image file="${lwuitres.dir}/image/Slider.sel#borderCenter:1" name="Slider.sel#borderCenter:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderTopL:1" name="SliderFull.borderTopL:1" />
-                    <image file="${lwuitres.dir}/image/SliderFull.borderBottomL:1" name="SliderFull.borderBottomL:1" />
-                    <image file="${lwuitres.dir}/image/rugtile.png" name="rugtile.png" />
-                    
-                    <theme file="${lwuitres.dir}/theme/Makeover" name="Makeover" />
-                </build>
-                
-                <wtkpreprocess verbose="true"  
-               srcdir="${src.dir}" 
-                destdir="${src.preprocessed.NOKIA}"
-                device="Nokia"
-                version="2"
-                symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=svr2.ustadmobile.com:8001,ERRORLOGTHRESHOLD=0"
-                printsymbols="true"/>
-            </target>
-            
-            <target name="post-compile" depends="pre-preprocess">
-                <mkdir dir="${classes.dir.NOKIA}"/>
-                <!--<extract dir="${classes.dir.NOKIA}" excludeManifest="true" classpath="${libs.classpath}" excludeclasspath="${extra.classpath}"/>-->
-                
-                <!-- 
-                    Note the MIDP 'ports' must be copied and overwrite the main 
-                    files because default implementations just throw an exception
-                    and rely on being after the ports in classpath
-                -->
-                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/IO/src"/>
-                <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/UI/src"/>
-                <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/IO_MIDP/src"/>
-                <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/UI/src"/>
-                
-                <copydir dest="${src.preprocessed.NOKIA}" src="${jazz.src}/src"/>
-                
-                
-                
-                <wtkbuild srcdir="${src.preprocessed.NOKIA}"
-                    destdir="${classes.dir.NOKIA}"
-                    preverify="false" classpath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}">
-                        
-                    <classpath>
-                        <path path="${kxml.jar}"/>
-                        <path path="${libs.classpath}"/>
-                    </classpath>
-                </wtkbuild>
-            </target>
-            
-            <target name="post-jar" depends="post-compile">
-                <mkdir dir="${dist.dir.NOKIA}"/>
-                
-                <wtkjad jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" 
-                    jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
-                    name="Ustad Mobile"
-                    vendor="Toughra Technologies FZ LLC">
-                        
-                        
-                    <midlet icon="exemobicon.png" name="${Midlet_1_name}" class="${Midlet_1_class}"></midlet>
-                    <!--
-                    <attribute name="JAD-Version" value="1.0"/>
-                    -->
-                    
-                    <attribute name="MIDlet-Version" value="${ustadmobileversion}"/>
-                    
-                    <attribute name="MicroEdition-Configuration" value="CLDC-1.1"/>
-                    <attribute name="MicroEdition-Profile" value="MIDP-2.0"/>
-                    <attribute name="Nokia-MIDlet-Category" value="Application"/>
-                    <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
-                    <attribute name="Nokia-Update" value="http://www.ustadmobile.com/jad/midp2/EXEMobile2.jad"/>
-                    <attribute name="MIDlet-Jar-URL" value="${MidletSuite}.jar"/>
-                    
-                    <attribute name="progressive_download" value="enabled"/>
-                    
-                    
-                </wtkjad>
-                
-                <copy todir="${classes.dir.NOKIA}/icons">
-                    <fileset dir="${src.dir}/icons"/>
-                </copy>
-                
-                
-                <copy file="${src.dir}/localization.res" tofile="${classes.dir.NOKIA}/localization.res"/>
-                <copy file="${src.dir}/theme2.res" tofile="${classes.dir.NOKIA}/theme2.res"/>
-                
-                <copy file="${src.dir}/exemobicon.png" tofile="${classes.dir.NOKIA}/exemobicon.png"/>
-                
-                <wtkpackage basedir="${classes.dir.NOKIA}" 
-                    jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
-                    jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
-                    config="CLDC-1.1"
-                    profile="MIDP-2.0"
-                    obfuscate="true"
-                    preverify="true"
-                    libclasspath="${kxml.jar}"
-                    bootclasspath="${platform.bootclasspath}:${wtk.proguard.home}/lib/proguard.jar:${classpath.NOKIA}" 
-                    includes="${javac.includes}">
-                        <fileset dir="${classes.dir.NOKIA}"/>
-                        
-                </wtkpackage>
-                
-                <wtksign 
-                    keystore="${wtk.keystore}"
-                    jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar" 
-                    jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
-                    storepass="${wtk.storepass}" 
-                    certpass="${wtk.certpass}" 
-                    certalias="${wtk.certalias}"
-                />
 
-            </target>
-            
-            <target name="post-clean">
-                <delete dir="${src.preprocessed.NOKIA}"/>
-                <delete dir="${classes.dir.NOKIA}"/>
-                <delete dir="${dist.dir.NOKIA}"/>
-            </target>
-            
-            <target name="wtk-runme" depends="post-jar">
-                <wtkrun jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" device="DefaultColorPhone" wait="true"/>
-            </target>
+            <attribute name="MIDlet-Version" value="${ustadmobileversion}"/>
+
+            <attribute name="MicroEdition-Configuration" value="CLDC-1.1"/>
+            <attribute name="MicroEdition-Profile" value="MIDP-2.0"/>
+            <attribute name="Nokia-MIDlet-Category" value="Application"/>
+            <attribute name="MIDlet-Permissions" value="javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.http, javax.microedition.io.Connector.socket"/>
+            <attribute name="Nokia-Update" value="http://www.ustadmobile.com/jad/midp2/EXEMobile2.jad"/>
+            <attribute name="MIDlet-Jar-URL" value="${MidletSuite}.jar"/>
+
+            <attribute name="progressive_download" value="enabled"/>
+
+
+        </wtkjad>
+
+        <copy todir="${classes.dir.NOKIA}/icons">
+            <fileset dir="${src.dir}/icons"/>
+        </copy>
+
+
+        <copy file="${src.dir}/localization.res" tofile="${classes.dir.NOKIA}/localization.res"/>
+        <copy file="${src.dir}/theme2.res" tofile="${classes.dir.NOKIA}/theme2.res"/>
+
+        <copy file="${src.dir}/exemobicon.png" tofile="${classes.dir.NOKIA}/exemobicon.png"/>
+
+        <wtkpackage basedir="${classes.dir.NOKIA}" 
+            jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
+            jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
+            config="CLDC-1.1"
+            profile="MIDP-2.0"
+            obfuscate="true"
+            preverify="true"
+            libclasspath="${kxml.jar}"
+            bootclasspath="${platform.bootclasspath}:${wtk.proguard.home}/lib/proguard.jar:${classpath.NOKIA}" 
+            includes="${javac.includes}">
+                <fileset dir="${classes.dir.NOKIA}"/>
+
+        </wtkpackage>
+
+        <wtksign 
+            keystore="${wtk.keystore}"
+            jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar" 
+            jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
+            storepass="${wtk.storepass}" 
+            certpass="${wtk.certpass}" 
+            certalias="${wtk.certalias}"
+        />
+
+    </target>
+
+    <target name="post-clean">
+        <delete dir="${src.preprocessed.NOKIA}"/>
+        <delete dir="${classes.dir.NOKIA}"/>
+        <delete dir="${dist.dir.NOKIA}"/>
+    </target>
+
+    <target name="wtk-runme" depends="post-jar">
+        <wtkrun jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" device="DefaultColorPhone" wait="true"/>
+    </target>
 </project>

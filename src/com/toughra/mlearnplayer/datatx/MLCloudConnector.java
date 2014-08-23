@@ -23,16 +23,12 @@ import com.sun.lwuit.io.util.Util;
 import com.toughra.mlearnplayer.EXEStrMgr;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
-import com.toughra.mlearnplayer.xml.GenericXmlParser;
-import com.toughra.mlearnplayer.xml.XmlNode;
 import javax.microedition.io.*;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-import org.kxml2.io.KXmlParser;
 import net.sf.jazzlib.*;
-import com.toughra.mlearnplayer.datatx.MLCloudFileRequest;
 
 /**
  * MLCloudConnector manages maintaining a connection between the app and the
@@ -146,17 +142,27 @@ public class MLCloudConnector {
         try {
             conn = (SocketConnection)Connector.open("socket://" + this.serverName);
             
-            conn.setSocketOption(SocketConnection.DELAY, 1);
-            conn.setSocketOption(SocketConnection.LINGER, 0);
+            //conn.setSocketOption(SocketConnection.DELAY, 0);
+            //conn.setSocketOption(SocketConnection.LINGER, 0);
             //conn.setSocketOption(SocketConnection.RCVBUF, 8192);
-            //conn.setSocketOption(SocketConnection.RCVBUF, 0);
+            conn.setSocketOption(SocketConnection.RCVBUF, 0);
             //conn.setSocketOption(SocketConnection.SNDBUF, 512);
-            //conn.setSocketOption(SocketConnection.SNDBUF, 0);
+            conn.setSocketOption(SocketConnection.SNDBUF, 0);
+            
             conn.setSocketOption(SocketConnection.KEEPALIVE, 1);
+            
+            conn.setSocketOption(SocketConnection.DELAY, 0);
+            //conn.setSocketOption(SocketConnection.KEEPALIVE, 0);
+            
+            boolean delayOff = conn.getSocketOption(SocketConnection.DELAY) == 0;
+            boolean keepAliveOff = conn.getSocketOption(
+                    SocketConnection.KEEPALIVE) == 0;
             
             in = conn.openInputStream();
             out = conn.openOutputStream();
-            System.out.println("Opened up connection to cloud server");
+            System.out.println("Opened up connection to cloud server : "+
+                this.serverName);
+            EXEStrMgr.lg(114, "Connecting to server: " + this.serverName);
         }catch(Exception e) {
             EXEStrMgr.lg(124, "Exception getting connection to server going", e);
         }
@@ -278,19 +284,22 @@ public class MLCloudConnector {
         int bytesToGo = 1;
         do {
             b = in.read();
-            if(b == '\n') {
-                numLFs++;
-                if(numCRs == 2 && numLFs == 2) {
-                    inHeader = false;
-                    break;//header is over
+            
+            if(b != -1) {
+                if(b == '\n') {
+                    numLFs++;
+                    if(numCRs == 2 && numLFs == 2) {
+                        inHeader = false;
+                        break;//header is over
+                    }
+                }else if(b == '\r') {
+                    numCRs++;
+                }else {
+                    numLFs = 0;
+                    numCRs = 0;
                 }
-            }else if(b == '\r') {
-                numCRs++;
-            }else {
-                numLFs = 0;
-                numCRs = 0;
+                headerStream.write(b);
             }
-            headerStream.write(b);
         }while(inHeader && b != -1);
 
         String hdrText = new String(headerStream.toByteArray());
@@ -358,7 +367,7 @@ public class MLCloudConnector {
             }
             
             count = in.read(buf, 0, bytesToRead);
-            if(count == -1) {
+            if(count == -1 || (count < bytesToRead && clPos == -1)) {
                 break;//end of stream
             }
             outToUse.write(buf, 0, count);
@@ -419,7 +428,10 @@ public class MLCloudConnector {
         buf.append("Accept: */*\n");
         buf.append("Cache-control: no-cache\n");
         buf.append("Connection: Keep-Alive\n");
-        buf.append("Accept-Encoding: gzip\n");
+        
+        //disable - something is screwed up here
+        //buf.append("Accept-Encoding: gzip\n");
+        
         if(headers != null) {
             Enumeration e = headers.keys();
             while(e.hasMoreElements()) {
@@ -462,6 +474,8 @@ public class MLCloudConnector {
                         bout.write(buf,0,count);
                     }
                     
+                    out.flush();
+                    
                     String requestStr = new String(bout.toByteArray());
                     
                     reqIn.close();
@@ -474,7 +488,8 @@ public class MLCloudConnector {
                 
                 return respCode;
             }catch(Exception e) {
-                EXEStrMgr.lg(125, "Something went wrong with cloud request", e);
+                EXEStrMgr.lg(125, "Something went wrong with cloud request "
+                        + " HTTP Code: " + respCode + " : ", e);
                 closeConnections();
             }
             
