@@ -303,6 +303,11 @@ public class MLCloudConnector {
         }while(inHeader && b != -1);
 
         String hdrText = new String(headerStream.toByteArray());
+        String logStr = new String(hdrText);
+        if(hdrText.length() > 64) {
+            logStr = logStr.substring(0, 64);
+        }
+        EXEStrMgr.lg(150, "HTTP response header starts: " + logStr);
         responseStatus = Integer.parseInt(hdrText.substring(9, 12));
         lastResponseCode = responseStatus;
         
@@ -427,7 +432,11 @@ public class MLCloudConnector {
         buf.append('\n');
         buf.append("Accept: */*\n");
         buf.append("Cache-control: no-cache\n");
-        buf.append("Connection: Keep-Alive\n");
+        if(MLearnUtils.KEEPALIVE_ENABLED) {
+            buf.append("Connection: Keep-Alive\n");
+        }else {
+            buf.append("Connection: close\n");
+        }
         
         //disable - something is screwed up here
         //buf.append("Accept-Encoding: gzip\n");

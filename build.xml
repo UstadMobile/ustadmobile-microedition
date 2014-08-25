@@ -163,7 +163,7 @@ supported character set.
                 destdir="${src.preprocessed.NOKIA}"
                 device="Nokia"
                 version="2"
-                symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=svr2.ustadmobile.com:8001,ERRORLOGTHRESHOLD=0"
+                symbols="NOKIA,MEDIAENABLED,CRAZYDEBUG,DEBUGLOG,SERVER=svr2.ustadmobile.com:8007,ERRORLOGTHRESHOLD=0"
                 printsymbols="true"/>
             </target>
             
@@ -225,7 +225,7 @@ supported character set.
                     jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
                     config="CLDC-1.1"
                     profile="MIDP-2.0"
-                    obfuscate="true"
+                    obfuscate="${ustadmobile.obfuscate}"
                     preverify="true"
                     bootclasspath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}" 
                     includes="${javac.includes}">

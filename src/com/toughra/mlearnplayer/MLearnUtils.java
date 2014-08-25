@@ -45,6 +45,9 @@ import javax.microedition.media.Manager;
  */
 public class MLearnUtils {
     
+    /** Global setting for whether or not to use KeepAlive */
+    public static final boolean KEEPALIVE_ENABLED = false;
+    
     public static final int  RESIZE_MAXPROPORTION = 0;
     
     public static final int  RESIZE_BOUND_X = 1;

@@ -116,17 +116,14 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
     /** Name of the learner (for teacher record transmission etc)*/
     TextField nameField;
     
-    //The combo box for setting the language
-    ComboBox langCombo;
+    //The Radio button group used to set language now
+    ButtonGroup langBtnGroup;
     
     /** The language codes that are available to select from*/
     String[] langCodeStr;
     
     /**Learner ID field*/
     TextField lIdField;
-    
-    /**Checkbox for turning on/off the bluetooth log receive server*/
-    CheckBox svrOnCheckBox;
     
     /**command for doing the bluetooth search*/
     Command doSearchCmd;
@@ -233,7 +230,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         }
         
         //the meaning of life, the universe and everything
-        setOKCmd = new Command("OK", 42);
+        setOKCmd = new Command(MLearnUtils._("ok"), 42);
 
         //The about form
         aboutForm = new Form("About");
@@ -311,47 +308,29 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
         String localeNow = EXEStrMgr.getInstance().getLocale();
         for(int i = 0; i < numLangs; i++) {
             langNameStr[i] = MLearnUtils._(langCodeStr[i]);
-            if(localeNow.equals(langNameStr[i])) {
+            if(localeNow.equals(langCodeStr[i])) {
                 langSelIndex = i;
             }
         }
         
-        langCombo = new ComboBox(langNameStr);
-        langCombo.setSelectedIndex(langSelIndex, true);
+        
         Label langLabel = new Label(MLearnUtils._("language"));
         settingsForm.addComponent(langLabel);
-        settingsForm.addComponent(langCombo);
-        
-        //the label for selecting the bluetooth server to talk with (teacher phone)
-        Label tchrLabel = new Label(MLearnUtils._("Teachers Phone"));
-        //settingsForm.addComponent(tchrLabel);
         
         
-        String btServerName = EXEStrMgr.getInstance().getPref("server.bt.name");
-        String btBtnStr = "[Find]";
-        if(btServerName != null) {
-            btBtnStr = btServerName;
+        langBtnGroup = new ButtonGroup();
+        RadioButton[] langBtns = new RadioButton[numLangs];
+        for(int i = 0; i < numLangs; i++) {
+            langBtns[i] = new RadioButton(langNameStr[i]);
+            langBtnGroup.add(langBtns[i]);
+            settingsForm.addComponent(langBtns[i]);
         }
-        
-        doSearchCmd = new Command(btBtnStr, SEARCHBT);
-        searchButton = new Button(doSearchCmd);
-        searchButton.addActionListener(this);
-        //bluetooth is not supported for the moment
-        //settingsForm.addComponent(searchButton);
+        langBtnGroup.setSelected(langSelIndex);
         
         sendTestCmd = new Command(MLearnUtils._("senddatanow"), SENDTEST);
         sendTestBtn = new Button(sendTestCmd);
         sendTestBtn.addActionListener(this);
         settingsForm.addComponent(sendTestBtn);
-        
-        //checkbox for switching server (e.g. teacher) mode on/off
-        svrOnCheckBox = new CheckBox(MLearnUtils._("serveron"));
-        String svrEnabled = EXEStrMgr.getInstance().getPref("server.enabled");
-        if(svrEnabled != null && svrEnabled.equals("true")) {
-            svrOnCheckBox.setSelected(true);
-        }
-        //bluetooth is not supported for the moment
-        //settingsForm.addComponent(svrOnCheckBox);
         
         ///settings OK button
         Button settingOKButton = new Button(setOKCmd);
@@ -428,7 +407,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
             }
         }
         
-        langCombo.setSelectedIndex(langSelIndex);
+        langBtnGroup.setSelected(langSelIndex);
     }
     
     /**
@@ -436,15 +415,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
      * changes and see if we need to run the bluetooth server / log transmit etc
      */
     protected void contMain() {
-        if(host.curFrm != null) {
-            host.curFrm.show();   
-        }
         EXEStrMgr.getInstance().setPref("learnername", nameField.getText());
-        EXEStrMgr.getInstance().setPref("server.enabled", 
-                String.valueOf(svrOnCheckBox.isSelected()));
         
         String localeNow = EXEStrMgr.getInstance().getLocale();
-        String newLocale = langCodeStr[langCombo.getSelectedIndex()];
+        String newLocale = langCodeStr[langBtnGroup.getSelectedIndex()];
         if(!newLocale.equals(localeNow)) {
             //you must restart
             boolean changed = Dialog.show(MLearnUtils._("changelang"), 
@@ -454,7 +428,10 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 EXEStrMgr.getInstance().setPref("locale", newLocale);
             }
         }
-        MLServerThread.getInstance().checkServer();
+        
+        if(host.curFrm != null) {
+            host.curFrm.show();   
+        }
     }
     
     
@@ -484,6 +461,7 @@ public class MLearnMenu extends Form implements ActionListener, DataChangedListe
                 host.notifyDestroyed();
             }else if(cmd.equals(setOKCmd)) {
                 //TODO: Make sure this shows only the items that were last seen
+                this.contMain();
                 this.show();
             }else if(cmd.getId() == SETTINGS) {
                 settingsForm.show();

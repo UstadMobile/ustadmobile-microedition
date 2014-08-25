@@ -247,7 +247,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /** The main xAPI server that we talk to for all operations - _MUST_ include port hostname:port only*/
     //#ifndef SERVER
-    public final static String masterServer = "78.47.197.237:8001";
+    public final static String masterServer = "svr2.ustadmobile.com:8007";
     //#endif
     
     /** The main Course and Cloud server that we talk to for all operations - _MUST_ include port hostname:port only*/

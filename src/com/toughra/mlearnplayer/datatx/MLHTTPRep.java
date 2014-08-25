@@ -59,12 +59,15 @@ public class MLHTTPRep {
      * functionality)
      * 
      * @param pusher MLObjectPusher object that is used to figure out which files need sent up
+     * @return Total bytes processed in this run
      */
-    public void sendOwnLogs(MLObjectPusher pusher) {
+    public long sendOwnLogs(MLObjectPusher pusher) {
         String url = MLearnPlayerMidlet.masterServer + MLCloudConnector.CLOUD_LOGSUBMIT_PATH;
         
         Vector selfRepList = pusher.checkRepFiles();
         Hashtable repStatusHT = pusher.getRepStatus();
+        
+        long totalSent = 0;
 
         for(int i = 0; i < selfRepList.size(); i++) {
             String cFname = selfRepList.elementAt(i).toString();
@@ -84,6 +87,7 @@ public class MLHTTPRep {
             try {
                 EXEStrMgr.lg(25, "Attempt to send " + fileURL + " as " + cFname + " from " + alreadySent);
                 long sizeSentTo = sendLog(fileURL, cFname, alreadySent);
+                totalSent += (sizeSentTo - alreadySent);
                 if(sizeSentTo > 0) {
                     repStatusHT.put(cFname, String.valueOf(sizeSentTo));
                 }
@@ -98,7 +102,7 @@ public class MLHTTPRep {
         }
 
         pusher.saveRepStatus(repStatusHT);
-
+        return totalSent;
     }
     
     /**

@@ -218,22 +218,28 @@ public class EXEStrMgr {
         return uuid;
     }
     
+    public JSONObject getTinCanActor() {
+        return getTinCanActor(getCloudUser());
+    }
+    
     /**
      * Make a JSONObject representing the TinCan actor for the user
      * 
+     * @param cloudUser Username of user to make actor object for
+     * 
      * @return Tin Can actor with mbox, name and objectType set
      */
-    public JSONObject getTinCanActor() {
+    public JSONObject getTinCanActor(String cloudUser) {
         JSONObject obj = new JSONObject();
         try {
-            obj.put("mbox", "mailto:" + getCloudUser() + "@" + MBOX_POSTFIX);
+            obj.put("mbox", "mailto:" +  cloudUser + "@" + MBOX_POSTFIX);
             obj.put("name", getCloudUser());
             obj.put("objectType", "Agent");
         }catch(JSONException e) {
             EXEStrMgr.lg(170, "Exception creating tin can actor json", e);
         }
         
-        String jsonText = obj.toString();
+        //String jsonText = obj.toString();
         
         return obj;
     }
