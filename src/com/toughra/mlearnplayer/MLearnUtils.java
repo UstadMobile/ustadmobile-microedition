@@ -48,6 +48,11 @@ public class MLearnUtils {
     /** Global setting for whether or not to use KeepAlive */
     public static final boolean KEEPALIVE_ENABLED = false;
     
+    /** Global setting for whether or not usernames and passcodes are num only*/
+    public static final boolean PASSCODE_NUMONLY=true;
+    
+    public static final String TINCAN_PREFIX="http://www.ustadmobile.com/xapi";
+    
     public static final int  RESIZE_MAXPROPORTION = 0;
     
     public static final int  RESIZE_BOUND_X = 1;
@@ -1089,5 +1094,40 @@ public class MLearnUtils {
         
         String retVal = "PT" + hours +"H" + mins + "M" + secs + "S";
         return retVal;
+    }
+    
+    
+    /**
+     * Remove all HTML tags etc. from a string
+     * 
+     * @param content string with HTML in it to be removed
+     * @return The content string without any HTML tags
+     */
+    public static String removeHTMLTags(String content) {
+        String contentLower = content.toLowerCase();
+        int startOfStyle = contentLower.indexOf("<style");
+        if(startOfStyle != -1) {
+            int endOfStyle = contentLower.indexOf("</style>");
+            if(endOfStyle != -1) {
+                content = content.substring(0, startOfStyle) 
+                        + content.substring(endOfStyle+8);
+            }
+        }
+        
+        while (content.indexOf("<") != -1) {
+            int beginTag;
+            int endTag;
+
+            beginTag = content.indexOf("<");
+            endTag = content.indexOf(">");
+            if (beginTag == 0) {
+                content = content.substring(endTag
+                        + 1, content.length());
+            } else {
+                content = content.substring(0, beginTag) + content.substring(endTag
+                        + 1, content.length());
+            }
+        }
+        return content;
     }
 }

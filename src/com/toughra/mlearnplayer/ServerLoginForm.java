@@ -71,23 +71,27 @@ public class ServerLoginForm extends Form implements ActionListener, Runnable{
         
         
         userIDField = new MLTextField();
-        //userIDField.setInputModeOrder(inputModeOrder); //Commented such that the Login field does not include numbers only.
+        if(MLearnUtils.PASSCODE_NUMONLY) {
+            userIDField.setInputModeOrder(inputModeOrder); //Commented such that the Login field does not include numbers only.
+            //TODO:RE-ENABLE ME IN NOKIA
+            //userIDField.setT9Enabled(false);
+            userIDField.setUseSoftkeys(true);
+        }
         
-        //TODO:RE-ENABLE ME IN NOKIA
-        //userIDField.setT9Enabled(false);
         
-        //userIDField.setUseSoftkeys(true);
         addComponent(userIDField);
         
         Label passwordLabel = new Label(MLearnUtils._("passcode"));
         addComponent(passwordLabel);
         
         passcodeField = new MLTextField();
-        //passcodeField.setInputModeOrder(inputModeOrder); //Commented such that the Login field does not include numbers only
+        if(MLearnUtils.PASSCODE_NUMONLY) {
+            passcodeField.setInputModeOrder(inputModeOrder);
         
-        //TODO:RE-ENABLE ME IN NOKIA
-        //passcodeField.setT9Enabled(false);
-        //passcodeField.setInputMode("123"); //Commented such that the Login field does not only accept numbers.
+            //TODO:RE-ENABLE ME IN NOKIA
+            //passcodeField.setT9Enabled(false);
+            passcodeField.setInputMode("123");
+        }
         addComponent(passcodeField);
         
         loginCommand = new Command(MLearnUtils._("login"), CMDID_LOGIN);

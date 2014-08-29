@@ -24,9 +24,10 @@ supported character set.
     <property name="Midlet_1_name" value="Ustad Mobile"/>
     <property name="Midlet_1_class" value="com.toughra.mlearnplayer.MLearnPlayerMidlet"/>
     
+    <!--
     <property name="Midlet_2_name" value="Ustad Mobile Test"/>
     <property name="Midlet_2_class" value="com.toughra.mlearnplayer.test.UstadMobileUnitTest"/>
-    
+    -->
     
     <property name="wtk.cldc.version" value="1.1"/>
     <property name="wtk.midp.version" value="2.0"/>
@@ -192,7 +193,9 @@ supported character set.
                         
                         
                     <midlet icon="exemobicon.png" name="${Midlet_1_name}" class="${Midlet_1_class}"></midlet>
+                    <!--
                     <midlet icon="exemobicon.png" name="${Midlet_2_name}" class="${Midlet_2_class}"></midlet>
+                    -->
                     
                     <attribute name="MicroEdition-Configuration" value="CLDC-1.1"/>
                     <attribute name="MicroEdition-Profile" value="MIDP-2.0"/>
@@ -230,8 +233,10 @@ supported character set.
                     bootclasspath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}" 
                     includes="${javac.includes}">
                         <fileset dir="${classes.dir.NOKIA}"/>
+                        <!--
                         <preserve class="com.toughra.mlearnplayer.test.UstadMobileTinCanTest"/>
                         <preserve class="com.toughra.mlearnplayer.test.UstadMobileBaseTest"/>
+                        -->
                 </wtkpackage>
                 
                 <wtksign 

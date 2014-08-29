@@ -4,7 +4,17 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="1"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/MLearnUtils.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/MLearnMenu.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/idevices/MCQIdevice.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/exemobile2-build.properties</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/ServerLoginForm.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/datatx/MLServerThread.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/datatx/MLCloudConnector.java</file>
             <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/MLearnPlayerMidlet.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/build.xml</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/EXETOC.java</file>
+            <file>file:/home/mike/NetBeansProjects/EXEMobile2/src/com/toughra/mlearnplayer/MLearnPreferences.java</file>
         </group>
     </open-files>
 </project-private>

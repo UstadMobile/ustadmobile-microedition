@@ -36,6 +36,8 @@ import java.util.*;
 import com.toughra.mlearnplayer.FeedbackDialog;
 import com.toughra.mlearnplayer.MLearnPlayerMidlet;
 import com.toughra.mlearnplayer.MLearnUtils;
+import com.toughra.mlearnplayer.UMTinCan;
+import org.json.me.JSONArray;
 import org.json.me.JSONException;
 import org.json.me.JSONObject;
 
@@ -133,17 +135,43 @@ public class MCQIdevice extends Idevice implements ActionListener {
             XmlNode tinCanNode = currentNode.findFirstChildByTagName("tincan", true);
             String tinCanId = null;
             String tinCanDef = null;
+            JSONObject tcDefObj = null;
+            
             if(tinCanNode != null) {
                 tinCanDef = currentNode.findFirstChildByTagName("activitydef", 
                         true).getTextChildContent(0);
                 tinCanId = tinCanNode.getAttribute("id");
+            }else {
+                tinCanId = MLearnUtils.TINCAN_PREFIX + "/" 
+                        + MLearnPlayerMidlet.getInstance().getTinCanPage()
+                        + "/mcq" + i;
+                tcDefObj = new JSONObject();
+                try {
+                    String qText = MLearnUtils.removeHTMLTags(
+                            questionTextHTML);
+                    String qName = "MCQ: " + i + ": " +MLearnPlayerMidlet.getInstance(
+                        ).getTinCanPage();
+                    tcDefObj.put("name", 
+                            UMTinCan.makeLangMapVal("en-US", qName));
+                    tcDefObj.put("description", 
+                            UMTinCan.makeLangMapVal("en-US", qName + " " + qText));
+                    tcDefObj.put("type", 
+                            "http://adlnet.gov/expapi/activities/cmi.interaction");
+                    tcDefObj.put("interactionType", "choice");
+                    
+                }catch(JSONException e) {
+                    
+                }
             }
+            
             QuestionItem thisItem = new QuestionItem(questionTextHTML, tinCanId, 
                     tinCanDef);
             questions.addElement(thisItem);
 
             Vector questionAnswers = currentNode.findChildrenByTagName("answer", true);
             Vector answerObjVector = new Vector();
+            String[][] ansInfo = new String[questionAnswers.size()][2];
+            int correctIndex =0;
             for(int j = 0; j < questionAnswers.size(); j++) {
                 XmlNode currentAnswer = (XmlNode)questionAnswers.elementAt(j);
                 String answerText = currentAnswer.getTextChildContent(0);
@@ -151,10 +179,19 @@ public class MCQIdevice extends Idevice implements ActionListener {
                         true).elementAt(0);
                 String feedback = feedbackNode.getTextChildContent(0);
                 String responseId = currentAnswer.getAttribute("id");
+                if(responseId == null) {
+                    responseId = "opt" + j;
+                }
+                
+                boolean thisAnswerCorrect = currentAnswer.getAttribute(
+                        "iscorrect").equals("true");
                 Answer answer = new Answer(answerText,
-                        currentAnswer.getAttribute("iscorrect").equals("true"), 
+                        thisAnswerCorrect, 
                         new Integer(i), feedback, j, responseId);
                 answer.questionId = i;
+                if(thisAnswerCorrect) {
+                    correctIndex = j;
+                }
                 
                 if(feedbackNode.hasAttribute("audio")) {
                     answer.fbAudio = feedbackNode.getAttribute("audio");
@@ -162,8 +199,35 @@ public class MCQIdevice extends Idevice implements ActionListener {
                 
                 
                 answerObjVector.addElement(answer);
+                ansInfo[j][0] = "opt" + j;
+                ansInfo[j][1] = MLearnUtils.removeHTMLTags(answerText).trim();
                 totalAnswers++;
             }
+            
+            //complete definition if applicable
+            if(tcDefObj != null) {
+                JSONArray correctArr = new JSONArray();
+                correctArr.put(ansInfo[correctIndex][0]);
+                try {
+                    tcDefObj.put("correctResponsesPattern", correctArr);
+                    JSONArray choicesArr = new JSONArray();
+                    for(int j = 0; j < questionAnswers.size(); j++) {
+                        JSONObject thisAnsObj = new JSONObject();
+                        thisAnsObj.put("id", ansInfo[j][0]);
+                        thisAnsObj.put("description", UMTinCan.makeLangMapVal(
+                                "en-US", ansInfo[j][1]));
+                        choicesArr.put(thisAnsObj);
+                    }
+                    tcDefObj.put("choices", choicesArr);
+                    
+                    String jsonStr = tcDefObj.toString();
+                    thisItem.tinCanDefinition = jsonStr;
+                    int x = 0;
+                }catch(JSONException e) {
+                    
+                }
+            }
+            
             answers.addElement(answerObjVector);
             questionAnswers = null;
             totalQuestions++;
@@ -293,6 +357,19 @@ public class MCQIdevice extends Idevice implements ActionListener {
                     resultDef.put("success", selectedAnswer.isCorrect);
                     resultDef.put("response", selectedAnswer.responseId);
                     stmtObject.put("result", resultDef);
+                    
+                    JSONObject ctxObj = new JSONObject();
+                    JSONObject ctxActivities = new JSONObject();
+                    String parentActId = question.activityId.substring(0, 
+                            question.activityId.lastIndexOf('/'));
+                    JSONObject parentActObj = new JSONObject();
+                    parentActObj.put("id", parentActId);
+                    JSONArray parentArr = new JSONArray();
+                    parentArr.put(parentActObj);
+                    ctxActivities.put("parent", parentArr);
+                    ctxObj.put("contextActivities", ctxActivities);
+                    stmtObject.put("context", ctxObj);
+                    
                 }catch(JSONException je) {
                     EXEStrMgr.lg(180, "Exception creating json tincan statement", 
                             je);

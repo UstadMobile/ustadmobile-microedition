@@ -426,6 +426,7 @@ public class EXETOC implements ActionListener{
                 cache.pages[i].title = currentPageNode.getAttribute("title");
                 
                 //check and see if there is a tincan node
+                /*
                 Vector tinCanObjs = currentPageNode.findChildrenByTagName("tincan", 
                         false);
                 if(tinCanObjs.size() > 0) {
@@ -437,6 +438,7 @@ public class EXETOC implements ActionListener{
                     cache.pages[i].tinCanActivityDef = 
                         activityDefNode.getTextChildContent(0);
                 }
+                */
                 
                 Vector pageDevices = currentPageNode.findChildrenByTagName(
                         "idevice", true);
@@ -447,6 +449,7 @@ public class EXETOC implements ActionListener{
                     cache.pages[i].idevices[j][TOCCachePage.DEV_ID] = curNode.getAttribute("id");
                     cache.pages[i].idevices[j][TOCCachePage.DEV_TITLE] = curNode.getAttribute("title");
                 }
+                
             }
             
             //now set the previous / next hrefs

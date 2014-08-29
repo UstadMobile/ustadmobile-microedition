@@ -173,7 +173,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     //#ifdef MEDIAENABLED
 //#    public static final boolean mediaEnabled = true;
     //#else
-    public static final boolean mediaEnabled = true;
+    public static final boolean mediaEnabled = false;
     //#endif
     
     /** Array of sound file names that can be used for positive feedback*/
@@ -788,6 +788,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
     
     /**
      * Record the TinCan 
+     * @param nextPageHref - The next page href that is to be shown.
      */
     public void recordPageTinCan(String nextPageHref) {
         //if going to a new page and we have a time record on the last page
@@ -795,39 +796,14 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             long duration = System.currentTimeMillis() - currentPageStartTime;
             TOCCachePage cPg = myTOC.cache.getPageByHref(currentHref);
             JSONObject actorObj = EXEStrMgr.getInstance().getTinCanActor();
-            
-            if(cPg.tinCanID != null && actorObj != null) {
-                try {
-                    JSONObject stmtObject = new JSONObject();
-                    stmtObject.put("actor", actorObj);
-                    JSONObject activityDef = new JSONObject(
-                            cPg.tinCanActivityDef);
-                    
-                    JSONObject objectDef = new JSONObject();
-                    objectDef.put("id", cPg.tinCanID);
-                    objectDef.put("definition", activityDef);
-                    objectDef.put("objectType", "Activity");
-                    stmtObject.put("object", objectDef);
-                    
-                    JSONObject verbDef = new JSONObject();
-                    verbDef.put("id", "http://adlnet.gov/expapi/verbs/experienced");
-                    JSONObject verbDisplay = new JSONObject();
-                    verbDisplay.put("en-US", "experienced");
-                    verbDef.put("display", verbDisplay);
-                    stmtObject.put("verb", verbDef);
-                    
-                    String stmtDuration = MLearnUtils.format8601Duration(duration);
-                    JSONObject resultDef = new JSONObject();
-                    resultDef.put("duration", stmtDuration);
-                    stmtObject.put("result", resultDef);
-                    
-                    String totalStmtStr = stmtObject.toString();
-                    EXEStrMgr.getInstance().queueTinCanStmt(stmtObject);
-                }catch(JSONException e) {
-                    EXEStrMgr.lg(181, "Exception creating json tincan page statement", 
-                            e);
-                }
-                
+            if(actorObj != null && cPg != null) {
+                String pageName = cPg.href.substring(0, cPg.href.lastIndexOf('.'));
+                int slashPos = currentPackageURI.lastIndexOf('/', currentPackageURI.length() -1);
+                String folderName = currentPackageURI.substring(slashPos+1);
+                String prefix = MLearnUtils.TINCAN_PREFIX + "/" + folderName;
+                JSONObject tinCanStmt = UMTinCan.makePageViewStmt(prefix, 
+                        pageName, cPg.title, "en-US", duration, actorObj);
+                EXEStrMgr.getInstance().queueTinCanStmt(tinCanStmt);   
             }
         }
         
@@ -835,6 +811,20 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
         if(currentPageStartTime == 0 || !currentHref.equals(nextPageHref)) {
             currentPageStartTime = System.currentTimeMillis();
         }
+    }
+    
+    /**
+     * For use with Idevices - get the currently playing pagename
+     * 
+     * @return folderName/Pagename
+     */
+    public String getTinCanPage() {
+        String pageName = this.currentHref.substring(0, 
+                this.currentHref.lastIndexOf('.'));
+        int slashPos = currentPackageURI.lastIndexOf('/', 
+                currentPackageURI.length() -1);
+        String folderName = currentPackageURI.substring(slashPos+1);
+        return folderName + "/" + pageName;
     }
     
     /**
