@@ -6,7 +6,7 @@ NetBeans.  See README for instructions on building from source.
 
 -->
 
-<project name="EXEMobile2" default="post-jar" basedir=".">
+<project name="EXEMobile2" default="jar" basedir=".">
     <description>Builds, tests, and runs the project .</description>
     
     <property file="exemobile2-build.properties"/> 
@@ -39,7 +39,7 @@ NetBeans.  See README for instructions on building from source.
     <property name="wtk.midp.version" value="2.1"/>
     
     <!-- do per version pre-processing -->
-    <target name="pre-preprocess">
+    <target name="preprocess">
         
         <path id="ustadlibclasspath.ref">
             <fileset dir="${lib.dir}" >
@@ -108,7 +108,7 @@ NetBeans.  See README for instructions on building from source.
         />
     </target>
             
-    <target name="post-compile" depends="pre-preprocess">
+    <target name="build" depends="preprocess">
         <mkdir dir="${classes.dir.NOKIA}"/>
                 
         <wtkbuild srcdir="${src.preprocessed.NOKIA}"
@@ -120,7 +120,7 @@ NetBeans.  See README for instructions on building from source.
         </wtkbuild>
     </target>
             
-    <target name="post-jar" depends="post-compile">
+    <target name="jar" depends="build">
         <mkdir dir="${dist.dir.NOKIA}"/>
 
         <wtkjad jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" 
@@ -169,7 +169,15 @@ NetBeans.  See README for instructions on building from source.
                 <fileset dir="${classes.dir.NOKIA}"/>
 
         </wtkpackage>
+    </target>
 
+    <target name="clean">
+        <delete dir="${src.preprocessed.NOKIA}"/>
+        <delete dir="${classes.dir.NOKIA}"/>
+        <delete dir="${dist.dir.NOKIA}"/>
+    </target>
+    
+    <target name="sign" depends="jar">
         <wtksign 
             keystore="${wtk.keystore}"
             jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar" 
@@ -178,16 +186,9 @@ NetBeans.  See README for instructions on building from source.
             certpass="${wtk.certpass}" 
             certalias="${wtk.certalias}"
         />
-
     </target>
 
-    <target name="post-clean">
-        <delete dir="${src.preprocessed.NOKIA}"/>
-        <delete dir="${classes.dir.NOKIA}"/>
-        <delete dir="${dist.dir.NOKIA}"/>
-    </target>
-
-    <target name="wtk-runme" depends="post-jar">
+    <target name="wtk-runme" depends="jar">
         <wtkrun jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" device="DefaultColorPhone" wait="true"/>
     </target>
 </project>

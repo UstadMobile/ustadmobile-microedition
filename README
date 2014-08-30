@@ -3,45 +3,25 @@ Ustad Mobile README
 
 For more info see: www.ustadmobile.com
 
-Updated 16/April/2014
+Updated 30/Aug/2014
 
 To build:
 
-There are three NetBeans projects that you will need
- * EXEMobile2 - the main project
- * UI - a modified version of LWUIT that supports bitmap arabic fonts
- * MIDP_UI - part of LWUIT required to build (unmodified from stock LWUIT)
+1. Checkout the project:
 
-1. Check out all the projects needed for the build 
+git clone https://github.com/mikedawson/ustadmobile-microedition.git
 
-cd ~/NetBeansProjects
-git clone git://git.code.sf.net/p/ustadmobil/ustadmobilcode EXEMobile2
-git clone git://git.code.sf.net/p/ustadmobil/codelwuitnokiaui LWUIT_for_Series_40
+2. Add required libraries to the lib folder 
+ Coming Soon: script to auto download these (JazzJ2ME, LWUIT, kXML, MicroEmu 
+ Nokia UI, ProGaurd)
 
-2. Open the required projects in NetBeans:
-UstadMobile from directory ~/NetBeansProjects/EXEMobile2
-UI from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/UI
-UI-MIDP from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/Ports/MIDP/UI
-IO from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/IO
-IO-MIDP from ~/NetBeansProjects/ustadmobil-codelwuitnokiaui/Ports/MIDP/IO
+3.Run the build with Antenna in classpath
+  $ export WTK_HOME=/path/to/wtk 
+  $ ant -f antenna-build.xml -lib /opt/antenna
 
-3. Build the projects (right click and select clean/build): 
-    UI, IO, IO_MIDP, UI-MIDP, JazzJ2MEMob
 
-4. Copy exemobile2-build.sample.properties to exemobile2-build.properties
-
-3. Set the paths in exemobile2-build.properties so that the compilation can find 
-   required libraries mentioned
-
-4. Download MicroEmu (2.0.4) from https://code.google.com/p/microemu/ 
-
-5. Resolve any reference problems in NetBeans and make sure that you have a suitable 
-   Wireless Toolkit (WTK) installed - this has been tested with 2.5.2 building in Linux
-
-6. Note: if receiving an invalid first byte 100... RuntimeException on Linux under
+4. Note: if receiving an invalid first byte 100... RuntimeException on Linux under
     emulator add this line to /opt/WTK2.5.2/wtklib/Linux/ktools.properties
  
    microedition.encoding= *encoding*
-
-NOTE: This has been switched to using Nokia's implementation of LWUIT 
 
