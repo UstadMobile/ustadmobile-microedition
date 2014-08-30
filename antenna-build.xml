@@ -36,9 +36,6 @@ NetBeans.  See README for instructions on building from source.
     <property name="src.dir" value="./src/"/>
     
     
-    <!-- end of properties to make it build outside of netbeans -->
-    
-    <taskdef classpath="${lwuit.home.editorpath}/editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
     
     
     <property name="MidletSuite" value="UstadMobile"/>
@@ -50,6 +47,10 @@ NetBeans.  See README for instructions on building from source.
     
     <!-- do per version pre-processing -->
     <target name="preprocess">
+        
+        <!-- end of properties to make it build outside of netbeans -->
+    
+        <taskdef classpath="${lwuit.home.editorpath}/editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
         
         <path id="ustadlibclasspath.ref">
             <fileset dir="${lib.dir}" >
