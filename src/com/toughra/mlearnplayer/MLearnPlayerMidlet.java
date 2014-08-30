@@ -336,6 +336,7 @@ public class MLearnPlayerMidlet extends MIDlet implements ActionListener, Runnab
             ServerLoginForm.setTextFieldDefaults();
             
             Display.getInstance().setBidiAlgorithm(true);
+            Display.getInstance().setArabizeAlgorithm(true);
             Resources r = Resources.open("/theme2.res");
             UIManager.getInstance().setThemeProps(r.getTheme("Makeover"));
 

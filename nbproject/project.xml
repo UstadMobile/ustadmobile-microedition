@@ -8,53 +8,9 @@
         </data>
         <references xmlns="http://www.netbeans.org/ns/ant-project-references/2">
             <reference>
-                <foreign-project>IO</foreign-project>
-                <artifact-type>jar</artifact-type>
-                <script>${project.IO}/build.xml</script>
-                <target>jar</target>
-                <clean-target>clean</clean-target>
-                <id>jar</id>
-                <properties>
-                    <property name="config.active"/>
-                </properties>
-            </reference>
-            <reference>
-                <foreign-project>IO_MIDP</foreign-project>
-                <artifact-type>jar</artifact-type>
-                <script>${project.IO_MIDP}/build.xml</script>
-                <target>jar</target>
-                <clean-target>clean</clean-target>
-                <id>jar</id>
-                <properties>
-                    <property name="config.active"/>
-                </properties>
-            </reference>
-            <reference>
                 <foreign-project>JazzJ2MEMob</foreign-project>
                 <artifact-type>jar</artifact-type>
                 <script>${project.JazzJ2MEMob}/build.xml</script>
-                <target>jar</target>
-                <clean-target>clean</clean-target>
-                <id>jar</id>
-                <properties>
-                    <property name="config.active"/>
-                </properties>
-            </reference>
-            <reference>
-                <foreign-project>UI</foreign-project>
-                <artifact-type>jar</artifact-type>
-                <script>${project.UI}/build.xml</script>
-                <target>jar</target>
-                <clean-target>clean</clean-target>
-                <id>jar</id>
-                <properties>
-                    <property name="config.active"/>
-                </properties>
-            </reference>
-            <reference>
-                <foreign-project>UI-MIDP</foreign-project>
-                <artifact-type>jar</artifact-type>
-                <script>${project.UI-MIDP}/build.xml</script>
                 <target>jar</target>
                 <clean-target>clean</clean-target>
                 <id>jar</id>

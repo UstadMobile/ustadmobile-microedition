@@ -5,4 +5,5 @@
 *.class
 private.properties
 test-properties.json
-
+/lib/
+.ant-targets-build_exterior.xml

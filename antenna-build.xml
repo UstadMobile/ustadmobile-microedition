@@ -10,17 +10,22 @@ NetBeans.  See README for instructions on building from source.
     <description>Builds, tests, and runs the project .</description>
     
     <property file="exemobile2-build.properties"/> 
+        
+    <condition property="classpath.antenna" 
+               value="${classpath}"
+               else="${antenna.home}">
+        <available resource="antenna.properties"/>
+    </condition>
     
-    <taskdef classpath="${antenna.home}" resource="antenna.properties"/>
+    <taskdef classpath="${classpath.antenna}" resource="antenna.properties"/>
+    
+    <!-- Find WTK HOME and Bootclasspath parameters-->
+    <include file="build-wtk-common.xml"/>
     
     <!-- properties to make it build outside netbeans -->
     <property name="src.dir" value="./src/"/>
-    <property name="lwuit.src" value="../LWUIT_for_Series_40/"/>
-    <property name="jazz.src" value="../JazzJ2MEMob/"/>
-    <property name="kxml.jar" value="/opt/kxml/kxml2-min-2.3.0.jar"/>
-    <property name="platform.home" value="/opt/WTK2.5.2"/>
-    <property name="platform.bootclasspath" value="${platform.home}/lib/jsr226.jar:${platform.home}/lib/jsr239.jar:${platform.home}/lib/jsr75.jar:${platform.home}/lib/satsa-crypto.jar:${platform.home}/lib/jsr229.jar:${platform.home}/lib/satsa-pki.jar:${platform.home}/lib/jsr179.jar:${platform.home}/lib/jsr238.jar:${platform.home}/lib/jsr211.jar:${platform.home}/lib/j2me-xmlrpc.jar:${platform.home}/lib/jsr180.jar:${platform.home}/lib/mmapi.jar:${platform.home}/lib/satsa-jcrmi.jar:${platform.home}/lib/jsr082.jar:${platform.home}/lib/satsa-apdu.jar:${platform.home}/lib/jsr184.jar:${platform.home}/lib/j2me-ws.jar:${platform.home}/lib/wma20.jar:${platform.home}/lib/jsr234.jar:${platform.home}/lib/cldcapi11.jar:${platform.home}/lib/midpapi20.jar"/>
-
+    
+    
     <!-- end of properties to make it build outside of netbeans -->
     
     <taskdef classpath="${lwuit.home.editorpath}/editor.jar" classname="com.sun.lwuit.tools.resourcebuilder.LWUITTask" name="build" />
@@ -35,6 +40,16 @@ NetBeans.  See README for instructions on building from source.
     
     <!-- do per version pre-processing -->
     <target name="pre-preprocess">
+        
+        <path id="ustadlibclasspath.ref">
+            <fileset dir="${lib.dir}" >
+                <include name="kxml2-min-2.3.0.jar" />
+                <include name="JazzJ2MEMob.jar" />
+                <include name="LWUIT-MIDP-IO.jar" />
+                <include name="LWUIT-MIDP.jar" />
+            </fileset>
+        </path>
+        
 
         <!-- Make the localization properties -->
         <native2ascii src="${src.dir}/../l10n-src" dest="${src.dir}/../l10n-ascii"
@@ -95,30 +110,13 @@ NetBeans.  See README for instructions on building from source.
             
     <target name="post-compile" depends="pre-preprocess">
         <mkdir dir="${classes.dir.NOKIA}"/>
-        <!--<extract dir="${classes.dir.NOKIA}" excludeManifest="true" classpath="${libs.classpath}" excludeclasspath="${extra.classpath}"/>-->
-
-        <!-- 
-            Note the MIDP 'ports' must be copied and overwrite the main 
-            files because default implementations just throw an exception
-            and rely on being after the ports in classpath
-        -->
-        <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/IO/src"/>
-        <copydir dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/UI/src"/>
-        <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/IO_MIDP/src"/>
-        <copydir forceoverwrite="true" dest="${src.preprocessed.NOKIA}" src="${lwuit.src}/Ports/MIDP/UI/src"/>
-
-        <copydir dest="${src.preprocessed.NOKIA}" src="${jazz.src}/src"/>
-
-
-
+                
         <wtkbuild srcdir="${src.preprocessed.NOKIA}"
             destdir="${classes.dir.NOKIA}"
-            preverify="false" classpath="${platform.bootclasspath}:${extra.classpath}:${classpath.NOKIA}">
+            preverify="false" 
+            bootclasspath="${wtk.active.bootclasspath}:${classpath.nokiaui}"
+            classpath="${toString:ustadlibclasspath.ref}">
 
-            <classpath>
-                <path path="${kxml.jar}"/>
-                <path path="${libs.classpath}"/>
-            </classpath>
         </wtkbuild>
     </target>
             
@@ -128,13 +126,10 @@ NetBeans.  See README for instructions on building from source.
         <wtkjad jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" 
             jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
             name="Ustad Mobile"
-            vendor="Toughra Technologies FZ LLC">
+            vendor="UstadMobile Inc">
 
 
             <midlet icon="exemobicon.png" name="${Midlet_1_name}" class="${Midlet_1_class}"></midlet>
-            <!--
-            <attribute name="JAD-Version" value="1.0"/>
-            -->
 
             <attribute name="MIDlet-Version" value="${ustadmobileversion}"/>
 
@@ -160,6 +155,7 @@ NetBeans.  See README for instructions on building from source.
 
         <copy file="${src.dir}/exemobicon.png" tofile="${classes.dir.NOKIA}/exemobicon.png"/>
 
+        <echo message="looking for proguard in: ${lib.dir}/proguard.jar"/>
         <wtkpackage basedir="${classes.dir.NOKIA}" 
             jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
             jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
@@ -167,8 +163,8 @@ NetBeans.  See README for instructions on building from source.
             profile="MIDP-2.0"
             obfuscate="true"
             preverify="true"
-            libclasspath="${kxml.jar}"
-            bootclasspath="${platform.bootclasspath}:${wtk.proguard.home}/lib/proguard.jar:${classpath.NOKIA}" 
+            libclasspath="${toString:ustadlibclasspath.ref}"
+            bootclasspath="${wtk.active.bootclasspath}:${wtk.proguard.home}/lib/proguard.jar:${classpath.nokiaui}" 
             includes="${javac.includes}">
                 <fileset dir="${classes.dir.NOKIA}"/>
 
