@@ -166,7 +166,7 @@ NetBeans.  See README for instructions on building from source.
 
         <copy file="${src.dir}/exemobicon.png" tofile="${classes.dir.NOKIA}/exemobicon.png"/>
 
-        <echo message="looking for proguard in: ${lib.dir}/proguard.jar"/>
+        <echo message="looking for proguard in: ${wtk.proguard.home}/lib/proguard.jar"/>
         <wtkpackage basedir="${classes.dir.NOKIA}" 
             jarfile="${dist.dir.NOKIA}/${MidletSuite}.jar"
             jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad"
@@ -227,7 +227,7 @@ NetBeans.  See README for instructions on building from source.
             <url url="http://www.ustadmobile.com/build-dep/LWUIT_1_5.zip"/>
             
             <!-- ProGuard 4.10 zipped binary from UstadMobile.com -->
-            <url url="http://www.ustadmobile.com/build-dep/proguard4.10"/>
+            <url url="http://www.ustadmobile.com/build-dep/proguard4.10.zip"/>
         </get>
         
         <unzip dest="${lib.dir}">
