@@ -201,4 +201,44 @@ NetBeans.  See README for instructions on building from source.
     <target name="wtk-runme" depends="jar">
         <wtkrun jadfile="${dist.dir.NOKIA}/${MidletSuite}.jad" device="DefaultColorPhone" wait="true"/>
     </target>
+    
+    <target name="getlibs">
+        <mkdir dir="${lib.dir}"/>
+        <mkdir dir="${lib.dir}/downloads"/>
+        
+        <get dest="${lib.dir}/downloads">
+            <!-- LWUIT MIDP IO Package from UstadMobile Jenkins -->
+            <url url="http://devserver.ustadmobile.com:8080/job/LWUIT/lastSuccessfulBuild/artifact/MIDP-binaries/LWUIT-MIDP-IO.jar"/>
+            
+            <!-- LWUIT UI Package from UstadMobile Jenkins -->
+            <url url="http://devserver.ustadmobile.com:8080/job/LWUIT/lastSuccessfulBuild/artifact/MIDP-binaries/LWUIT-MIDP.jar"/>
+            
+            <!-- Jazz J2ME Zip framework from UstadMobile Jenkins -->
+            <url url="http://devserver.ustadmobile.com:8080/job/Jazz-J2ME/lastSuccessfulBuild/artifact/dist/JazzJ2MEMob.jar"/>
+            
+            <!-- kXML JAR from UstadMobile.com -->
+            <url url="http://www.ustadmobile.com/build-dep/kxml2-min-2.3.0.jar"/>
+            
+            <!-- microEmu Nokia UI from UstadMobile.com -->
+            <url url="http://www.ustadmobile.com/build-dep/microemu-nokiaui.jar"/>
+            
+            <!-- LWUIT original binary for resource builder -->
+            <url url="http://www.ustadmobile.com/build-dep/LWUIT_1_5.zip"/>
+            
+            <!-- ProGuard 4.10 zipped binary from UstadMobile.com -->
+            <url url="http://www.ustadmobile.com/build-dep/proguard4.10"/>
+        </get>
+        
+        <unzip dest="${lib.dir}">
+            <fileset dir="${lib.dir}/downloads">
+                <include name="*.zip"/>
+            </fileset>
+        </unzip>
+        
+        <copy todir="${lib.dir}">
+            <fileset dir="${lib.dir}/downloads">
+                <include name="*.jar"/>
+            </fileset>
+        </copy>
+    </target>
 </project>
