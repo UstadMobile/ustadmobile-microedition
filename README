@@ -15,6 +15,20 @@ git clone https://github.com/mikedawson/ustadmobile-microedition.git
   
    $ ant -f antenna-build.xml getlibs
 
+  Requires: 
+  LWUIT with Arabization:
+    https://github.com/mikedawson/lwuit-for-series-40
+  JazzJ2ME from:
+    https://github.com/mikedawson/jazzj2me
+  kXML from:
+    http://www.kxml.org/
+  MicroEmu NokiaUI package:
+    http://www.microemu.org
+  ProGuard
+    http://proguard.sourceforge.net
+  LWUIT with Resource Editor:
+    https://lwuit.java.net
+
 3. Optional: If you want to customize library paths etc. copy 
    exemobile2-build.default.properties to exemobile2-build.properties and
    adjust.  
