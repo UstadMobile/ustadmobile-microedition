@@ -133,7 +133,7 @@ public class EXETOC implements ActionListener{
     /**
      * LWUIT List for the collection
      */
-    List colList;
+    com.sun.lwuit.List colList;
     
     /**The URL of the collection */
     String currentURL;
@@ -147,7 +147,7 @@ public class EXETOC implements ActionListener{
     static final String[] RTLLANGS = {"ar", "fa", "ps"};
 
     /* List for GUI */
-    List tocList;
+    com.sun.lwuit.List tocList;
 
     /** The host midlet*/
     private MLearnPlayerMidlet hostMidlet;
@@ -230,7 +230,7 @@ public class EXETOC implements ActionListener{
     public Form getCollectionForm() {
         if(colForm == null) {
             colForm = new Form(colTitle);
-            colList = new List();
+            colList = new com.sun.lwuit.List();
             colList.setRenderer(new DefaultListCellRenderer(false));
             int numItems = collection.length;
             for(int i = 0; i < numItems; i++) {
@@ -492,7 +492,7 @@ public class EXETOC implements ActionListener{
      * Gets the current list
      * @return current table of contents list
      */
-    public List getList() {
+    public com.sun.lwuit.List getList() {
         return tocList;
     }
 
@@ -506,7 +506,7 @@ public class EXETOC implements ActionListener{
     public Form getForm() {
         if(tocList == null) {
             tocForm = new Form("Table of Contents");
-            tocList = new List();
+            tocList = new com.sun.lwuit.List();
             tocList.setRenderer(new DefaultListCellRenderer(false));
             
             int numItems = cache.pages.length;
