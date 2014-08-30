@@ -12,12 +12,16 @@ To build:
 git clone https://github.com/mikedawson/ustadmobile-microedition.git
 
 2. Add required libraries to the lib folder 
- Coming Soon: script to auto download these (JazzJ2ME, LWUIT, kXML, MicroEmu 
- Nokia UI, ProGaurd)
+   Coming Soon: script to auto download these (JazzJ2ME, LWUIT, kXML, MicroEmu 
+   Nokia UI, ProGaurd)
 
-3.Run the build with Antenna in classpath
-  $ export WTK_HOME=/path/to/wtk 
-  $ ant -f antenna-build.xml -lib /opt/antenna
+3. Optional: If you want to customize library paths etc. copy 
+   exemobile2-build.default.properties to exemobile2-build.properties and
+   adjust.  
+
+3. Run the build with Antenna in classpath
+   $ export WTK_HOME=/path/to/wtk 
+   $ ant -f antenna-build.xml -lib /opt/antenna
 
 
 4. Note: if receiving an invalid first byte 100... RuntimeException on Linux under

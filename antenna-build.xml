@@ -9,6 +9,16 @@ NetBeans.  See README for instructions on building from source.
 <project name="EXEMobile2" default="jar" basedir=".">
     <description>Builds, tests, and runs the project .</description>
     
+    
+    <condition property="build.properties.filename" 
+        value="exemobile2-build.properties" 
+        else="exemobile2-build.default.properties">
+            
+        <resourceexists>
+            <file file="build-release.properties"/>
+        </resourceexists>
+    </condition>
+
     <property file="exemobile2-build.properties"/> 
         
     <condition property="classpath.antenna" 
